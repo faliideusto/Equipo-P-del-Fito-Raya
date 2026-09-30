@@ -9,6 +9,14 @@ El repositorio incluye `render.yaml` con un Web Service Node en el plan Free, re
 
 El servidor escucha en `0.0.0.0` y usa el puerto `PORT` de Render. El comando local `pnpm start` sigue disponible.
 
+Si creas el Web Service manualmente, configura estos valores en su panel:
+
+- **Build Command:** `corepack pnpm install --frozen-lockfile && corepack pnpm build`
+- **Start Command:** `corepack pnpm start:render`
+- **Environment → NODE_VERSION:** `24.19.0`
+
+Corepack ejecuta pnpm directamente, sin `corepack enable`, que intenta escribir enlaces en carpetas protegidas de Render. Para un servicio existente, cambia estos valores en el panel: modificar `render.yaml` no actualiza un servicio creado manualmente. Guarda los cambios y usa **Manual Deploy → Deploy latest commit**.
+
 ## Almacenamiento
 
 En Supabase crea un proyecto del plan Free y ejecuta `supabase/positions.sql` en su SQL Editor. En Render configura `SUPABASE_URL` (URL del proyecto) y `SUPABASE_SECRET_KEY` (clave Secret o la antigua service_role). No uses la clave pública ni variables `NEXT_PUBLIC_`. Solo el servidor accede a esta tabla; RLS y permisos impiden la lectura/escritura desde clientes públicos.

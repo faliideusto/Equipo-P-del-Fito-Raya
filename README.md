@@ -6,7 +6,7 @@ Configura `SNP_EMAIL` y `SNP_PASSWORD` en `.env.local`, reinicia el servidor y a
 
 ## Arranque
 
-Requiere Node.js >= 22 (recomendado: 24) y pnpm 11.19.0. El proyecto incluye `pnpm-lock.yaml` para reproducir las versiones instaladas.
+Requiere Node.js 24 y pnpm 11.19.0. `.node-version` fija Node 24.19.0 y `pnpm-lock.yaml` permite reproducir las versiones instaladas.
 
 ```sh
 pnpm install --frozen-lockfile
