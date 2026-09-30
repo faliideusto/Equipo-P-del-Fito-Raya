@@ -2489,6 +2489,19 @@ a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);bo
 .sponsor-content>p:not(.eyebrow) {color:#61778e;font-size:16px;line-height:1.6;margin:0 0 24px}
 .sponsor-content .eyebrow {font-size:11px}
 .sponsor-action {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:18px;border-top:1px solid #edf1f6;color:#1267d5;font-weight:600}
+.mini-lineup {margin-top:24px;padding:24px}
+.mini-lineup .panel-heading {padding:0;gap:16px;flex-wrap:wrap}
+.mini-lineup .panel-heading p {margin:8px 0;color:#61778e}
+.mini-player-pool {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:300px;overflow:auto;margin:20px 0}
+.mini-pairs {display:grid;gap:12px}
+.mini-pair {border:1px solid #dce4ef;border-radius:12px;padding:16px;background:#f9fbff}
+.mini-pair-heading {display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.mini-pair-heading span {margin-left:auto;color:#1267d5;font-size:13px}
+.mini-pair-heading button {border:0;background:transparent;color:#61778e;cursor:pointer}
+.mini-pair-slots {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mini-pair-slots select {width:100%;min-width:0;padding:12px;border:1px solid #dce4ef;border-radius:8px;background:white;color:#18324e}
+.mini-pair-slots button {width:100%;white-space:normal}
+@media(max-width:700px){.mini-player-pool,.mini-pair-slots {grid-template-columns:1fr}}
 @media(max-width:1100px){.sponsors-grid {grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.sponsors-grid {grid-template-columns:1fr}.sponsors-intro {flex-wrap:wrap}.sponsors-intro>span {margin-left:0}}
 @media(max-width:700px){.mvp-grid {grid-template-columns:1fr}.mvp-month {flex-wrap:wrap}}
