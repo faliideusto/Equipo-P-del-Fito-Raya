@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: fito-snp
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start:render
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: SNP_EMAIL
+        sync: false
+      - key: SNP_PASSWORD
+        sync: false
+      - key: POSITIONS_ADMIN_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SNP_CACHE_SECONDS
+        value: "300"

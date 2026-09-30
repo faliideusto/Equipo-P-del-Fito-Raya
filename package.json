@@ -1,0 +1,42 @@
+{
+  "name": "fito-snp",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "start:render": "next start --hostname 0.0.0.0",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "snp:login": "node scripts/snp-login.mjs",
+    "snp:sync": "tsx scripts/snp-sync.ts",
+    "positions:migrate": "tsx scripts/migrate-positions.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "fetch-cookie": "^3.2.0",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tough-cookie": "^6.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "latest",
+    "playwright": "^1.63.0",
+    "tailwindcss": "latest",
+    "tsx": "latest",
+    "typescript": "^5.9.3"
+  }
+}

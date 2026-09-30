@@ -1,0 +1,28 @@
+node_modules/
+.pnpm-store/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+
+.snp-private/
+.snp-cache/
+.club-private/
+
+# Local logs and generated diagnostics
+*.log
+*.tmp.*
+coverage/
+playwright-report/
+test-results/
+.DS_Store
+Thumbs.db
+
+# Research evidence stays local; publish the curated integration guide only.
+docs/*.json
+docs/*.txt
+docs/*.png
+docs/*.jpg
+docs/investigacion-*.md
+scripts/research-*.mjs
