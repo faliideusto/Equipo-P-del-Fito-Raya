@@ -19,6 +19,7 @@ const sections = [
   { slug: "/clasificacion", label: "Clasificación", icon: Trophy },
   { slug: "/jornadas", label: "Jornadas", icon: CalendarDays },
   { slug: "/plantilla", label: "Plantilla", icon: Users },
+  { slug: "/estadisticas", label: "Ranking temporada", icon: Trophy },
   { slug: "/parejas", label: "Crear parejas", icon: ArrowUpRight },
 ];
 export function Navigation() {
