@@ -2473,6 +2473,24 @@ body {
 .mvp-card .avatar {width:80px;height:80px;margin:16px auto;font-size:24px}
 .mvp-card h2 {font-size:25px;margin:16px 0}
 .mvp-grid form {display:grid;gap:16px;align-content:start}
+.sponsors-intro {display:flex;align-items:center;gap:20px;padding:28px;margin-bottom:28px;background:#eaf3ff;border:1px solid #d6e7ff;border-radius:16px;color:#125eb8}
+.sponsors-intro h2 {margin:0 0 6px;font-size:22px;color:#18324e}
+.sponsors-intro p {margin:0;color:#56708a}
+.sponsors-intro>span {margin-left:auto;white-space:nowrap;font-size:14px}
+.sponsors-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-bottom:24px}
+.sponsor-card {display:flex;flex-direction:column;background:white;border:1px solid #dce4ef;border-radius:18px;overflow:hidden;text-decoration:none;transition:transform .2s,box-shadow .2s,border-color .2s}
+.sponsor-card:hover,.sponsor-card:focus-visible {transform:translateY(-4px);box-shadow:0 16px 35px #14396215;border-color:#408cff}
+.sponsor-card:focus-visible {outline:3px solid #1267d5;outline-offset:3px}
+.sponsor-logo {position:relative;height:210px;margin:22px;background:white;border-radius:12px;overflow:hidden}
+.sponsor-logo img {object-fit:contain}
+.sponsor-cobos .sponsor-logo img {object-fit:cover}
+.sponsor-content {padding:4px 28px 28px;display:flex;flex:1;flex-direction:column}
+.sponsor-content h2 {font-size:23px;color:#18324e;margin:8px 0 12px}
+.sponsor-content>p:not(.eyebrow) {color:#61778e;font-size:16px;line-height:1.6;margin:0 0 24px}
+.sponsor-content .eyebrow {font-size:11px}
+.sponsor-action {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:18px;border-top:1px solid #edf1f6;color:#1267d5;font-weight:600}
+@media(max-width:1100px){.sponsors-grid {grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.sponsors-grid {grid-template-columns:1fr}.sponsors-intro {flex-wrap:wrap}.sponsors-intro>span {margin-left:0}}
 @media(max-width:700px){.mvp-grid {grid-template-columns:1fr}.mvp-month {flex-wrap:wrap}}
 .score-banner a.score-team:hover {text-decoration:underline}
 .score-banner a.score-team:focus-visible {outline:3px solid white;outline-offset:6px;border-radius:8px}
