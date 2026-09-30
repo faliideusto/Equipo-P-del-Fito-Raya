@@ -79,7 +79,6 @@ export function Navigation() {
           <div className="nav-group">
             <div className="nav-caption">EXPLORAR SNP</div>
             <Link className={`nav-link ${pathname.startsWith("/competicion") ? "active" : ""}`} href="/competicion" onClick={() => setOpen(false)}><Trophy size={18} /> Competición</Link>
-            <Link className={`nav-link ${pathname === "/conexion" ? "active" : ""}`} href="/conexion" onClick={() => setOpen(false)}><Layers3 size={18} /> Conexión SNP</Link>
           </div>
         </nav>
         <div className="sidebar-footer">
