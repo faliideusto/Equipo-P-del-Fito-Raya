@@ -55,6 +55,7 @@ export function Navigation() {
           >
             <House size={18} /> Inicio
           </Link>
+          <Link className={`nav-link ${pathname === "/mvp" ? "active" : ""}`} href="/mvp" onClick={() => setOpen(false)}><Trophy size={18} /> MVP</Link>
           {(["a", "b"] as const).map((id) => (
             <div className="nav-group" key={id}>
               <div className="nav-caption">

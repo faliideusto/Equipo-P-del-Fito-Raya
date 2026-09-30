@@ -2465,6 +2465,15 @@ body {
 .coach-password-change summary {cursor:pointer;font-weight:600}
 .coach-password-change form {display:grid;gap:12px;max-width:440px;margin-top:16px}
 .coach-password-change input {padding:12px;border:1px solid #dce4ef;border-radius:8px}
+.mvp-month {display:flex;align-items:center;gap:20px;padding:24px;margin-bottom:24px}
+.mvp-month input,.mvp-grid select {padding:12px;border:1px solid #dce4ef;border-radius:8px;background:white;color:inherit}
+.mvp-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-bottom:24px}
+.mvp-card {padding:32px;text-align:center;background:linear-gradient(145deg,#fff,#edf5ff)}
+.mvp-trophy {display:block;margin:24px auto;color:#bf9118}
+.mvp-card .avatar {width:80px;height:80px;margin:16px auto;font-size:24px}
+.mvp-card h2 {font-size:25px;margin:16px 0}
+.mvp-grid form {display:grid;gap:16px;align-content:start}
+@media(max-width:700px){.mvp-grid {grid-template-columns:1fr}.mvp-month {flex-wrap:wrap}}
 .score-banner a.score-team:hover {text-decoration:underline}
 .score-banner a.score-team:focus-visible {outline:3px solid white;outline-offset:6px;border-radius:8px}
 @media(max-width:600px) {.position-editor-list label {flex-wrap:wrap}.position-editor-list select {width:100%}.position-unlock input {width:100%}}

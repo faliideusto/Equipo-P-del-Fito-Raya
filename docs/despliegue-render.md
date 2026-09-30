@@ -19,6 +19,8 @@ Corepack ejecuta pnpm directamente, sin `corepack enable`, que intenta escribir 
 
 ## Almacenamiento
 
+Para activar MVP, ejecuta `supabase/mvp.sql`. El entrenador usa la contraseña vigente para elegir un jugador por equipo y mes. La elección es pública en la web y queda en el historial; una nueva elección del mismo equipo y mes reemplaza la anterior. Solo el servidor accede a la tabla y comprueba que el jugador está disponible en la plantilla del equipo.
+
 Ejecuta también `supabase/coach-password.sql` antes de desplegar la opción de cambio de contraseña. La contraseña inicial procede de `POSITIONS_ADMIN_PASSWORD`; tras cambiarla, se valida únicamente la huella scrypt guardada en Supabase. La contraseña nueva no se guarda en claro ni se devuelve al navegador. El cambio afecta a ambos equipos y al editor de posiciones. El administrador del alojamiento y la base de datos conserva capacidad técnica de restablecer el acceso; para una administración exclusiva, transfiere esos servicios al entrenador.
 
 Para activar el archivo privado de alineaciones del entrenador, ejecuta también `supabase/lineups.sql` en el SQL Editor del proyecto existente. Usa la misma contraseña de `POSITIONS_ADMIN_PASSWORD`. La tabla `saved_lineups` tiene RLS y no concede acceso público; el servidor verifica la contraseña en cada consulta, guardado y eliminación. Las propuestas de A y B se almacenan por separado. El navegador mantiene la contraseña solo mientras el apartado está abierto y no guarda las alineaciones en almacenamiento local.
