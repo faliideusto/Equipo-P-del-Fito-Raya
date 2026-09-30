@@ -2479,7 +2479,7 @@ body {
 .sponsors-intro>span {margin-left:auto;white-space:nowrap;font-size:14px}
 .sponsors-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-bottom:24px}
 .sponsor-card {display:flex;flex-direction:column;background:white;border:1px solid #dce4ef;border-radius:18px;overflow:hidden;text-decoration:none;transition:transform .2s,box-shadow .2s,border-color .2s}
-.sponsor-card:hover,.sponsor-card:focus-visible {transform:translateY(-4px);box-shadow:0 16px 35px #14396215;border-color:#408cff}
+a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);box-shadow:0 16px 35px #14396215;border-color:#408cff}
 .sponsor-card:focus-visible {outline:3px solid #1267d5;outline-offset:3px}
 .sponsor-logo {position:relative;height:210px;margin:22px;background:white;border-radius:12px;overflow:hidden}
 .sponsor-logo img {object-fit:contain}
