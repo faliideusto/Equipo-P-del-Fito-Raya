@@ -24,6 +24,7 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { PlayerPicker } from "./player-picker";
 import { PairCard } from "./pair-card";
 import { PositionEditor } from "./position-editor";
+import { SavedLineups } from "./saved-lineups";
 export function LineupBuilder({
   players: initialPlayers,
   teamId,
@@ -299,6 +300,7 @@ export function LineupBuilder({
           conflictos de posición son avisos y permiten seguir probando.
         </p>
         <PositionEditor players={players} teamId={teamId} onSaved={setPlayers} />
+        <SavedLineups teamId={teamId} pairs={pairs} players={players} onLoad={saved => { setPairs(saved); setSelected(players.map(p => p.id)); setArmed(null); setPicker(null); setNotice("Alineación privada recuperada. Puedes seguir ajustándola sin cambiar la copia guardada."); }} />
       </div>
       {picker && (
         <PlayerPicker

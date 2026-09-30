@@ -19,6 +19,8 @@ Corepack ejecuta pnpm directamente, sin `corepack enable`, que intenta escribir 
 
 ## Almacenamiento
 
+Para activar el archivo privado de alineaciones del entrenador, ejecuta también `supabase/lineups.sql` en el SQL Editor del proyecto existente. Usa la misma contraseña de `POSITIONS_ADMIN_PASSWORD`. La tabla `saved_lineups` tiene RLS y no concede acceso público; el servidor verifica la contraseña en cada consulta, guardado y eliminación. Las propuestas de A y B se almacenan por separado. El navegador mantiene la contraseña solo mientras el apartado está abierto y no guarda las alineaciones en almacenamiento local.
+
 En Supabase crea un proyecto del plan Free y ejecuta `supabase/positions.sql` en su SQL Editor. En Render configura `SUPABASE_URL` (URL del proyecto) y `SUPABASE_SECRET_KEY` (clave Secret o la antigua service_role). No uses la clave pública ni variables `NEXT_PUBLIC_`. Solo el servidor accede a esta tabla; RLS y permisos impiden la lectura/escritura desde clientes públicos.
 
 Las posiciones se guardan mediante upsert por jugador, sin reemplazar las de otros equipos. El almacenamiento local sigue siendo la alternativa de desarrollo cuando no están configuradas las variables de Supabase. Los datos actuales del archivo privado se pueden importar con el script `pnpm positions:migrate` antes del despliegue. Supabase Free puede pausar proyectos inactivos y tiene límites de uso; no garantiza disponibilidad continua.

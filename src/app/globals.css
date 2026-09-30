@@ -2458,6 +2458,9 @@ body {
 .position-legend span:last-child {color:#926800}
 .pool-player.suggest-opposite, .picker-list button.suggest-opposite {background:#e5f8ed;border-color:#36a76a;box-shadow:inset 4px 0 #36a76a}
 .pool-player.suggest-both, .picker-list button.suggest-both {background:#fff6cf;border-color:#d7af2c;box-shadow:inset 4px 0 #d7af2c}
+.saved-lineups-list {display:grid;gap:16px;margin:24px 0}
+.saved-lineups-list article {padding:24px}
+.saved-lineups-list h3 {font-size:20px;margin:0 0 8px}
 .score-banner a.score-team:hover {text-decoration:underline}
 .score-banner a.score-team:focus-visible {outline:3px solid white;outline-offset:6px;border-radius:8px}
 @media(max-width:600px) {.position-editor-list label {flex-wrap:wrap}.position-editor-list select {width:100%}.position-unlock input {width:100%}}
