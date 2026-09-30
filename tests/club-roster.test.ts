@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { clubRoster, sharedPlayerIds } from "../src/data/club-roster";
+import { clubRoster, sharedPlayerIds, additionalPlayers } from "../src/data/club-roster";
 import { snapshotTeams } from "../src/data/snp-explorer-snapshot";
 import { assignPlayer, emptyLineup } from "../src/domain/rules";
 
@@ -22,4 +22,12 @@ test("Shared players remain in B and do not duplicate when SNP also lists them i
   const b = clubRoster("b", reserves, [], {});
   assert.equal(b.length, reserves.length);
   assert.ok(sharedPlayerIds.every(id => b.some(p => p.sourceId === id)));
+});
+test("Daniel belongs only to A and Ruben is available in both with shared position and no duplicate registration", () => {
+  const get = (team: "a" | "b") => clubRoster(team, snapshotTeams[team === "a" ? "7778" : "803902"].players, snapshotTeams["803902"].players, { "b-354270": "RIGHT" }, additionalPlayers.filter(p => p.teams.includes(team)));
+  const a = get("a"); const b = get("b");
+  assert.ok(a.some(p => p.sourceId === "249372")); assert.ok(!b.some(p => p.sourceId === "249372"));
+  for (const rows of [a, b]) { assert.equal(rows.filter(p => p.sourceId === "354270").length, 1); assert.equal(rows.find(p => p.sourceId === "354270")?.position, "RIGHT"); }
+  const registered = clubRoster("a", [additionalPlayers[0]], [], {}, additionalPlayers);
+  assert.equal(registered.filter(p => p.sourceId === "249372").length, 1);
 });
