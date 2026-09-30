@@ -34,7 +34,7 @@ export default async function RosterPage({
               <PlayerAvatar name={player.name} photoUrl={player.photoUrl ?? null} />
               <div className="roster-name">
                 <strong>{player.name}</strong>
-                <span>{positionLabel(player.position)}{teamId === "a" && player.sourceTeamId === "803902" ? " · Ficha en equipo B" : ""}</span>
+                <span>{positionLabel(player.position)}</span>
               </div>
               <div className="points-bar">
                 <div
