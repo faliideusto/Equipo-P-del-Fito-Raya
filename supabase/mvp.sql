@@ -10,4 +10,4 @@ create table if not exists public.monthly_mvp (
 );
 alter table public.monthly_mvp enable row level security;
 revoke all on public.monthly_mvp from anon, authenticated;
-grant select, insert, update on public.monthly_mvp to service_role;
+grant select, insert, update, delete on public.monthly_mvp to service_role;

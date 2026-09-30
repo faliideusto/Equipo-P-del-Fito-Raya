@@ -12,6 +12,11 @@ test("MVP storage upserts by team and month without overwriting the other team",
   process.env.SUPABASE_URL = "https://test.invalid"; process.env.SUPABASE_SECRET_KEY = "test-key";
   let rows: MvpAward[] = [];
   globalThis.fetch = async (url, init) => {
+    if (init?.method === "DELETE") {
+      const params = new URL(String(url)).searchParams;
+      rows = rows.filter(row => `eq.${row.team_id}` !== params.get("team_id") || `eq.${row.month}` !== params.get("month"));
+      return new Response(null, { status: 204 });
+    }
     if (init?.method === "POST") {
       assert.equal(new URL(String(url)).searchParams.get("on_conflict"), "team_id,month");
       const row = JSON.parse(init.body as string) as MvpAward;
@@ -25,5 +30,10 @@ test("MVP storage upserts by team and month without overwriting the other team",
     await mvpAwards(award); await mvpAwards({ ...award, team_id: "b" });
     const result = await mvpAwards({ ...award, player_id: "a-2" });
     assert.equal(result.length, 2); assert.equal(result.find(r => r.team_id === "a")?.player_id, "a-2"); assert.equal(result.find(r => r.team_id === "b")?.player_id, "a-1");
+    await mvpAwards({ ...award, month: "2026-08" });
+    const cleared = await mvpAwards(undefined, { team_id: "a", month: "2026-09" });
+    assert.equal(cleared.length, 2);
+    assert.ok(cleared.some(row => row.team_id === "b" && row.month === "2026-09"));
+    assert.ok(cleared.some(row => row.team_id === "a" && row.month === "2026-08"));
   } finally { globalThis.fetch = previous.fetch; for (const [key, value] of Object.entries({ SUPABASE_URL: previous.url, SUPABASE_SECRET_KEY: previous.key })) { if (value === undefined) delete process.env[key]; else process.env[key] = value; } }
 });
