@@ -8,11 +8,13 @@ import { PlayerAvatar } from "@/components/player-avatar";
 export function PlayerPicker({
   players,
   used,
+  partner,
   onChoose,
   onClose,
 }: {
   players: Player[];
   used: (string | null)[];
+  partner?: Player;
   onChoose: (id: string) => void;
   onClose: () => void;
 }) {
@@ -39,9 +41,10 @@ export function PlayerPicker({
         </button>
       </div>
       <p>Si ya tiene pareja, intercambia su hueco con el jugador actual.</p>
+      {partner && <p className="position-legend"><span>Verde: lado complementario</span><span>Amarillo: juega en ambos lados</span></p>}
       <div className="picker-list">
         {players.map((p) => (
-          <button key={p.id} onClick={() => onChoose(p.id)}>
+          <button key={p.id} onClick={() => onChoose(p.id)} className={p.id === partner?.id || !partner ? "" : p.position === "BOTH" ? "suggest-both" : (partner.position === "LEFT" && p.position === "RIGHT") || (partner.position === "RIGHT" && p.position === "LEFT") ? "suggest-opposite" : ""}>
             <PlayerAvatar name={p.name} photoUrl={p.photoUrl} small />
             <span>
               {p.name}

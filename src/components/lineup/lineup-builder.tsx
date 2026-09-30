@@ -304,6 +304,7 @@ export function LineupBuilder({
         <PlayerPicker
           players={players.filter((p) => selected.includes(p.id))}
           used={used}
+          partner={playerById(pairs.find((pair) => pair.id === picker.pairId)?.players[picker.slot === 0 ? 1 : 0] ?? null)}
           onClose={() => setPicker(null)}
           onChoose={(id) => place(id, picker.pairId, picker.slot)}
         />
