@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { verifyCoachPassword } from "@/lib/coach-auth";
 import { clubRepository } from "@/data/repository";
 import { savePositions, hasPersistentPositions } from "@/lib/player-positions";
 import type { Position } from "@/domain/types";
@@ -10,16 +10,12 @@ export async function POST(request: Request) {
   try {
     const origin = request.headers.get("origin");
     if (!origin || new URL(origin).host !== request.headers.get("host")) return reply({ error: "Origen no válido." }, 403);
-    if (!process.env.POSITIONS_ADMIN_PASSWORD) return reply({ error: "El servidor no tiene configurada la contraseña de posiciones." }, 503);
     const raw = await request.text();
     if (raw.length > 16000) return reply({ error: "Petición demasiado grande." }, 413);
     const body = JSON.parse(raw);
     if (Date.now() > resetAt) { failed = 0; resetAt = Date.now() + 300000; }
     if (failed >= 10) return reply({ error: "Demasiados intentos. Espera cinco minutos." }, 429);
-    if (typeof body.password !== "string" || !timingSafeEqual(
-      createHash("sha256").update(body.password).digest(),
-      createHash("sha256").update(process.env.POSITIONS_ADMIN_PASSWORD).digest(),
-    )) { failed++; return reply({ error: "Contraseña incorrecta." }, 401); }
+    if (!await verifyCoachPassword(body.password)) { failed++; return reply({ error: "Contraseña incorrecta." }, 401); }
     if (!hasPersistentPositions()) return reply({ error: "Configura Supabase para que las posiciones se conserven en Render gratuito." }, 503);
     if (body.action === "unlock") return reply({ ok: true });
     if (body.action !== "save" || !["a", "b"].includes(body.teamId) || !Array.isArray(body.positions) || body.positions.length > 40) return reply({ error: "Datos no válidos." }, 400);

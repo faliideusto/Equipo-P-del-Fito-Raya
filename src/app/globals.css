@@ -2461,6 +2461,10 @@ body {
 .saved-lineups-list {display:grid;gap:16px;margin:24px 0}
 .saved-lineups-list article {padding:24px}
 .saved-lineups-list h3 {font-size:20px;margin:0 0 8px}
+.coach-password-change {margin:24px 0;padding:20px;border:1px solid #dce4ef;border-radius:12px}
+.coach-password-change summary {cursor:pointer;font-weight:600}
+.coach-password-change form {display:grid;gap:12px;max-width:440px;margin-top:16px}
+.coach-password-change input {padding:12px;border:1px solid #dce4ef;border-radius:8px}
 .score-banner a.score-team:hover {text-decoration:underline}
 .score-banner a.score-team:focus-visible {outline:3px solid white;outline-offset:6px;border-radius:8px}
 @media(max-width:600px) {.position-editor-list label {flex-wrap:wrap}.position-editor-list select {width:100%}.position-unlock input {width:100%}}

@@ -1,4 +1,5 @@
-import { createHash, timingSafeEqual, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
+import { verifyCoachPassword, changeCoachPassword } from "@/lib/coach-auth";
 import { clubRepository } from "@/data/repository";
 import { lineups } from "@/lib/saved-lineups";
 import type { Pair } from "@/domain/types";
@@ -10,11 +11,15 @@ export async function POST(request: Request) {
     const origin = request.headers.get("origin");
     if (!origin || new URL(origin).host !== request.headers.get("host")) return reply({ error: "Origen no válido." }, 403);
     const raw = await request.text(); if (raw.length > 16000) return reply({ error: "Petición demasiado grande." }, 413);
-    const body = JSON.parse(raw); const secret = process.env.POSITIONS_ADMIN_PASSWORD;
-    if (!secret) return reply({ error: "Contraseña de entrenador no configurada." }, 503);
+    const body = JSON.parse(raw);
     if (Date.now() > reset) { failed = 0; reset = Date.now() + 300000; }
     if (failed >= 10) return reply({ error: "Espera cinco minutos antes de volver a intentar." }, 429);
-    if (typeof body.password !== "string" || !timingSafeEqual(createHash("sha256").update(body.password).digest(), createHash("sha256").update(secret).digest())) { failed++; return reply({ error: "Contraseña incorrecta." }, 401); }
+    if (!await verifyCoachPassword(body.password)) { failed++; return reply({ error: "Contraseña incorrecta." }, 401); }
+    if (body.action === "change-password") {
+      if (typeof body.newPassword !== "string" || body.newPassword.length < 12 || body.newPassword.length > 128 || body.newPassword === body.password) return reply({ error: "Usa una contraseña nueva de entre 12 y 128 caracteres." }, 400);
+      await changeCoachPassword(body.newPassword);
+      return reply({ ok: true });
+    }
     if (!['a', 'b'].includes(body.teamId) || !['list', 'save', 'delete'].includes(body.action)) return reply({ error: "Datos no válidos." }, 400);
     let value;
     if (body.action === "save") {

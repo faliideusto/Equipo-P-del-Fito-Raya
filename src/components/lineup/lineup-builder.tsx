@@ -250,6 +250,7 @@ export function LineupBuilder({
         </section>
         <div className="pair-section-title">
           <h2>Tu alineación</h2>
+          <a className="button secondary small" href={`#saved-lineups-${teamId}`}>Guardar alineación</a>
           <span>
             <Check size={14} /> Orden SNP automático
           </span>
@@ -300,7 +301,7 @@ export function LineupBuilder({
           conflictos de posición son avisos y permiten seguir probando.
         </p>
         <PositionEditor players={players} teamId={teamId} onSaved={setPlayers} />
-        <SavedLineups teamId={teamId} pairs={pairs} players={players} onLoad={saved => { setPairs(saved); setSelected(players.map(p => p.id)); setArmed(null); setPicker(null); setNotice("Alineación privada recuperada. Puedes seguir ajustándola sin cambiar la copia guardada."); }} />
+        <SavedLineups teamId={teamId} pairs={ordered} players={players} onLoad={saved => { setPairs(saved); setSelected(players.map(p => p.id)); setArmed(null); setPicker(null); setNotice("Alineación privada recuperada. Puedes seguir ajustándola sin cambiar la copia guardada."); }} />
       </div>
       {picker && (
         <PlayerPicker
