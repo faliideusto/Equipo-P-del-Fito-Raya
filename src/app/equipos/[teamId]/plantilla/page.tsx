@@ -27,14 +27,14 @@ export default async function RosterPage({
         </div>
         <div className="roster-list">
           {players.map((player, i) => (
-            <Link href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${teamId === "a" ? "7778" : "803902"}`} className="roster-row" key={player.id}>
+            <Link href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`} className="roster-row" key={player.id}>
               <span className={`roster-rank ${i < 3 ? "top" : ""}`}>
                 {player.points === null ? "—" : String(i + 1).padStart(2, "0")}
               </span>
               <PlayerAvatar name={player.name} photoUrl={player.photoUrl ?? null} />
               <div className="roster-name">
                 <strong>{player.name}</strong>
-                <span>{positionLabel(player.position)}</span>
+                <span>{positionLabel(player.position)}{teamId === "a" && player.sourceTeamId === "803902" ? " · Ficha en equipo B" : ""}</span>
               </div>
               <div className="points-bar">
                 <div

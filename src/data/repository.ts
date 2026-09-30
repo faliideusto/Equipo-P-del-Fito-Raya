@@ -1,7 +1,8 @@
-import { fixtures, players, teams } from "./snp-snapshot";
+import { fixtures, teams } from "./snp-snapshot";
 import type { Fixture, Player, Standing, Team, TeamId } from "@/domain/types";
 import { getSnpTeam, getSnpCompetition } from "@/lib/snp-service";
 import { readPositions } from "@/lib/player-positions";
+import { clubRoster } from "./club-roster";
 const sourceTeams = { a: "7778", b: "803902" };
 export interface ClubRepository {
   getTeams(): Promise<Team[]>;
@@ -15,13 +16,9 @@ export const clubRepository: ClubRepository = {
   getTeams: async () => teams,
   getTeam: async (id) => teams.find((t) => t.id === id),
   getPlayers: async (id) => {
-    const result = await getSnpTeam(sourceTeams[id]);
+    const [result, reserves] = await Promise.all([getSnpTeam(sourceTeams[id]), id === "a" ? getSnpTeam(sourceTeams.b) : Promise.resolve(null)]);
     const positions = await readPositions();
-    return result.data.players.map(p => {
-      const previous = players.find(old => old.teamId === id && (old.sourceId||old.id.replace(/^[ab]-/,""))===p.id);
-      const playerId = previous?.id ?? `${id}-${p.id}`;
-      return { id: playerId, sourceId: p.id, name: p.name, teamId: id, points: p.points, position: Object.hasOwn(positions, playerId) ? positions[playerId] : previous?.position ?? null, photoUrl: p.photoUrl };
-    }).sort((a,b) => b.points-a.points);
+    return clubRoster(id, result.data.players, reserves?.data.players ?? [], positions);
   },
   getStandings: async (id) => {
     const result = await getSnpCompetition({division:id === "a" ? "2318" : "2326"});

@@ -5,6 +5,7 @@ export interface Player {
   name: string;
   teamId: TeamId;
   sourceId?: string;
+  sourceTeamId?: string;
   photoUrl?: string | null;
   points: number | null;
   position: Position | null;
