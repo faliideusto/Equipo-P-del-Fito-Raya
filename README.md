@@ -100,3 +100,14 @@ No publiques `.env.local`, `.snp-private/` ni `.snp-cache/`. Están excluidos de
 ## Diseño
 
 Azul de pista como acento principal, blanco roto y grafito. Logo oficial sin reinterpretación, granate discreto para identificar el equipo B, amarillo en el detalle de la pelota. La pista del inicio está dibujada con CSS y no necesita recursos externos. Tipografía del sistema, sin descargar fuentes ni llamadas a APIs de terceros.
+# Cuentas de jugadores
+
+El menú «Mi perfil» permite registrarse con correo, contraseña y posición en pista,
+iniciar sesión y vincular la ficha automáticamente con el acceso propio de SNP.
+La contraseña SNP se usa solo para comprobar la identidad y no se conserva.
+La posición del usuario sustituye la anterior; el entrenador puede editarla después.
+
+La instalación requiere `supabase/accounts.sql` y las variables de Supabase ya
+utilizadas por el club. El proyecto actual usa registro directo sin confirmación
+de correo por decisión del propietario. Detalles: [cuentas](docs/cuentas.md).
+

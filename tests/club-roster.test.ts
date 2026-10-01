@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 import { clubRoster, sharedPlayerIds, additionalPlayers } from "../src/data/club-roster";
 import { snapshotTeams } from "../src/data/snp-explorer-snapshot";
 import { assignPlayer, emptyLineup } from "../src/domain/rules";
+test("registered position fills the roster and later coach changes still apply", () => {
+  const roster = (positions: Record<string, "RIGHT" | "LEFT" | "BOTH" | null>) => clubRoster("a", snapshotTeams["7778"].players, [], positions, [], { "381423": "LEFT" });
+  assert.equal(roster({}).find(p => p.sourceId === "381423")?.position, "LEFT");
+  assert.equal(roster({ "a-381423": "RIGHT" }).find(p => p.sourceId === "381423")?.position, "RIGHT");
+});
 
 test("A includes the three shared B players with canonical positions and source profiles", () => {
   const a = clubRoster("a", snapshotTeams["7778"].players, snapshotTeams["803902"].players, { "b-249269": "LEFT" });

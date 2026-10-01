@@ -3,6 +3,7 @@ import type { Fixture, Player, Standing, Team, TeamId } from "@/domain/types";
 import { getSnpTeam, getSnpCompetition, getSnpPlayer } from "@/lib/snp-service";
 import { readPositions } from "@/lib/player-positions";
 import { clubRoster, additionalPlayers } from "./club-roster";
+import { registeredPositions } from "@/lib/account-profile";
 const sourceTeams = { a: "7778", b: "803902" };
 export interface ClubRepository {
   getTeams(): Promise<Team[]>;
@@ -17,12 +18,12 @@ export const clubRepository: ClubRepository = {
   getTeam: async (id) => teams.find((t) => t.id === id),
   getPlayers: async (id) => {
     const [result, reserves] = await Promise.all([getSnpTeam(sourceTeams[id]), id === "a" ? getSnpTeam(sourceTeams.b) : Promise.resolve(null)]);
-    const positions = await readPositions();
+    const [positions, registered] = await Promise.all([readPositions(), registeredPositions()]);
     const additions = await Promise.all(additionalPlayers.filter(player => player.teams.includes(id)).map(async player => {
       try { return (await getSnpPlayer(player.id, undefined, "20")).data; }
       catch { return player; }
     }));
-    return clubRoster(id, result.data.players, reserves?.data.players ?? [], positions, additions);
+    return clubRoster(id, result.data.players, reserves?.data.players ?? [], positions, additions, registered);
   },
   getStandings: async (id) => {
     const result = await getSnpCompetition({division:id === "a" ? "2318" : "2326"});
