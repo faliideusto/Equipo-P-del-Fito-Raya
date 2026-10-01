@@ -23,6 +23,7 @@ import { formatPoints } from "@/lib/format";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { PlayerPicker } from "./player-picker";
 import { PairCard } from "./pair-card";
+import { useIsCoach } from "../app-shell";
 import { PositionEditor } from "./position-editor";
 import { SavedLineups } from "./saved-lineups";
 export function LineupBuilder({
@@ -32,6 +33,7 @@ export function LineupBuilder({
   players: Player[];
   teamId: TeamId;
 }) {
+  const isCoach = useIsCoach();
   const [players, setPlayers] = useState(initialPlayers);
   const [selected, setSelected] = useState<string[]>(players.map((p) => p.id));
   const [pairs, setPairs] = useState<Pair[]>(emptyLineup);
@@ -250,7 +252,7 @@ export function LineupBuilder({
         </section>
         <div className="pair-section-title">
           <h2>Tu alineación</h2>
-          <a className="button secondary small" href={`#saved-lineups-${teamId}`}>Guardar alineación</a>
+          {isCoach && <a className="button secondary small" href={`#saved-lineups-${teamId}`}>Guardar alineación</a>}
           <span>
             <Check size={14} /> Orden SNP automático
           </span>

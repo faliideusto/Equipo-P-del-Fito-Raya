@@ -23,7 +23,7 @@ const sections = [
   { slug: "/estadisticas", label: "Ranking temporada", icon: Trophy },
   { slug: "/parejas", label: "Crear parejas", icon: ArrowUpRight },
 ];
-export function Navigation() {
+export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   return (
@@ -58,6 +58,7 @@ export function Navigation() {
           </Link>
           <Link className={`nav-link ${pathname === "/mvp" ? "active" : ""}`} href="/mvp" onClick={() => setOpen(false)}><Trophy size={18} /> MVP</Link>
           <Link className={`nav-link ${pathname === "/mi-perfil" || pathname === "/acceso" ? "active" : ""}`} href="/mi-perfil" onClick={() => setOpen(false)}><Users size={18} /> Mi perfil</Link>
+          {isCoach && <Link className={`nav-link ${pathname === "/entrenador" ? "active" : ""}`} href="/entrenador" onClick={() => setOpen(false)}><Layers3 size={18}/> Panel de entrenador</Link>}
           <Link className={`nav-link ${pathname === "/patrocinadores" ? "active" : ""}`} href="/patrocinadores" onClick={() => setOpen(false)}><HeartHandshake size={18} /> Patrocinadores</Link>
           {(["a", "b"] as const).map((id) => (
             <div className="nav-group" key={id}>

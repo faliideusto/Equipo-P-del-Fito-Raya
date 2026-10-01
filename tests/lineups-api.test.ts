@@ -12,7 +12,7 @@ test("Private lineup API rejects requests without authentication or from another
     const unauthenticated = await POST(request("http://localhost", { action: "list", teamId: "a" }));
     assert.equal(unauthenticated.status, 401);
     assert.equal((await unauthenticated.json()).lineups, undefined);
-    const invalidTeam = await POST(request("http://localhost", { password: "test-only-secret", action: "list", teamId: "c" }));
-    assert.equal(invalidTeam.status, 400);
+    const passwordWithoutSession = await POST(request("http://localhost", { password: "test-only-secret", action: "list", teamId: "c" }));
+    assert.equal(passwordWithoutSession.status, 401);
   } finally { if (previous === undefined) delete process.env.POSITIONS_ADMIN_PASSWORD; else process.env.POSITIONS_ADMIN_PASSWORD = previous; }
 });

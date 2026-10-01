@@ -1,7 +1,9 @@
 import { cookies } from "next/headers";
+import { verifyCoachToken } from "./coach-session";
 
-type AuthUser = { id: string; email?: string; user_metadata?: { position?: string } };
-type Session = { access_token: string; refresh_token: string; expires_in: number; user: AuthUser };
+type AuthUser = { id: string; email?: string; role?: "coach" | "player"; user_metadata?: { position?: string } };
+export type Session = { access_token: string; refresh_token: string; expires_in: number; user: AuthUser };
+export const accountCookieOptions = () => ({ httpOnly: true, secure: process.env.RENDER === "true" || process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/" });
 export class AccountError extends Error {
   constructor(message: string, public status = 400) { super(message); }
 }
@@ -16,15 +18,17 @@ export async function authRequest(path: string, body?: object, token?: string, m
 }
 export async function saveSession(session: Session) {
   const jar = await cookies();
-  const options = { httpOnly: true, secure: process.env.RENDER === "true" || process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/" };
+  jar.delete("fito-coach");
+  const options = accountCookieOptions();
   jar.set("fito-access", session.access_token, { ...options, maxAge: session.expires_in });
   jar.set("fito-refresh", session.refresh_token, { ...options, maxAge: 30 * 86400 });
 }
 export async function clearSession() {
-  const jar = await cookies(); jar.delete("fito-access"); jar.delete("fito-refresh");
+  const jar = await cookies(); jar.delete("fito-access"); jar.delete("fito-refresh"); jar.delete("fito-coach");
 }
 export async function currentAccount(): Promise<AuthUser | null> {
   const jar = await cookies(); const token = jar.get("fito-access")?.value;
+  if (await verifyCoachToken(jar.get("fito-coach")?.value)) return { id: "coach", email: "fitoraya", role: "coach" };
   if (token) {
     const response = await authRequest("user", undefined, token);
     if (response.ok) return response.json();

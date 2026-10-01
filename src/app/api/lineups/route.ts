@@ -1,10 +1,11 @@
+import { isCoachSession } from "@/lib/coach-session";
+import { clearSession } from "@/lib/account-auth";
 import { randomUUID } from "node:crypto";
-import { verifyCoachPassword, changeCoachPassword } from "@/lib/coach-auth";
+import { changeCoachPassword } from "@/lib/coach-auth";
 import { clubRepository } from "@/data/repository";
 import { lineups } from "@/lib/saved-lineups";
 import type { Pair } from "@/domain/types";
 export const runtime = "nodejs";
-let failed = 0; let reset = 0;
 export async function POST(request: Request) {
   const reply = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
   try {
@@ -12,12 +13,11 @@ export async function POST(request: Request) {
     if (!origin || new URL(origin).host !== request.headers.get("host")) return reply({ error: "Origen no válido." }, 403);
     const raw = await request.text(); if (raw.length > 16000) return reply({ error: "Petición demasiado grande." }, 413);
     const body = JSON.parse(raw);
-    if (Date.now() > reset) { failed = 0; reset = Date.now() + 300000; }
-    if (failed >= 10) return reply({ error: "Espera cinco minutos antes de volver a intentar." }, 429);
-    if (!await verifyCoachPassword(body.password)) { failed++; return reply({ error: "Contraseña incorrecta." }, 401); }
+    if (!await isCoachSession()) return reply({ error: "Inicia sesión como entrenador." }, 401);
     if (body.action === "change-password") {
       if (typeof body.newPassword !== "string" || body.newPassword.length < 12 || body.newPassword.length > 128 || body.newPassword === body.password) return reply({ error: "Usa una contraseña nueva de entre 12 y 128 caracteres." }, 400);
       await changeCoachPassword(body.newPassword);
+      await clearSession();
       return reply({ ok: true });
     }
     if (!['a', 'b'].includes(body.teamId) || !['list', 'save', 'delete'].includes(body.action)) return reply({ error: "Datos no válidos." }, 400);

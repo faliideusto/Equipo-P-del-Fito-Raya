@@ -33,3 +33,7 @@ export async function changeCoachPassword(password: string) {
   const salt = randomBytes(32).toString("hex");
   await credentialRequest({ salt, hash: scryptSync(password, salt, 64).toString("hex") });
 }
+export async function coachCredentialRevision() {
+  const saved = await credentialRequest();
+  return createHash("sha256").update(saved ? `${saved.salt}:${saved.hash}` : process.env.POSITIONS_ADMIN_PASSWORD || "unconfigured").digest("hex");
+}

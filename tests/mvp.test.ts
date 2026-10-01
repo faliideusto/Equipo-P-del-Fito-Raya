@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { POST } from "../src/app/api/mvp/route";
 import { mvpAwards, type MvpAward } from "../src/lib/mvp";
-test("MVP edition requires password and same origin", async () => {
+test("MVP edition requires a coach session and same origin", async () => {
   const request = (origin: string) => new Request("http://localhost/api/mvp", { method: "POST", headers: { origin, host: "localhost" }, body: JSON.stringify({ action: "save", teamId: "a", month: "2026-09", playerId: "a-1" }) });
   assert.equal((await POST(request("http://example.com"))).status, 403);
   assert.equal((await POST(request("http://localhost"))).status, 401);

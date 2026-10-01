@@ -1,13 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PageHeading } from "./sports";
 import { ExplorerPlayer } from "./explorer-player";
 import { PositionOptions } from "./account-access";
+import { CoachDashboard } from "./coach-dashboard";
 import type { PlayerLink } from "@/lib/account-profile";
-type Account = { user: { id: string; email: string; position?: string } | null; link: PlayerLink | null };
+type Account = { user: { id: string; email: string; role?: string; position?: string } | null; link: PlayerLink | null };
 type TeamStats = { id: string; position: string | null; rank: number; played: number; won: number; lost: number; setsWon: number; setsLost: number; points: number; partial: boolean; stale: boolean; acts: number };
 export function AccountProfile() {
+  const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null); const [error, setError] = useState(""); const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false); const [position, setPosition] = useState(""); const [teams, setTeams] = useState<TeamStats[] | null>(null); const [statsError, setStatsError] = useState("");
   async function refreshAccount() {
@@ -33,11 +36,13 @@ export function AccountProfile() {
     try {
       const response = await fetch("/api/account", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, ...fields }) });
       const data = await response.json(); if (!response.ok) throw new Error(data.error);
+      if (action === "logout") { router.replace("/acceso"); router.refresh(); return; }
       await refreshAccount();
       setMessage(action === "link" ? "Ficha vinculada y posición aplicada a tus equipos." : action === "position" ? "Posición guardada en tus equipos." : "");
     } catch (e) { setError(e instanceof Error ? e.message : "No se pudo completar."); }
     finally { setBusy(false); }
   }
+  if (account?.user?.role === "coach") return <CoachDashboard/>;
   return <><PageHeading eyebrow="TU ESPACIO EN EL CLUB" title="Mi perfil." text="Tu ficha SNP y lo que aportas a tu equipo."/>{error && <p className="snp-warning" role="alert">{error}</p>}{message && <p className="account-message" role="status">{message}</p>}
     {!account && !error && <p role="status">Comprobando tu sesión…</p>}
     {!account && error && <button className="button secondary" onClick={() => { setError(""); void refreshAccount().catch(e => setError(e.message)); }}>Volver a intentar</button>}
