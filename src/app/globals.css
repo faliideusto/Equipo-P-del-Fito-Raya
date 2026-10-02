@@ -2492,6 +2492,8 @@ a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);bo
 .sponsor-logo {position:relative;height:210px;margin:22px;background:white;border-radius:12px;overflow:hidden}
 .sponsor-logo img {object-fit:contain}
 .sponsor-cobos .sponsor-logo img {object-fit:cover}
+.sponsor-ivan-garcia .sponsor-logo {background:#000}
+.sponsor-ivan-garcia .sponsor-logo img {padding:16px}
 .sponsor-content {padding:4px 28px 28px;display:flex;flex:1;flex-direction:column}
 .sponsor-content h2 {font-size:23px;color:#18324e;margin:8px 0 12px}
 .sponsor-content>p:not(.eyebrow) {color:#61778e;font-size:16px;line-height:1.6;margin:0 0 24px}

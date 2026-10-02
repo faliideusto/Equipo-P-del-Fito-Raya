@@ -1,4 +1,5 @@
 export const sponsors = [
+  { id: "ivan-garcia", name: "Iván García", category: "Micropigmentación capilar", href: "https://ivangarciamicropigmentacioncapilar.my.canva.site/", action: "Visitar web", description: "Especialista en micropigmentación capilar." },
   { id: "cobos", name: "Cobos Catering", category: "Gastronomía y eventos", href: "https://coboscatering.com/", action: "Visitar web", description: "Catering para bodas, celebraciones y eventos de empresa." },
   { id: "fis-and-fit", name: "Fis and Fit", category: "Fisioterapia y pilates", href: "https://fisandfitfisioterapia.wodbuster.com/", action: "Conocer el centro", description: "Un centro en Jerez dedicado al movimiento y al cuidado físico." },
   { id: "sherry-transfer", name: "Sherry Transfer", category: "Transporte y traslados", href: "https://sherrytransfer.com/", action: "Visitar web", description: "Servicio de traslados y transporte con base en Jerez." },
