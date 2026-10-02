@@ -11,7 +11,7 @@ export async function proxy(request: NextRequest) {
   // fetches source files without forwarding the visitor's session cookies.
   const brandAsset = /^\/(?:team-logos|sponsors)\/[^/]+\.(?:png|jpe?g|webp|svg)$/i.test(path) || path === "/equipacion.png";
   if (brandAsset) return NextResponse.next({ request: { headers } });
-  if (path === "/acceso" || path === "/api/account" || path === "/api/account/roster" || path === "/api/health") return NextResponse.next({ request: { headers } });
+  if (path === "/acceso" || path === "/api/account" || path === "/api/account/roster" || path === "/api/account/search" || path === "/api/health") return NextResponse.next({ request: { headers } });
   let session: Session | undefined;
   try {
     const token = request.cookies.get("fito-access")?.value;

@@ -11,6 +11,7 @@ import { fixtures as savedFixtures,players as savedPlayers,teams as clubTeams } 
 import { fixtureScore } from "@/domain/rules";
 import type { SnpMatch } from "@/domain/snp";
 import { sharedPlayerIds } from "@/data/club-roster";
+import { clubMembers, localPlayerId, memberSports } from "./club-members";
 type Query = Partial<SnpCompetition["filters"]>;
 function options(value: unknown): SnpOption[] {
   if (!value || typeof value !== "object") throw new Error("SNP ha cambiado el formato de los filtros.");
@@ -73,6 +74,11 @@ export async function getSnpMatch(id: string, force = false) {
   return cachedSnp("match-"+id,async()=>parseMatch(await snpClient.html(`/enfrentamiento/edit/${id}/verG`),id),fallback,force);
 }
 export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:string, force=false) {
+  if (localPlayerId(id)) {
+    const member = (await clubMembers()).find(member => member.player_id === id);
+    if (!member) throw new Error("No se encontró el jugador.");
+    return { data: { ...memberSports(member), groups: [], group: "", stats: [], previousStats: [] } as SnpPlayerProfile, updatedAt: new Date().toISOString(), source: "live" as const, stale: false };
+  }
   validId(id); if(teamId)validId(teamId); if(requestedGroup)validId(requestedGroup);
   // Mi perfil has only the linked player ID. Use the same roster context as
   // the team view, because SNP's zonal rank is supplied by the roster endpoint.

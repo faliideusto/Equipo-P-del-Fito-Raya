@@ -1,9 +1,10 @@
 import { clubRepository } from "@/data/repository";
 import { accountConfig, AccountError } from "./account-auth";
 import type { TeamId } from "@/domain/types";
+import { memberId } from "./club-members";
 
 export function requireRosterSelection(teamId: unknown, playerId: unknown): { teamId: TeamId; playerId: string } {
-  if ((teamId !== "a" && teamId !== "b") || typeof playerId !== "string" || !/^\d{1,10}$/.test(playerId)) throw new AccountError("Elige tu equipo y tu jugador de la plantilla.");
+  if ((teamId !== "a" && teamId !== "b") || typeof playerId !== "string" || !memberId(playerId)) throw new AccountError("Elige tu equipo y tu jugador de la plantilla.");
   return { teamId, playerId };
 }
 export async function rosterPlayer(teamId: TeamId, playerId: string) {
@@ -19,5 +20,5 @@ export async function registrationRoster(teamId: TeamId) {
   ]);
   if (!response.ok) throw new AccountError("No se pudo cargar la disponibilidad de jugadores. Inténtalo de nuevo.", 503);
   const claimed = new Set((await response.json() as { player_id: string }[]).map(row => row.player_id));
-  return players.filter(player => player.sourceId && /^\d{1,10}$/.test(player.sourceId)).map(player => ({ id: player.sourceId!, name: player.name, available: !claimed.has(player.sourceId!) })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+  return players.filter(player => player.sourceId && memberId(player.sourceId)).map(player => ({ id: player.sourceId!, name: player.name, available: !claimed.has(player.sourceId!) })).sort((a, b) => a.name.localeCompare(b.name, "es"));
 }

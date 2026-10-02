@@ -1,5 +1,5 @@
 import { signInAccount } from "@/lib/account-password";
-import { registerLinkedAccount } from "@/lib/account-registration";
+import { registerAdditionalAccount, registerLinkedAccount } from "@/lib/account-registration";
 import { cookies } from "next/headers";
 import { accountBody, accountCookieOptions, accountFailure, accountReply, AccountError, authRequest, clearSession, currentAccount, limitAccountAttempts, saveSession } from "@/lib/account-auth";
 import { verifyCoachPassword } from "@/lib/coach-auth";
@@ -48,6 +48,11 @@ export async function POST(request: Request) {
     limitAccountAttempts(`auth:${email}`);
     if (body.action === "signup" && !isPosition(body.position)) throw new AccountError("Selecciona tu posición en pista.");
     if (body.action === "signup") {
+      if (body.registrationMode === "new") {
+        if (body.teamId !== "a" && body.teamId !== "b") throw new AccountError("Selecciona el equipo A o B.");
+        const session = await registerAdditionalAccount(email, password, body.position as "LEFT" | "RIGHT" | "BOTH", body.teamId, body.fullName, body.searchPlayerId);
+        await saveSession(session); return accountReply({ ok: true });
+      }
       const { teamId, playerId } = requireRosterSelection(body.teamId, body.playerId);
       const session = await registerLinkedAccount(email, password, body.position as "LEFT" | "RIGHT" | "BOTH", teamId, playerId);
       await saveSession(session); return accountReply({ ok: true });
