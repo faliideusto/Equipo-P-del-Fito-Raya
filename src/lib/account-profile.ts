@@ -1,8 +1,8 @@
 import { accountConfig, AccountError } from "./account-auth";
 import type { Position } from "@/domain/types";
-export type PlayerLink = { user_id: string; snp_user_id: string; player_id: string; position: Position; linked_at: string };
+export type PlayerLink = { user_id: string; snp_user_id: string | null; player_id: string; position: Position; linked_at: string };
 export function isPosition(value: unknown): value is Position { return value === "LEFT" || value === "RIGHT" || value === "BOTH"; }
-export async function playerLink(userId: string, identity?: { userId: string; playerId: string; position: Position }, remove = false): Promise<PlayerLink | null> {
+export async function playerLink(userId: string, identity?: { userId: string | null; playerId: string; position: Position }, remove = false): Promise<PlayerLink | null> {
   const { url, key } = accountConfig();
   const endpoint = new URL(identity ? "/rest/v1/rpc/link_player_account" : "/rest/v1/player_accounts", url);
   if (!identity) { endpoint.searchParams.set("user_id", `eq.${userId}`); endpoint.searchParams.set("select", "user_id,snp_user_id,player_id,position,linked_at"); }

@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   // Overwrite client-supplied values; this flag only controls the access layout.
   headers.set("x-fito-access-page", path === "/acceso" ? "1" : "0");
-  if (path === "/acceso" || path === "/api/account" || path === "/api/health") return NextResponse.next({ request: { headers } });
+  if (path === "/acceso" || path === "/api/account" || path === "/api/account/roster" || path === "/api/health") return NextResponse.next({ request: { headers } });
   let session: Session | undefined;
   try {
     const token = request.cookies.get("fito-access")?.value;

@@ -103,8 +103,8 @@ Azul de pista como acento principal, blanco roto y grafito. Logo oficial sin rei
 # Cuentas de jugadores
 
 El menú «Mi perfil» permite registrarse con correo, contraseña y posición en pista,
-iniciar sesión y vincular la ficha automáticamente con el acceso propio de SNP.
-La contraseña SNP se usa solo para comprobar la identidad y no se conserva.
+iniciar sesión y asociar su cuenta a un jugador de la plantilla A o B.
+No se pide contraseña de SNP: se busca el nombre y se selecciona la ficha.
 La posición del usuario sustituye la anterior; el entrenador puede editarla después.
 
 La instalación requiere `supabase/accounts.sql` y las variables de Supabase ya

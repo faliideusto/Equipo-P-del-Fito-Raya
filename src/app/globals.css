@@ -2533,3 +2533,7 @@ a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);bo
 
 .account-snp-registration { border: 1px solid #d7e2ef; background: #f7faff; border-radius: 12px; padding: 24px; display: grid; gap: 18px; }
 .account-snp-registration h2 { font-size: 20px; margin: 0; }
+
+.account-form select.roster-select { min-height: 220px; padding: 8px; }
+.roster-select option { padding: 10px 12px; border-radius: 6px; }
+.roster-select option:checked { background: #1267e9; color: white; }

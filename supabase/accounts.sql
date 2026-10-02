@@ -1,11 +1,13 @@
 -- Account ownership comes from Supabase Auth, never from a browser-supplied ID.
 create table if not exists public.player_accounts (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  snp_user_id text not null unique check (snp_user_id ~ '^[0-9]{1,10}$'),
+  snp_user_id text unique check (snp_user_id ~ '^[0-9]{1,10}$'),
   player_id text not null unique check (player_id ~ '^[0-9]{1,10}$'),
   position text not null check (position in ('RIGHT', 'LEFT', 'BOTH')),
   linked_at timestamptz not null default now()
 );
+-- Self-selection from the roster does not verify or require a SNP login.
+alter table public.player_accounts alter column snp_user_id drop not null;
 alter table public.player_accounts enable row level security;
 revoke all on public.player_accounts from anon, authenticated;
 grant select, insert, update, delete on public.player_accounts to service_role;

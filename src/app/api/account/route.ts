@@ -4,7 +4,7 @@ import { accountBody, accountCookieOptions, accountFailure, accountReply, Accoun
 import { verifyCoachPassword } from "@/lib/coach-auth";
 import { createCoachToken } from "@/lib/coach-session";
 import { isPosition, playerLink } from "@/lib/account-profile";
-import { identifySnpAccount } from "@/lib/snp-identity";
+import { requireRosterSelection, rosterPlayer } from "@/lib/account-roster";
 export const runtime = "nodejs";
 export async function GET() {
   try { const user = await currentAccount(); return accountReply({ user: user ? { id: user.id, email: user.email, role: user.role === "coach" ? "coach" : "player", position: user.user_metadata?.position } : null, link: user && user.role !== "coach" ? await playerLink(user.id) : null }); }
@@ -37,11 +37,9 @@ export async function POST(request: Request) {
         const link = await playerLink(user.id, { userId: previous.snp_user_id, playerId: previous.player_id, position });
         return accountReply({ ok: true, link });
       }
-      const { email, password } = credentials(body);
-      let identity;
-      try { identity = await identifySnpAccount(email, password); }
-      catch { throw new AccountError("No se pudo vincular SNP. Comprueba tu correo y contraseña propios de SNP. Si aparece una verificación, complétala en SNP. La cuenta debe tener una ficha de jugador."); }
-      const link = await playerLink(user.id, { ...identity, position }); return accountReply({ ok: true, link });
+      const { teamId, playerId } = requireRosterSelection(body.teamId, body.playerId);
+      await rosterPlayer(teamId, playerId);
+      const link = await playerLink(user.id, { userId: null, playerId, position }); return accountReply({ ok: true, link });
     }
     if (body.action !== "login" && body.action !== "signup") throw new AccountError("Acción no válida.");
     const { email, password } = credentials(body);
@@ -49,9 +47,8 @@ export async function POST(request: Request) {
     if (body.action === "signup" && password.length < 12) throw new AccountError("Usa al menos 12 caracteres para la contraseña de la web.");
     if (body.action === "signup" && !isPosition(body.position)) throw new AccountError("Selecciona tu posición en pista.");
     if (body.action === "signup") {
-      const snp = credentials({ email: body.snpEmail, password: body.snpPassword });
-      limitAccountAttempts(`snp-register:${snp.email}`);
-      const session = await registerLinkedAccount(email, password, body.position as "LEFT" | "RIGHT" | "BOTH", snp.email, snp.password);
+      const { teamId, playerId } = requireRosterSelection(body.teamId, body.playerId);
+      const session = await registerLinkedAccount(email, password, body.position as "LEFT" | "RIGHT" | "BOTH", teamId, playerId);
       await saveSession(session); return accountReply({ ok: true });
     }
     const response = await authRequest("token?grant_type=password", { email, password });

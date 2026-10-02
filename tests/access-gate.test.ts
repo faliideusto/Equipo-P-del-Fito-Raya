@@ -8,7 +8,7 @@ test("blocks unauthenticated pages and all data APIs while allowing access and h
     assert.equal(response.status, 307); assert.equal(new URL(response.headers.get("location")!).pathname, "/acceso");
   }
   for (const path of ["/api/snp/competition", "/api/positions", "/api/mvp", "/api/account/stats"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).status, 401);
-  for (const path of ["/acceso", "/api/account", "/api/health"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).headers.get("x-middleware-next"), "1");
+  for (const path of ["/acceso", "/api/account", "/api/account/roster?team=a", "/api/health"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).headers.get("x-middleware-next"), "1");
   const forwarded = await proxy(new NextRequest("http://localhost:10000/equipos/a", { headers: { host: "club.example.invalid" } }));
   assert.equal(new URL(forwarded.headers.get("location")!).host, "club.example.invalid");
 });
