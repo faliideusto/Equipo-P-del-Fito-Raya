@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 export async function GET() {
   try {
     const user = await currentAccount(); if (!user) throw new AccountError("Inicia sesión para ver tu perfil.", 401);
+    if (user.role === "visitor") return accountReply({ teams: [] });
     const link = await playerLink(user.id); if (!link) return accountReply({ teams: [] });
     const teams = [];
     for (const teamId of ["a", "b"] as const) {

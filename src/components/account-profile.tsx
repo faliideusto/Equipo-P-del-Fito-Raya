@@ -44,6 +44,7 @@ export function AccountProfile() {
     finally { setBusy(false); }
   }
   if (account?.user?.role === "coach") return <CoachDashboard/>;
+  if (account?.user?.role === "visitor") return <><PageHeading eyebrow="ESCUELA FITO RAYA" title="Cuenta de visitante." text="Consulta los equipos, las jornadas y las estadísticas del club."/><section className="panel account-card"><p>Este acceso no está asociado a ningún jugador.</p><Link href="/" className="button">Ver el club</Link></section></>;
   return <><PageHeading eyebrow="TU ESPACIO EN EL CLUB" title="Mi perfil." text="Tu ficha SNP y lo que aportas a tu equipo."/>{error && <p className="snp-warning" role="alert">{error}</p>}{message && <p className="account-message" role="status">{message}</p>}
     {!account && !error && <p role="status">Comprobando tu sesión…</p>}
     {!account && error && <button className="button secondary" onClick={() => { setError(""); void refreshAccount().catch(e => setError(e.message)); }}>Volver a intentar</button>}

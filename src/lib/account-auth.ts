@@ -1,7 +1,11 @@
 import { cookies } from "next/headers";
 import { verifyCoachToken } from "./coach-session";
 
-type AuthUser = { id: string; email?: string; role?: "coach" | "player"; user_metadata?: { position?: string } };
+type AuthUser = { id: string; email?: string; role?: "coach" | "player" | "visitor"; app_metadata?: { role?: string }; user_metadata?: { position?: string } };
+export function accountIdentity(user: AuthUser): AuthUser {
+  // Only server-managed app_metadata can grant the visitor role.
+  return { ...user, role: user.app_metadata?.role === "visitor" ? "visitor" : "player" };
+}
 export type Session = { access_token: string; refresh_token: string; expires_in: number; user: AuthUser };
 export const accountCookieOptions = () => ({ httpOnly: true, secure: process.env.RENDER === "true" || process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/" });
 export class AccountError extends Error {
@@ -31,7 +35,7 @@ export async function currentAccount(): Promise<AuthUser | null> {
   if (await verifyCoachToken(jar.get("fito-coach")?.value)) return { id: "coach", email: "fitoraya", role: "coach" };
   if (token) {
     const response = await authRequest("user", undefined, token);
-    if (response.ok) return response.json();
+    if (response.ok) return accountIdentity(await response.json());
     if (response.status !== 401 && response.status !== 403) throw new AccountError("No se pudo comprobar tu sesión. Inténtalo de nuevo.", 503);
   }
   const refresh = jar.get("fito-refresh")?.value;
@@ -41,7 +45,7 @@ export async function currentAccount(): Promise<AuthUser | null> {
     if (response.status >= 500) throw new AccountError("No se pudo renovar tu sesión.", 503);
     await clearSession(); return null;
   }
-  const session: Session = await response.json(); await saveSession(session); return session.user;
+  const session: Session = await response.json(); await saveSession(session); return accountIdentity(session.user);
 }
 export function requireSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
