@@ -7,6 +7,10 @@ export async function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   // Overwrite client-supplied values; this flag only controls the access layout.
   headers.set("x-fito-access-page", path === "/acceso" ? "1" : "0");
+  // Public brand assets must be readable by Next's image optimizer, which
+  // fetches source files without forwarding the visitor's session cookies.
+  const brandAsset = /^\/(?:team-logos|sponsors)\/[^/]+\.(?:png|jpe?g|webp|svg)$/i.test(path) || path === "/equipacion.png";
+  if (brandAsset) return NextResponse.next({ request: { headers } });
   if (path === "/acceso" || path === "/api/account" || path === "/api/account/roster" || path === "/api/health") return NextResponse.next({ request: { headers } });
   let session: Session | undefined;
   try {
@@ -56,6 +60,6 @@ export async function proxy(request: NextRequest) {
   }
 }
 export const config = {
-  // Only the assets used by the access page can load without going through Auth.
+  // Access-page assets skip the proxy; other public brand files are allowed above.
   matcher: ["/((?!_next/static/|_next/image|favicon.ico|icon.svg|logo-fito.png).*)"],
 };
