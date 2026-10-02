@@ -73,6 +73,9 @@ export async function getSnpMatch(id: string, force = false) {
 }
 export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:string, force=false) {
   validId(id); if(teamId)validId(teamId); if(requestedGroup)validId(requestedGroup);
+  // Mi perfil has only the linked player ID. Use the same roster context as
+  // the team view, because SNP's zonal rank is supplied by the roster endpoint.
+  teamId ??= Object.entries(snapshotTeams).find(([, team]) => team.players.some(player => player.id === id))?.[0];
   const team = teamId ? await getSnpTeam(teamId) : undefined;
   const known = team?.data.players.find(p=>p.id===id) || Object.values(snapshotTeams).flatMap(t=>t.players).find(p=>p.id===id);
   const fallback:SnpPlayerProfile|undefined = known ? {...known,groups:[],group:"",stats:[],previousStats:[],statsError:"Conecta SNP para consultar el historial deportivo."} : undefined;
