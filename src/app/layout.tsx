@@ -10,7 +10,10 @@ export const metadata: Metadata = {
   },
   description:
     "Los equipos de Escuela Fito Raya. Plantillas, jornadas y laboratorio de alineaciones SNP.",
-  icons: { icon: "/icon.svg" },
+  icons: {
+    icon: { url: "/logo-fito.png", type: "image/png" },
+    apple: "/logo-fito.png",
+  },
 };
 export default async function RootLayout({
   children,
