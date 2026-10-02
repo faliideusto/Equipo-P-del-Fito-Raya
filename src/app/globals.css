@@ -2551,3 +2551,11 @@ a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);bo
 .logout-button { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; padding: 9px 12px; font-size: 13px; }
 .session-actions [role="alert"] { color: #b42318; font-size: 12px; }
 @media (max-width: 640px) { .topbar-account { margin-left: auto; } .topbar-account .season { display: none; } }
+
+.password-field { display: grid; gap: 9px; }
+.password-input { position: relative; }
+.account-form .password-input input { padding-right: 58px; }
+.password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: #486b96; cursor: pointer; }
+.password-toggle:hover { color: #1267d5; background: #e7effc; }
+.password-toggle:focus-visible { outline: 2px solid #1267d5; outline-offset: -2px; }
+.password-toggle:disabled { cursor: default; opacity: .5; }
