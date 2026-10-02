@@ -3,7 +3,7 @@ import type { Player, Position, TeamId } from "@/domain/types";
 import { players as savedPlayers } from "./snp-snapshot";
 import { snapshotTeams } from "./snp-explorer-snapshot";
 
-export const sharedPlayerIds = ["249269", "368448", "371555"] as const;
+export const sharedPlayerIds = ["249269", "368448", "371555", "405856"] as const;
 export const additionalPlayers: (SnpPlayer & { teams: TeamId[] })[] = [
   { id: "249372", name: "DANIEL SANCHEZ GOMEZ", points: 20312.5, photoUrl: null, nationalRank: null, zoneRank: null, teams: ["a"] },
   { id: "354270", name: "RUBEN RAMIREZ DOMINGUEZ", points: 44062.5, photoUrl: null, nationalRank: null, zoneRank: null, teams: ["a", "b"] },
@@ -12,14 +12,23 @@ export function clubRoster(teamId: TeamId, own: SnpPlayer[], reserves: SnpPlayer
   const entries = new Map(own.map(player => [player.id, player]));
   for (const player of additions) if (!entries.has(player.id)) entries.set(player.id, player);
   const reserveEntries = new Map((snapshotTeams["803902"]?.players ?? []).map(player => [player.id, player]));
+  // Shared players can move their SNP registration between teams. Retain a
+  // fallback from either previous roster while the current B data is loading.
+  for (const player of Object.values(snapshotTeams).flatMap(team => team.players)) {
+    if (sharedPlayerIds.some(id => id === player.id) && !reserveEntries.has(player.id)) reserveEntries.set(player.id, player);
+  }
   for (const player of reserves) reserveEntries.set(player.id, player);
+  if (teamId === "b") for (const player of reserveEntries.values()) {
+    if (sharedPlayerIds.some(id => id === player.id) && !entries.has(player.id)) entries.set(player.id, player);
+  }
   if (teamId === "a") for (const player of reserveEntries.values()) {
     if (sharedPlayerIds.some(id => id === player.id) && !entries.has(player.id)) entries.set(player.id, player);
   }
   return [...entries.values()].map(p => {
     const shared = sharedPlayerIds.some(id => id === p.id) || p.id === "354270";
     const origin = shared ? "b" : teamId;
-    const previous = savedPlayers.find(old => old.teamId === origin && (old.sourceId || old.id.replace(/^[ab]-/, "")) === p.id);
+    const previous = savedPlayers.find(old => old.teamId === origin && (old.sourceId || old.id.replace(/^[ab]-/, "")) === p.id)
+      ?? (shared ? savedPlayers.find(old => (old.sourceId || old.id.replace(/^[ab]-/, "")) === p.id) : undefined);
     const playerId = previous?.id ?? `${origin}-${p.id}`;
     return { id: playerId, sourceId: p.id, sourceTeamId: origin === "a" ? "7778" : "803902", name: p.name, teamId, points: p.points, position: Object.hasOwn(positions, playerId) ? positions[playerId] : registered[p.id] ?? previous?.position ?? null, photoUrl: p.photoUrl };
   }).sort((a, b) => b.points - a.points);

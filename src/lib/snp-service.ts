@@ -10,6 +10,7 @@ import { load } from "cheerio";
 import { fixtures as savedFixtures,players as savedPlayers,teams as clubTeams } from "@/data/snp-snapshot";
 import { fixtureScore } from "@/domain/rules";
 import type { SnpMatch } from "@/domain/snp";
+import { sharedPlayerIds } from "@/data/club-roster";
 type Query = Partial<SnpCompetition["filters"]>;
 function options(value: unknown): SnpOption[] {
   if (!value || typeof value !== "object") throw new Error("SNP ha cambiado el formato de los filtros.");
@@ -75,7 +76,7 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
   validId(id); if(teamId)validId(teamId); if(requestedGroup)validId(requestedGroup);
   // Mi perfil has only the linked player ID. Use the same roster context as
   // the team view, because SNP's zonal rank is supplied by the roster endpoint.
-  teamId ??= Object.entries(snapshotTeams).find(([, team]) => team.players.some(player => player.id === id))?.[0];
+  teamId ??= sharedPlayerIds.some(playerId => playerId === id) ? "803902" : Object.entries(snapshotTeams).find(([, team]) => team.players.some(player => player.id === id))?.[0];
   const team = teamId ? await getSnpTeam(teamId) : undefined;
   const known = team?.data.players.find(p=>p.id===id) || Object.values(snapshotTeams).flatMap(t=>t.players).find(p=>p.id===id);
   const fallback:SnpPlayerProfile|undefined = known ? {...known,groups:[],group:"",stats:[],previousStats:[],statsError:"Conecta SNP para consultar el historial deportivo."} : undefined;
