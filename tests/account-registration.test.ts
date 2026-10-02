@@ -32,8 +32,11 @@ test("registration requires a roster player, shares A/B identity and rolls back 
     await assert.rejects(registerLinkedAccount("test@example.invalid", "fixture-web-only-password", "LEFT", "a", "999999"), /no aparece/);
     assert.ok(!calls.some(call => call.url.includes("/admin/users")));
     calls.length = 0;
-    const session = await registerLinkedAccount("test@example.invalid", "fixture-web-only-password", "LEFT", "a", "381423");
+    const session = await registerLinkedAccount("test@example.invalid", "x", "LEFT", "a", "381423");
     assert.equal(session.user.id, id);
+    const createdPassword = JSON.parse(calls.find(call => call.url.endsWith("/admin/users"))!.body!).password;
+    assert.equal(createdPassword.length, 72);
+    assert.equal(JSON.parse(calls.find(call => call.url.includes("/token?"))!.body!).password, createdPassword);
     const rpc = calls.find(call => call.url.includes("/rpc/"))!;
     assert.equal(JSON.parse(rpc.body!).p_player_id, "381423");
     assert.equal(JSON.parse(rpc.body!).p_snp_user_id, null);

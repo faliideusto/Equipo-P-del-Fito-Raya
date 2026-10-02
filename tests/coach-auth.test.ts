@@ -11,10 +11,10 @@ test("Changing the coach password persists only a hash and invalidates the initi
   };
   try {
     assert.equal(await verifyCoachPassword("initial-test"), true);
-    await changeCoachPassword("new-private-test-password");
+    await changeCoachPassword("x");
     assert.equal(await verifyCoachPassword("initial-test"), false);
-    assert.equal(await verifyCoachPassword("new-private-test-password"), true);
-    assert.ok(!JSON.stringify(saved).includes("new-private-test-password"));
+    assert.equal(await verifyCoachPassword("x"), true);
+    assert.equal(saved && Object.hasOwn(saved, "password"), false);
   } finally {
     globalThis.fetch = previous.fetch;
     for (const [key, value] of Object.entries({ SUPABASE_URL: previous.url, SUPABASE_SECRET_KEY: previous.key, POSITIONS_ADMIN_PASSWORD: previous.password })) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }

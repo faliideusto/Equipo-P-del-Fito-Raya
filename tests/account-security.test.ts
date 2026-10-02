@@ -6,7 +6,7 @@ test("account API rejects foreign origins and invalid registration before talkin
   const request = (body: object, origin = "http://localhost:3000") => new Request("http://localhost:3000/api/account", { method: "POST", headers: { "Content-Type": "application/json", origin }, body: JSON.stringify(body) });
   assert.equal((await POST(request({ action: "signup" }, "https://other.invalid"))).status, 403);
   assert.equal((await POST(request({ action: "signup", email: "member@example.invalid", password: "long-enough-pass", position: "invalid" }))).status, 400);
-  assert.equal((await POST(request({ action: "signup", email: "member@example.invalid", password: "short", position: "LEFT" }))).status, 400);
+  assert.equal((await POST(request({ action: "signup", email: "member@example.invalid", password: "", position: "LEFT" }))).status, 400);
   const proxied = new Request("http://localhost:10000/api/account", { method: "POST", headers: { host: "escuelafitoraya.onrender.com", origin: "https://escuelafitoraya.onrender.com" }, body: JSON.stringify({action:"signup",email:"bad"}) });
   assert.equal((await POST(proxied)).status,400);
 });

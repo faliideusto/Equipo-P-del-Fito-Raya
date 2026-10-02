@@ -2537,3 +2537,9 @@ a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);bo
 .account-form select.roster-select { min-height: 220px; padding: 8px; }
 .roster-select option { padding: 10px 12px; border-radius: 6px; }
 .roster-select option:checked { background: #1267e9; color: white; }
+
+.topbar-account { display: flex; align-items: center; gap: 18px; }
+.session-actions { display: flex; align-items: center; gap: 8px; }
+.logout-button { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; padding: 9px 12px; font-size: 13px; }
+.session-actions [role="alert"] { color: #b42318; font-size: 12px; }
+@media (max-width: 640px) { .topbar-account { margin-left: auto; } .topbar-account .season { display: none; } }

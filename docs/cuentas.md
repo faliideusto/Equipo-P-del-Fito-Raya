@@ -24,6 +24,10 @@ El acceso a todas las páginas y APIs de datos requiere una sesión de jugador v
 
 Los endpoints privados verifican la sesión y obtienen la cuenta del servidor; no confían en IDs de usuario enviados por el cliente. RLS deniega acceso directo a las tablas a clientes anon/authenticated; solo el servidor puede ejecutar la función de vinculación. Se verifican origen, tamaño, posición y límites de intentos. Los límites de registro son por correo de esta web y proceso; para despliegues con varias instancias añadir un limitador compartido.
 
+Las contraseñas de la web solo deben ser no vacías; no hay mínimo de longitud ni requisitos de composición. Para las cuentas nuevas el servidor deriva una credencial de proveedor con SHA-256 y un prefijo fijo (72 caracteres), y Supabase almacena su hash habitual. La contraseña original no se guarda. El inicio de sesión prueba esa representación y, ante credenciales incorrectas, admite la contraseña directa para cuentas anteriores o restablecidas desde Supabase. Esta representación es específica de la web: una cuenta nueva no se autentica directamente en Supabase con la contraseña original. Los formularios mantienen límites de tamaño para acotar las peticiones. El entrenador también puede elegir una contraseña corta; se mantiene su almacenamiento con scrypt.
+
+El botón Cerrar sesión está en la cabecera de todas las páginas privadas, además de Mi perfil y el panel de entrenador. Elimina las cookies y cierra la sesión local de Auth antes de regresar a /acceso.
+
 No hay recuperación de contraseña en la interfaz de esta primera versión; un administrador puede enviar el restablecimiento desde Supabase Auth.
 
 ## Entrenador

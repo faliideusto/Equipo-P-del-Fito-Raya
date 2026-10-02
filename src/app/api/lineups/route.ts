@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const body = JSON.parse(raw);
     if (!await isCoachSession()) return reply({ error: "Inicia sesión como entrenador." }, 401);
     if (body.action === "change-password") {
-      if (typeof body.newPassword !== "string" || body.newPassword.length < 12 || body.newPassword.length > 128 || body.newPassword === body.password) return reply({ error: "Usa una contraseña nueva de entre 12 y 128 caracteres." }, 400);
+      if (typeof body.newPassword !== "string" || body.newPassword.length < 1 || body.newPassword.length > 128) return reply({ error: "Introduce una contraseña nueva." }, 400);
       await changeCoachPassword(body.newPassword);
       await clearSession();
       return reply({ ok: true });

@@ -1,3 +1,4 @@
+import { signInAccount } from "@/lib/account-password";
 import { registerLinkedAccount } from "@/lib/account-registration";
 import { cookies } from "next/headers";
 import { accountBody, accountCookieOptions, accountFailure, accountReply, AccountError, authRequest, clearSession, currentAccount, limitAccountAttempts, saveSession } from "@/lib/account-auth";
@@ -44,14 +45,13 @@ export async function POST(request: Request) {
     if (body.action !== "login" && body.action !== "signup") throw new AccountError("Acción no válida.");
     const { email, password } = credentials(body);
     limitAccountAttempts(`auth:${email}`);
-    if (body.action === "signup" && password.length < 12) throw new AccountError("Usa al menos 12 caracteres para la contraseña de la web.");
     if (body.action === "signup" && !isPosition(body.position)) throw new AccountError("Selecciona tu posición en pista.");
     if (body.action === "signup") {
       const { teamId, playerId } = requireRosterSelection(body.teamId, body.playerId);
       const session = await registerLinkedAccount(email, password, body.position as "LEFT" | "RIGHT" | "BOTH", teamId, playerId);
       await saveSession(session); return accountReply({ ok: true });
     }
-    const response = await authRequest("token?grant_type=password", { email, password });
+    const response = await signInAccount(email, password);
     if (!response.ok) {
       if (response.status === 429) throw new AccountError("Espera unos minutos antes de volver a intentarlo.", 429);
       throw new AccountError(body.action === "login" ? "No se pudo entrar. Comprueba tu correo y contraseña." : "No se pudo crear la cuenta. Comprueba el correo y los requisitos de contraseña.");
