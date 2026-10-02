@@ -4,6 +4,7 @@ const logos: Record<string, string> = {
   CD_PADEL_ARCOS: "/team-logos/padel-arcos.png",
   "REBELIÓN 3K": "/team-logos/rebelion-3k.png",
   "GLOBALPADEL CANDELA": "/team-logos/global-padel.png",
+  "TOP BAL PÁDEL GAME B": "/team-logos/top-bal.jpg",
 };
 
 export function TeamLogo({
@@ -15,7 +16,7 @@ export function TeamLogo({
 }) {
   const source = name.toUpperCase().includes("FITO RAYA")
     ? "/logo-fito.png"
-    : logos[name];
+    : logos[name.trim().replace(/\s+/g, " ").toUpperCase()];
   return (
     <span className={`team-logo ${large ? "team-logo-large" : ""}`}>
       {source ? (
