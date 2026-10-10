@@ -11,6 +11,7 @@ import { fixtures as savedFixtures,players as savedPlayers,teams as clubTeams } 
 import { fixtureScore } from "@/domain/rules";
 import type { SnpMatch } from "@/domain/snp";
 import { sharedPlayerIds } from "@/data/club-roster";
+import { playerWinRates } from "@/domain/player-winrate";
 import { clubMembers, localPlayerId, memberSports } from "./club-members";
 type Query = Partial<SnpCompetition["filters"]>;
 function options(value: unknown): SnpOption[] {
@@ -86,7 +87,7 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
   const team = teamId ? await getSnpTeam(teamId) : undefined;
   const known = team?.data.players.find(p=>p.id===id) || Object.values(snapshotTeams).flatMap(t=>t.players).find(p=>p.id===id);
   const fallback:SnpPlayerProfile|undefined = known ? {...known,groups:[],group:"",stats:[],previousStats:[],statsError:"Conecta SNP para consultar el historial deportivo."} : undefined;
-  return cachedSnp<SnpPlayerProfile>(`player-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
+  return cachedSnp<SnpPlayerProfile>(`player-v2-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
     const html=await snpClient.html(`/ranking/menu_puntuacion/${id}`); const $=load(html);
     const identity=parsePlayerIdentity(html);
     const categories=await snpClient.ajax("ajaxGetCategoriaGrupoByJugador",{idjugador:id},"ranking");
@@ -97,6 +98,14 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
     const ranking=await snpClient.ajax("ajaxGetByJugadorAndGrupo",{idjugador:id,idgrupo:group},"ranking");
     const entity=ranking.entity as Record<string,unknown>|undefined;
     if(!entity) return base;
-    return {...base,points:snpNumber(entity.puntos),nationalRank:entity.orden?String(entity.orden):base.nationalRank,stats:normalizePlayerStats(ranking.datos),previousStats:normalizePlayerStats(ranking.datos_ant)};
+    const profile = {...base,points:snpNumber(entity.puntos),nationalRank:entity.orden?String(entity.orden):base.nationalRank,stats:normalizePlayerStats(ranking.datos),previousStats:normalizePlayerStats(ranking.datos_ant)};
+    try {
+      // The group's selector changes the detailed ranking, but the win rates
+      // cover every group in which the player has competed.
+      const rankings = await Promise.all(groups.map(option => option.id === group ? ranking : snpClient.ajax("ajaxGetByJugadorAndGrupo", {idjugador:id,idgrupo:option.id}, "ranking")));
+      return {...profile, winRates: playerWinRates(rankings.flatMap(row => normalizePlayerStats(row.datos)), rankings.flatMap(row => normalizePlayerStats(row.datos_ant)))};
+    } catch {
+      return {...profile, winRatesError: "No se pudo consultar el winrate de todos los grupos. Se volverá a intentar en la próxima actualización."};
+    }
   },fallback,force);
 }
