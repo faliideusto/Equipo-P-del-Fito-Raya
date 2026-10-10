@@ -91,6 +91,9 @@ Repositorio: https://github.com/faliideusto/Equipo-P-del-Fito-Raya
 
 Despliegue gratuito: [guía de Render](docs/despliegue-render.md). La configuración está en `render.yaml`.
 
+También disponible: [guía de Vercel](docs/despliegue-vercel.md), con configuración
+en `vercel.json`, caché compartida de SNP y almacenamiento del club en Supabase.
+
 GitHub almacena el código; el despliegue de esta aplicación necesita un servidor Node. El workflow de GitHub Actions ejecuta lint, TypeScript, pruebas y compilación sin credenciales ni consultas autenticadas a SNP.
 
 Antes de subir cambios, ejecuta `node scripts/check-repository.mjs`. Comprueba los archivos que entrarían en Git y detecta credenciales configuradas y algunos formatos comunes de claves. No sustituye una revisión manual de los cambios.

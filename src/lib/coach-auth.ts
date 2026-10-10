@@ -18,7 +18,7 @@ async function credentialRequest(value?: Credential): Promise<Credential | null>
     if (!response.ok) throw new Error("No se pudo consultar la contraseña del entrenador. Ejecuta el SQL de coach_credentials en Supabase.");
     return value ?? (await response.json())[0] ?? null;
   }
-  if (process.env.RENDER === "true" || url || key) throw new Error("Configura Supabase para conservar la contraseña.");
+  if (process.env.RENDER === "true" || process.env.VERCEL === "1" || url || key) throw new Error("Configura Supabase para conservar la contraseña.");
   if (value) { await mkdir(".club-private", { recursive: true }); const temp = `${file}.${randomBytes(8).toString("hex")}.tmp`; await writeFile(temp, JSON.stringify(value), { mode: 0o600 }); await rename(temp, file); return value; }
   try { return JSON.parse(await readFile(file, "utf8")); } catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return null; throw e; }
 }

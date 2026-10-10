@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (raw.length > 16000) return reply({ error: "Petición demasiado grande." }, 413);
     const body = JSON.parse(raw);
     if (!await isCoachSession()) return reply({ error: "Inicia sesión como entrenador." }, 401);
-    if (!hasPersistentPositions()) return reply({ error: "Configura Supabase para que las posiciones se conserven en Render gratuito." }, 503);
+    if (!hasPersistentPositions()) return reply({ error: "Configura Supabase para conservar las posiciones." }, 503);
     if (body.action === "unlock") return reply({ ok: true });
     if (body.action !== "save" || !["a", "b"].includes(body.teamId) || !Array.isArray(body.positions) || body.positions.length > 40) return reply({ error: "Datos no válidos." }, 400);
     const players = await clubRepository.getPlayers(body.teamId);

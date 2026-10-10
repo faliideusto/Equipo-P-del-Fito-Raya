@@ -15,7 +15,7 @@ export async function mvpAwards(award?: MvpAward, removal?: { team_id: TeamId; m
     if (!response.ok) throw new Error("No se pudo consultar MVP. Comprueba que se haya creado la tabla monthly_mvp en Supabase.");
     return award || removal ? mvpAwards() : response.json();
   }
-  if (process.env.RENDER === "true" || url || key) throw new Error("Configura Supabase para conservar los MVP.");
+  if (process.env.RENDER === "true" || process.env.VERCEL === "1" || url || key) throw new Error("Configura Supabase para conservar los MVP.");
   const file = ".club-private/mvp.json";
   async function read(): Promise<MvpAward[]> { try { return JSON.parse(await readFile(file, "utf8")); } catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return []; throw e; } }
   if (award || removal) { const target = award ?? removal!; const operation = pending.then(async () => { const rows = (await read()).filter(row => row.team_id !== target.team_id || row.month !== target.month); if (award) rows.push(award); await mkdir(".club-private", { recursive: true }); const tmp = `${file}.${randomUUID()}.tmp`; await writeFile(tmp, JSON.stringify(rows), { mode: 0o600 }); await rename(tmp, file); }); pending = operation.catch(() => {}); await operation; }

@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
       }
     }
     if (!valid) {
-      const protocol = process.env.RENDER === "true" ? "https:" : request.nextUrl.protocol;
+      const protocol = process.env.RENDER === "true" || process.env.VERCEL === "1" ? "https:" : request.nextUrl.protocol;
       const destination = new URL("/acceso", `${protocol}//${request.headers.get("host") ?? request.nextUrl.host}`);
       destination.searchParams.set("next", path + request.nextUrl.search);
       const response = path.startsWith("/api/")

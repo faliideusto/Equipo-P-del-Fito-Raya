@@ -15,7 +15,7 @@ export async function lineups(team: TeamId, action: "list" | "save" | "delete", 
     if (!response.ok) throw new Error("No se pudo acceder a las alineaciones. Comprueba que se haya creado la tabla saved_lineups en Supabase.");
     return action === "list" ? response.json() : lineups(team, "list");
   }
-  if (process.env.RENDER === "true" || url || key) throw new Error("Configura Supabase para conservar las alineaciones.");
+  if (process.env.RENDER === "true" || process.env.VERCEL === "1" || url || key) throw new Error("Configura Supabase para conservar las alineaciones.");
   const file = ".club-private/lineups.json";
   async function read(): Promise<SavedLineup[]> { try { return JSON.parse(await readFile(file, "utf8")); } catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return []; throw e; } }
   if (action !== "list") {

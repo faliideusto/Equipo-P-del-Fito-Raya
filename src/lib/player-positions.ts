@@ -7,7 +7,7 @@ type Positions = Record<string, Position | null>;
 const file = () => path.resolve(process.env.PLAYER_POSITIONS_FILE || ".club-private/positions.json");
 let pending: Promise<void> = Promise.resolve();
 export function hasPersistentPositions() {
-  return process.env.RENDER !== "true" || Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY);
+  return (process.env.RENDER !== "true" && process.env.VERCEL !== "1") || Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY);
 }
 function database() {
   const url = process.env.SUPABASE_URL;
@@ -40,7 +40,7 @@ export async function readPositions(): Promise<Positions> {
   catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return {}; throw error; }
 }
 export async function savePositions(updates: Positions): Promise<void> {
-  if (!hasPersistentPositions()) throw new Error("Configura Supabase para conservar las posiciones en Render gratuito.");
+  if (!hasPersistentPositions()) throw new Error("Configura Supabase para conservar las posiciones en el alojamiento.");
   if (database()) { await databaseRequest("POST", updates); return; }
   const operation = pending.then(async () => {
     const next = { ...await readPositions(), ...updates };

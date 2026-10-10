@@ -53,3 +53,17 @@ test("usa Supabase desde el servidor y bloquea el disco efímero de Render", asy
     }
   }
 });
+
+test("Vercel requires Supabase before saving club positions", async () => {
+  const previous = { VERCEL: process.env.VERCEL, SUPABASE_URL: process.env.SUPABASE_URL, SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY };
+  try {
+    process.env.VERCEL = "1";
+    delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY;
+    assert.equal(hasPersistentPositions(), false);
+    await assert.rejects(savePositions({ "a-1": "LEFT" }), /Supabase/);
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
