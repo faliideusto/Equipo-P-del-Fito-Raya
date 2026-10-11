@@ -26,3 +26,9 @@ export function cellsToSets(cells: string[][]): unknown {
     return [ours.trim() ? Number(ours) : NaN, theirs.trim() ? Number(theirs) : NaN];
   });
 }
+// A third set is not allowed once the first two have a winner: lock it and ignore its input.
+export function visibleCells(cells: string[][]): { cells: string[][]; thirdLocked: boolean } {
+  const thirdLocked = checkSets(cellsToSets([cells[0], cells[1], ["", ""]])).ok;
+  return { cells: thirdLocked ? [cells[0], cells[1], ["", ""]] : cells, thirdLocked };
+}
+export const setsToCells = (sets: SetScore[]): string[][] => [0, 1, 2].map(i => sets[i] ? sets[i].map(String) : ["", ""]);

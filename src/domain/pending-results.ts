@@ -1,6 +1,7 @@
 import type { Fixture, TeamId } from "./types";
 import type { SnpMatch, SnpMatchPlayer } from "./snp";
-export const RESULT_DELAY_MS = 2 * 3600 * 1000;
+// One hour after the start: a quick match can be over in under an hour.
+export const RESULT_DELAY_MS = 3600 * 1000;
 // The reminder changes about once a week: avoid a full server check on every navigation.
 export const PENDING_REFRESH_MS = 5 * 60 * 1000;
 export const dueForCheck = (lastCheck: number | null, now: number) => lastCheck === null || now - lastCheck >= PENDING_REFRESH_MS;
@@ -13,11 +14,11 @@ export function fixtureStart(date: string): number | null {
   const time = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T23:59:59Z` : date);
   return Number.isNaN(time) ? null : time;
 }
-export function lastPlayedFixture(fixtures: Fixture[], now: number): Fixture | null {
+export function lastPlayedFixture(fixtures: Fixture[], now: number, delay = RESULT_DELAY_MS): Fixture | null {
   let best: { fixture: Fixture; start: number } | null = null;
   for (const fixture of fixtures) {
     const start = fixtureStart(fixture.date);
-    if (start === null || start + RESULT_DELAY_MS > now) continue;
+    if (start === null || start + delay > now) continue;
     if (!best || start > best.start || (start === best.start && fixture.round > best.fixture.round)) best = { fixture, start };
   }
   return best?.fixture ?? null;

@@ -59,3 +59,13 @@ export async function deleteResult(fixtureId: string, teamId: TeamId, pairIndex:
   await updateFile<MatchResultRow>(RESULTS_FILE, rows => rows.filter(r => !sameKey(r, { fixture_id: fixtureId, team_id: teamId, pair_index: pairIndex })));
   await updateFile<MatchAbsenceRow>(ABSENCES_FILE, rows => rows.filter(r => !(r.fixture_id === fixtureId && r.reason === "already_reported" && r.pair_index === pairIndex)));
 }
+// Edit = delete + insert with the existing grants (no UPDATE). Unlike deleteResult,
+// partner confirmations stay: the pair still has a result.
+export async function replaceResult(row: MatchResultRow) {
+  if (supabase()) {
+    await rest("match_results", "DELETE", { fixture_id: `eq.${row.fixture_id}`, team_id: `eq.${row.team_id}`, pair_index: `eq.${row.pair_index}` });
+    await rest("match_results", "POST", {}, row);
+    return;
+  }
+  await updateFile<MatchResultRow>(RESULTS_FILE, rows => [...rows.filter(r => !sameKey(r, row)), row]);
+}

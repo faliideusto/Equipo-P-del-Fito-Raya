@@ -31,3 +31,9 @@ test("el cuadrante distingue celdas vacías de un lado sin rellenar", () => {
   assert.equal(half.ok, false);
   assert.match((half as { error: string }).error, /set 1/i);
 });
+test("el set 3 se bloquea y se ignora cuando los dos primeros dan ganador", async () => {
+  const { visibleCells } = await import("../src/domain/match-result");
+  assert.deepEqual(visibleCells([["6", "4"], ["6", "3"], ["2", "6"]]), { cells: [["6", "4"], ["6", "3"], ["", ""]], thirdLocked: true });
+  assert.deepEqual(visibleCells([["6", "4"], ["3", "6"], ["7", "5"]]), { cells: [["6", "4"], ["3", "6"], ["7", "5"]], thirdLocked: false });
+  assert.equal(visibleCells([["6", ""], ["6", "3"], ["", ""]]).thirdLocked, false);
+});

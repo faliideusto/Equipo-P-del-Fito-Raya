@@ -2,8 +2,8 @@ import { accountBody, accountFailure, accountReply, AccountError, currentAccount
 import { playerLink } from "@/lib/account-profile";
 import { isCoachSession } from "@/lib/coach-session";
 import { checkSets } from "@/domain/match-result";
-import { coachResults, pendingResults, resolvePair } from "@/lib/pending-results-service";
-import { deleteResult, DuplicateResultError, listResults, saveAbsence, saveResult } from "@/lib/match-results";
+import { coachResults, myFixtureResult, pendingResults, resolvePair } from "@/lib/pending-results-service";
+import { deleteResult, DuplicateResultError, listResults, replaceResult, saveAbsence, saveResult } from "@/lib/match-results";
 import type { TeamId } from "@/domain/types";
 export const runtime = "nodejs";
 const isTeam = (value: unknown): value is TeamId => value === "a" || value === "b";
@@ -21,8 +21,17 @@ export async function POST(request: Request) {
     if (!user) throw new AccountError("Inicia sesión para registrar resultados.", 401);
     if (user.role === "coach" || user.role === "visitor") throw new AccountError("Solo los jugadores registran resultados.", 403);
     limitAccountAttempts(`result:${user.id}`);
-    if (!isTeam(body.teamId) || !isFixture(body.fixtureId) || !["result", "absent", "confirm"].includes(String(body.action))) throw new AccountError("Petición no válida.");
+    if (!isTeam(body.teamId) || !isFixture(body.fixtureId) || !["result", "absent", "confirm", "edit"].includes(String(body.action))) throw new AccountError("Petición no válida.");
     const link = await playerLink(user.id); if (!link) throw new AccountError("Vincula primero tu ficha SNP.");
+    if (body.action === "edit") {
+      const mine = await myFixtureResult(user.id, link.player_id, body.teamId, body.fixtureId);
+      if (!mine || mine.pairIndex !== body.pairIndex) throw new AccountError("No tienes un resultado de esta pareja para modificar.", 403);
+      if (!mine.editable) throw new AccountError("SNP ya ha publicado este partido: el resultado ya no se puede modificar.", 409);
+      const check = checkSets(body.sets);
+      if (!check.ok) throw new AccountError(check.error);
+      await replaceResult({ fixture_id: body.fixtureId, team_id: body.teamId, pair_index: mine.pairIndex, sets: check.sets, player_id: link.player_id, submitted_by: user.id, created_at: new Date().toISOString() });
+      return accountReply({ ok: true, result: await myFixtureResult(user.id, link.player_id, body.teamId, body.fixtureId) });
+    }
     const pending = (await pendingResults(user.id, link.player_id)).find(p => p.fixtureId === body.fixtureId && p.teamId === body.teamId);
     if (!pending) throw new AccountError("Esta jornada ya no tiene resultado pendiente.", 409);
     const now = new Date().toISOString();

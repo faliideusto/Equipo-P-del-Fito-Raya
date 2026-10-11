@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+  ArrowUpRight,
+  CalendarCheck,
   ClipboardList,
   HeartHandshake,
   House,
@@ -16,6 +18,7 @@ import {
 import { useEffect, useState } from "react";
 import { SnpStatus } from "./snp-status";
 import { LogoutButton } from "./logout-button";
+import { RefreshDataButton } from "./refresh-data-button";
 
 type Item = { href: string; label: string; icon: typeof House; detail?: string; match: (path: string) => boolean };
 const teamItems: Item[] = (["a", "b"] as const).map((id) => ({
@@ -49,7 +52,13 @@ function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string;
 export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [latestHref, setLatestHref] = useState<string | null>(null);
   const close = () => setOpen(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/fixtures/latest", { signal: controller.signal, cache: "no-store" }).then(r => r.ok ? r.json() : null).then(data => { if (typeof data?.href === "string") setLatestHref(data.href); }).catch(() => {});
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
@@ -59,17 +68,18 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
   const bottomItems = [home, ...teamItems, clubItems[0]];
   return (
     <>
-      <div className="mobile-header">
+      <div className="mobile-header" style={{ viewTransitionName: "app-mobile-header" }}>
         <Link href="/" className="mobile-brand" onClick={close}>
           <Image src="/logo-fito.png" alt="" width={36} height={36} />
           <span>Fito Raya</span>
         </Link>
+        <div className="mobile-header-actions"><RefreshDataButton />
         <button className="mobile-menu" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="main-sidebar" aria-label={open ? "Cerrar menú" : "Abrir menú"}>
           {open ? <X size={20} /> : <Menu size={20} />}
           <span>Menú</span>
-        </button>
+        </button></div>
       </div>
-      <aside id="main-sidebar" className={`sidebar ${open ? "open" : ""}`}>
+      <aside id="main-sidebar" className={`sidebar ${open ? "open" : ""}`} style={{ viewTransitionName: "app-sidebar" }}>
         <Link href="/" className="brand" onClick={close}>
           <Image src="/logo-fito.png" alt="Fito Raya Escuela de Pádel" width={48} height={48} priority />
           <span>
@@ -81,6 +91,8 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
           <div className="nav-group">
             <div className="nav-caption">Nuestros equipos</div>
             {teamItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} onNavigate={close} />)}
+            {/* A shortcut, not a section: styled apart and never marked as the current page. */}
+            <Link className="nav-shortcut" href={latestHref ?? "/ultima-jornada"} onClick={close}><CalendarCheck size={18} /><span>Última jornada</span><ArrowUpRight size={16} className="nav-shortcut-arrow" /></Link>
           </div>
           <div className="nav-group">
             <div className="nav-caption">Club</div>
@@ -99,7 +111,7 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
         </div>
       </aside>
       {open && <button className="nav-backdrop" aria-label="Cerrar menú" onClick={close} />}
-      <nav className="bottom-nav" aria-label="Accesos rápidos">
+      <nav className="bottom-nav" aria-label="Accesos rápidos" style={{ viewTransitionName: "app-bottom-nav" }}>
         {bottomItems.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;

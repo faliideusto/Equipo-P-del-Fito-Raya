@@ -61,5 +61,5 @@ export async function proxy(request: NextRequest) {
 }
 export const config = {
   // Access-page assets skip the proxy; other public brand files are allowed above.
-  matcher: ["/((?!_next/static/|_next/image|favicon.ico|icon.svg|logo-fito.png).*)"],
+  matcher: ["/((?!_next/static/|_next/image|favicon.ico|apple-touch-icon(?:-precomposed)?.png|icon.svg|logo-fito.png).*)"],
 };

@@ -16,7 +16,7 @@ Que cada jugador con cuenta registre el resultado de su partido en la última jo
 | Saber si jugó | Acta SNP (la convocatoria es obligatoria antes del partido). Respaldo: botón «No jugué». |
 | Datos del formulario | Número de pareja (1–5) y cuadrante de 3 sets. Sin compañero ni rivales. |
 | Pareja | Fijada y no editable si el acta tiene al usuario convocado; selector libre si no. |
-| Jornada | Solo la última del equipo, a partir de 2 h después de la hora de inicio. |
+| Jornada | Solo la última del equipo, a partir de 1 h después de la hora de inicio (un partido rápido puede acabar en menos de una hora). |
 | Edición | No editable en v1; el entrenador puede borrar para que se vuelva a pedir. |
 | Repetición del pop-up | Una vez por jornada y dispositivo; después solo el chip de la esquina. |
 
@@ -26,7 +26,7 @@ Solo para cuentas `player` con ficha vinculada (`playerLink`). Entrenador, visit
 
 Para cada equipo del club (`a`, `b`) en cuya plantilla está el `player_id` del usuario (puede estar en los dos):
 
-1. **Última jornada:** del calendario del equipo (mismo origen que `team-schedule`), el último partido en el que juega ese equipo y cuya `date + 2 h <= ahora`. Si no hay fecha o no existe, no hay pendiente.
+1. **Última jornada:** del calendario del equipo (mismo origen que `team-schedule`), el último partido en el que juega ese equipo y cuya `date + 1 h <= ahora`. Si no hay fecha o no existe, no hay pendiente.
 2. **Acta SNP** (`getSnpMatch(fixture.id)`), identificando el lado propio con `teamIds`:
    - El usuario aparece en un partido **con sets** → resuelto por SNP.
    - Hay alineación (algún partido con jugadores propios) y **el usuario no aparece** → no jugó.
@@ -114,7 +114,7 @@ create table if not exists public.match_absences (
 ## 5. Pruebas
 
 - `tests/match-result.test.ts`: validación de sets (válidos, inválidos, tercer set vacío u obligatorio, súper tie-break).
-- `tests/pending-results.test.ts`: lógica de detección como función pura con calendario, acta y datos de la app simulados. Cubre cada rama de la sección 1, el margen de 2 h y el jugador compartido A/B.
+- `tests/pending-results.test.ts`: lógica de detección como función pura con calendario, acta y datos de la app simulados. Cubre cada rama de la sección 1, el margen de 1 h y el jugador compartido A/B.
 - Parser: test con el HTML de un acta convocada sin sets.
 - Se ejecutan `pnpm test`, `pnpm lint`, `pnpm typecheck` y `pnpm build`, y se prueba manualmente en la app (pop-up, chip, guardado y panel del entrenador).
 
