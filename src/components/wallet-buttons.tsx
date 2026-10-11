@@ -15,7 +15,9 @@ export function WalletButtons() {
   if (!state || !state.teams.length || !state.platforms.length) return null;
   return <section className="panel wallet-panel">
     <div className="panel-heading"><h2><Wallet size={18} aria-hidden/> Tarjeta del equipo</h2></div>
-    <p className="data-note">Añádela a tu móvil: verás el próximo partido, tu convocatoria, el último resultado y tus puntos SNP, y te avisará cuando el entrenador publique novedades.</p>
-    <div className="wallet-buttons">{state.teams.flatMap(teamId => state.platforms.map(platform => <a key={`${teamId}-${platform}`} className="button secondary" href={`/api/wallet/${platform}?team=${teamId}`}>{platform === "apple" ? "Añadir a Apple Wallet" : "Guardar en Google Wallet"}{state.teams.length > 1 ? ` · Equipo ${teamId.toUpperCase()}` : ""}</a>))}</div>
+    <div className="wallet-body">
+      <p className="data-note">Añádela a tu móvil: verás el próximo partido, tu convocatoria, el último resultado y tus puntos SNP, y te avisará cuando el entrenador publique novedades.</p>
+      <div className="wallet-buttons">{state.teams.flatMap(teamId => state.platforms.map(platform => <a key={`${teamId}-${platform}`} className="button secondary" href={`/api/wallet/${platform}?team=${teamId}`}>{platform === "apple" ? "Añadir a Apple Wallet" : "Guardar en Google Wallet"}{state.teams.length > 1 ? ` · Equipo ${teamId.toUpperCase()}` : ""}</a>))}</div>
+    </div>
   </section>;
 }
