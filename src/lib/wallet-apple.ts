@@ -6,7 +6,7 @@ import type { AppleConfig } from "./wallet-config";
 import { renderStrip } from "./wallet-strip";
 export type ApplePassMeta = { serial: string; authToken: string; baseUrl: string; passTypeId: string; teamIdentifier: string };
 type Field = { key: string; label: string; value: string; changeMessage?: string };
-// Store card, for its tall strip (375x144 pt): player and points on top, the match and the lineup drawn in the strip image (wallet-strip.tsx).
+// Event ticket: player and points on top, the match and the lineup drawn in the strip image (wallet-strip.tsx).
 // No front fields under the strip repeat them; the back keeps both as text.
 // Apple notifies on a field whose value changed only when it has a changeMessage, back fields included.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
@@ -23,7 +23,7 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
     authenticationToken: meta.authToken, webServiceURL: `${meta.baseUrl}/api/wallet/apple`,
     organizationName: "Escuela Fito Raya", description: `Tarjeta Fito Raya · ${card.teamLabel}`, logoText: card.playerName,
     backgroundColor: "rgb(76, 29, 149)", foregroundColor: "rgb(255, 255, 255)", labelColor: "rgb(255, 227, 241)",
-    storeCard: {
+    eventTicket: {
       headerFields: [{ key: "points", label: "PUNTOS SNP", value: card.snpPoints }],
       backFields: back,
     },
