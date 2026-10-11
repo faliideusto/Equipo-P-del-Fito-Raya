@@ -88,7 +88,7 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
   const team = teamId ? await getSnpTeam(teamId) : undefined;
   const known = team?.data.players.find(p=>p.id===id) || Object.values(snapshotTeams).flatMap(t=>t.players).find(p=>p.id===id);
   const fallback:SnpPlayerProfile|undefined = known ? {...known,groups:[],group:"",stats:[],previousStats:[],statsError:"Conecta SNP para consultar el historial deportivo."} : undefined;
-  return cachedSnp<SnpPlayerProfile>(`player-v2-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
+  return cachedSnp<SnpPlayerProfile>(`player-v3-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
     const html=await snpClient.html(`/ranking/menu_puntuacion/${id}`); const $=load(html);
     const identity=parsePlayerIdentity(html);
     const categories=await snpClient.ajax("ajaxGetCategoriaGrupoByJugador",{idjugador:id},"ranking");
