@@ -16,8 +16,8 @@ export default async function RosterPage({
   return (
     <>
       <PageHeading
-        eyebrow={`${team.shortName} / ${team.division}`}
-        title="El equipo que suma."
+        eyebrow={`${team.shortName} · ${team.division}`}
+        title="Plantilla"
         text={`${players.length} jugadores · Orden por puntos SNP publicados`}
       />
       <section className="panel">

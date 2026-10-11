@@ -13,10 +13,9 @@ export default async function PairsPage({
   return (
     <>
       <PageHeading
-        eyebrow={`${team.shortName} / ${team.division}`}
-        title="La química también se entrena."
-        text="Prueba parejas. Intercambia jugadores. Encuentra tu alineación."
-        action={<span className="badge blue team-context">{team.name}</span>}
+        eyebrow={`${team.shortName} · Laboratorio`}
+        title="Crear parejas"
+        text="Elige la convocatoria, junta jugadores y mira al momento cuántos puntos SNP suma cada pareja."
       />
       <LineupBuilder key={teamId} players={players} teamId={teamId} />
     </>

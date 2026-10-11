@@ -12,9 +12,9 @@ export default async function StandingsPage({
   return (
     <>
       <PageHeading
-        eyebrow={`${team.shortName} / ${team.division}`}
-        title="Cada punto cuenta."
-        text="Clasificación de liga · Temporada 2026 / 27"
+        eyebrow={`${team.shortName} · ${team.division}`}
+        title="Clasificación"
+        text="Tabla de liga publicada por SNP · Temporada 2026 / 27"
       />
       <section className="panel">
         <div className="panel-heading">

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ArrowUpRight, Trophy, Users, CalendarDays } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
-import { PageHeading, StandingsTable } from "@/components/sports";
-import { TeamSchedule } from "@/components/team-schedule";
-import { fixtureScore } from "@/domain/rules";
+import { NextMatchBoard, ResultRow, StandingsTable } from "@/components/sports";
+import { PlayerAvatar } from "@/components/player-avatar";
+import { formatPoints } from "@/lib/format";
 export default async function TeamPage({
   params,
 }: {
@@ -17,57 +17,69 @@ export default async function TeamPage({
     clubRepository.getStandings(teamId),
     clubRepository.getFixtures(teamId),
   ]);
-  const own = rows.find((r) => r.own)!;
-  const sourceId = teamId === "a" ? "7778" : "803902";
+  const ownIndex = rows.findIndex((r) => r.own);
   const division = teamId === "a" ? "2318" : "2326";
-  const calendar = fixtures.map(f => ({
-    id: f.id, round: f.round, date: f.date,
-    homeId: f.home ? sourceId : "", awayId: f.home ? "" : sourceId,
-    homeName: f.home ? team.name : f.opponent, awayName: f.home ? f.opponent : team.name,
-    score: f.score || (f.status === "played" ? [fixtureScore(f.matches).home, fixtureScore(f.matches).away] as [number, number] : null),
-    state: f.status,
-  }));
+  const sourceTeam = teamId === "a" ? "7778" : "803902";
+  const next = fixtures.find((f) => f.status === "pending");
+  const opponentIndex = next ? rows.findIndex((r) => r.name.trim().toUpperCase() === next.opponent.trim().toUpperCase()) : -1;
+  const played = fixtures.filter((f) => f.status === "played").reverse();
+  const top = players.slice(0, 5);
   return (
     <>
-      <PageHeading
-        eyebrow={`${team.shortName} / ${team.division}`}
-        title={team.name}
-        logoName={team.name}
-        text="Tu equipo, preparado para lo que viene."
-        action={
-          <Link className="button" href={`/equipos/${teamId}/parejas`}>
-            Crear parejas <ArrowUpRight size={18} />
-          </Link>
-        }
-      />
-      <TeamSchedule fixtures={calendar} teamId={sourceId} matchBaseHref={`/equipos/${teamId}/jornadas`}/>
-      <div className="summary-stats">
-        <div>
-          <Trophy />
-          <span>Posición en liga</span>
-          <strong>{rows.indexOf(own) + 1}º</strong>
-        </div>
-        <div>
-          <Users />
-          <span>Jugadores en plantilla</span>
-          <strong>{players.length}</strong>
-        </div>
-        <div>
-          <CalendarDays />
-          <span>Jornadas disputadas</span>
-          <strong>
-            {own.played}
-            <small> en SNP</small>
-          </strong>
+      <h1 className="sr-only">{team.name} · Resumen</h1>
+      {next ? (
+        <NextMatchBoard
+          fixture={next}
+          team={team}
+          standing={ownIndex >= 0 ? { position: ownIndex + 1, points: rows[ownIndex].points } : undefined}
+          opponentStanding={opponentIndex >= 0 ? { position: opponentIndex + 1, points: rows[opponentIndex].points } : undefined}
+        />
+      ) : (
+        <section className="panel empty-state">
+          <h2>No hay encuentros pendientes publicados.</h2>
+          <p>Consulta el calendario completo en Jornadas.</p>
+        </section>
+      )}
+      <div className="overview-grid">
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Clasificación</h2>
+            <Link className="text-link" href={`/equipos/${teamId}/clasificacion`}>Ver completa <ArrowRight size={16} /></Link>
+          </div>
+          <StandingsTable rows={rows} division={division} compact />
+        </section>
+        <div className="overview-side">
+          <section className="panel">
+            <div className="panel-heading">
+              <h2>Resultados</h2>
+              <Link className="text-link" href={`/equipos/${teamId}/jornadas`}>Calendario <ArrowRight size={16} /></Link>
+            </div>
+            {played.length ? (
+              <div className="result-list">{played.slice(0, 3).map((f) => <ResultRow key={f.id} fixture={f} team={team} />)}</div>
+            ) : (
+              <p className="panel-empty">Todavía no hay resultados publicados para este equipo.</p>
+            )}
+          </section>
+          <section className="panel">
+            <div className="panel-heading">
+              <h2>Mejor ranking SNP</h2>
+              <Link className="text-link" href={`/equipos/${teamId}/plantilla`}>{players.length} jugadores <ArrowRight size={16} /></Link>
+            </div>
+            <ol className="top-players">
+              {top.map((player, i) => (
+                <li key={player.id}>
+                  <Link href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${player.sourceTeamId ?? sourceTeam}`}>
+                    <span className="top-rank">{String(i + 1).padStart(2, "0")}</span>
+                    <PlayerAvatar name={player.name} photoUrl={player.photoUrl ?? null} />
+                    <span className="top-name">{player.name}</span>
+                    <span className="top-points">{formatPoints(player.points)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </section>
         </div>
       </div>
-      <div className="section-title">
-        <h2>Así va la liga</h2>
-        <span>{team.division} · SNP</span>
-      </div>
-      <section className="panel">
-        <StandingsTable rows={rows} division={division} />
-      </section>
     </>
   );
 }
