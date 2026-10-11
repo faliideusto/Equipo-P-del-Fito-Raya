@@ -1,6 +1,9 @@
 import { clubRepository, sourceTeams } from "@/data/repository";
 import { getSnpMatch } from "./snp-service";
 import { lastPlayedFixture, pendingFor, readActa, type ActaReading, type PendingResult } from "@/domain/pending-results";
+import { latestStarted } from "@/domain/fixture-navigation";
+import { myResult } from "@/domain/result-edit";
+import type { SetScore } from "@/domain/match-result";
 import { listAbsences, listResults, type MatchResultRow } from "./match-results";
 import type { Fixture, TeamId } from "@/domain/types";
 const TEAMS: TeamId[] = ["a", "b"];
@@ -37,4 +40,23 @@ export async function coachResults(now = Date.now()): Promise<CoachTeamResults[]
     const name = (id: string) => players.find(p => p.sourceId === id)?.name ?? "Jugador";
     return { teamId, fixture: { id: fixture.id, round: fixture.round, opponent: fixture.opponent, date: fixture.date }, results: rows.filter(r => r.team_id === teamId).map(r => ({ ...r, player_name: name(r.player_id) })) };
   }));
+}
+export type MyResult = { fixtureId: string; teamId: TeamId; pairIndex: number; sets: SetScore[]; submittedByName: string; editable: boolean };
+export async function myFixtureResult(userId: string, playerId: string, teamId: TeamId, fixtureId: string): Promise<MyResult | null> {
+  const fixture = (await clubRepository.getFixtures(teamId)).find(f => f.id === fixtureId);
+  if (!fixture) return null;
+  const [rows, absences, acta] = await Promise.all([listResults([fixtureId]), listAbsences(userId), getSnpMatch(fixtureId).catch(() => null)]);
+  const own = rows.filter(r => r.team_id === teamId);
+  const confirmedPair = absences.find(a => a.fixture_id === fixtureId && a.reason === "already_reported")?.pair_index ?? null;
+  const result = myResult({ results: own.map(r => ({ pairIndex: r.pair_index, sets: r.sets, submittedBy: r.submitted_by })), userId, playerId, confirmedPair, acta: acta?.data ?? null, ownSnpTeamId: sourceTeams[teamId], home: fixture.home });
+  if (!result) return null;
+  const row = own.find(r => r.pair_index === result.pairIndex)!;
+  const players = await clubRepository.getPlayers(teamId).catch(() => []);
+  return { fixtureId, teamId, pairIndex: result.pairIndex, sets: result.sets, submittedByName: players.find(p => p.sourceId === row.player_id)?.name ?? "Jugador", editable: result.editable };
+}
+// The user's own team(s); coaches, visitors and players in both teams get the most recent of A and B.
+export async function latestFixtureFor(playerId: string | null, now = Date.now()) {
+  const mine = playerId ? (await Promise.all(TEAMS.map(async team => (await clubRepository.getPlayers(team).catch(() => [])).some(p => p.sourceId === playerId) ? team : null))).filter((t): t is TeamId => t !== null) : [];
+  const teams = mine.length === 1 ? mine : TEAMS;
+  return latestStarted(await Promise.all(teams.map(async teamId => ({ teamId, fixtures: await clubRepository.getFixtures(teamId).catch(() => []) }))), now);
 }
