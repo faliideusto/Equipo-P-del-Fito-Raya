@@ -5,12 +5,20 @@ import { formatPoints } from "@/lib/format";
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { PageHeading } from "@/components/sports";
+import { FifaCard } from "@/components/fifa-card";
+import { SquadCourt } from "@/components/squad-court";
+import { ViewToggle, squadView } from "@/components/view-toggle";
+import { cardPhoto } from "@/data/player-photos";
+import { compactPoints, pointsTier, sideShort } from "@/domain/squad";
 export default async function RosterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ teamId: TeamId }>;
+  searchParams: Promise<{ vista?: string | string[] }>;
 }) {
   const { teamId } = await params;
+  const view = squadView((await searchParams).vista);
   const team = (await clubRepository.getTeam(teamId))!;
   const players = await clubRepository.getPlayers(teamId);
   return (
@@ -23,8 +31,30 @@ export default async function RosterPage({
       <section className="panel">
         <div className="panel-heading">
           <h2>Plantilla & ranking SNP</h2>
-          <span className="badge blue">{team.shortName}</span>
+          <ViewToggle view={view} href={`/equipos/${teamId}/plantilla`} />
         </div>
+        {view === "cartas" ? (
+          <SquadCourt
+            ranked={players}
+            keyOf={(player) => player.id}
+            label={`Plantilla del ${team.shortName} sobre la pista, por puntos SNP`}
+            benchLabel="Ordenados por puntos SNP"
+            card={(player, rank) => (
+              <FifaCard
+                name={player.name}
+                photoUrl={cardPhoto(player)}
+                rating={compactPoints(player.points)}
+                ratingLabel={sideShort(player.position)}
+                tier={pointsTier(player.points)}
+                href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`}
+                stats={[
+                  { label: "RANK", value: player.points === null ? "—" : rank },
+                  { label: "PTS SNP", value: player.points === null ? "—" : Math.round(player.points).toLocaleString("es-ES") },
+                ]}
+              />
+            )}
+          />
+        ) : (
         <div className="roster-list">
           {players.map((player, i) => (
             <Link href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`} className="roster-row" key={player.id}>
@@ -50,6 +80,7 @@ export default async function RosterPage({
             </Link>
           ))}
         </div>
+        )}
       </section>
       <p className="data-note">
         Plantilla y puntos consultados directamente en SNP. Los campos de puntuación vacíos en
