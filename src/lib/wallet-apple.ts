@@ -9,6 +9,9 @@ type Field = { key: string; label: string; value: string; changeMessage?: string
 // Event ticket: player and points on top, the match and the lineup drawn in the strip image (wallet-strip.tsx).
 // No front fields under the strip repeat them; the back keeps both as text.
 // Apple notifies on a field whose value changed only when it has a changeMessage, back fields included.
+// The pink background matches the left end of the strip's gradient.
+// On match day the pass shows on the lock screen: relevantDates (iOS 18+) covers the whole day in Madrid,
+// relevantDate (older iOS) is the start time.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
   const next = card.next; const round = next ? ` ${next.round}` : "";
   const back: Field[] = [
@@ -22,12 +25,13 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
     formatVersion: 1, passTypeIdentifier: meta.passTypeId, teamIdentifier: meta.teamIdentifier, serialNumber: meta.serial,
     authenticationToken: meta.authToken, webServiceURL: `${meta.baseUrl}/api/wallet/apple`,
     organizationName: "Escuela Fito Raya", description: `Tarjeta Fito Raya · ${card.teamLabel}`, logoText: card.playerName,
-    backgroundColor: "rgb(76, 29, 149)", foregroundColor: "rgb(255, 255, 255)", labelColor: "rgb(255, 227, 241)",
+    backgroundColor: "rgb(194, 40, 122)", foregroundColor: "rgb(255, 255, 255)", labelColor: "rgb(255, 227, 241)",
     eventTicket: {
       headerFields: [{ key: "points", label: "PUNTOS SNP", value: card.snpPoints }],
       backFields: back,
     },
     barcodes: [{ format: "PKBarcodeFormatQR", message: `${meta.baseUrl}/mi-perfil`, messageEncoding: "iso-8859-1" }],
+    ...(card.matchDay ? { relevantDate: card.matchDay.at, relevantDates: [{ startDate: card.matchDay.start, endDate: card.matchDay.end }] } : {}),
   };
 }
 // Icon and round logo are fixed; the strip is drawn for each card.

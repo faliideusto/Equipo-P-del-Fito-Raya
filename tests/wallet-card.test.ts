@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildWalletCard, shortDate, walletNotice, type TeamCardContext } from "../src/domain/wallet-card";
+import { buildWalletCard, matchDay, shortDate, walletNotice, type TeamCardContext } from "../src/domain/wallet-card";
 
 const players = [
   { id: "a-1", sourceId: "1", name: "CARLOS MARTIN", position: "LEFT" as const, points: 20312.5 },
@@ -13,7 +13,7 @@ const ctx = (over: Partial<TeamCardContext> = {}): TeamCardContext => ({ teamId:
 test("tarjeta completa de un jugador convocado", () => {
   assert.deepEqual(buildWalletCard(ctx(), "1"), {
     teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés",
-    next: { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: "10:00", venue: "Local" }, nextMatch: "J5 · C.D. VibraPadel · Dom 18/10 10:00 · Local",
+    next: { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: "10:00", venue: "Local" }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · C.D. VibraPadel · Dom 18/10 10:00 · Local",
     lineup: "Convocado J5 · Pareja 2 con Juan Perez", lineupShort: "Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X",
     snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40",
   });
@@ -68,4 +68,11 @@ test("los nombres de club de SNP salen con espacios en lugar de guiones bajos", 
   assert.equal(card.next?.opponent, "CD PADEL ARCOS");
   assert.equal(card.nextMatch, "J5 · CD PADEL ARCOS · Dom 18/10 10:00 · Local");
   assert.equal(card.lastResult, "J4 · Fito Raya A 7–5 CLUB RIVAL X");
+});
+test("día del partido en Madrid, con y sin hora y con cambio de horario", () => {
+  assert.deepEqual(matchDay("2026-10-18T08:00:00.000Z"), { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" });
+  assert.deepEqual(matchDay("2026-11-07"), { start: "2026-11-06T23:00:00.000Z", end: "2026-11-07T23:00:00.000Z", at: "2026-11-06T23:00:00.000Z" });
+  assert.deepEqual(matchDay("2026-10-24T22:30:00.000Z"), { start: "2026-10-24T22:00:00.000Z", end: "2026-10-25T23:00:00.000Z", at: "2026-10-24T22:30:00.000Z" });
+  assert.equal(matchDay(""), null);
+  assert.equal(buildWalletCard(ctx({ next: null }), "1")!.matchDay, null);
 });

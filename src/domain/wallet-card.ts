@@ -7,7 +7,9 @@ export type CardResult = { fixtureId: string; round: number; opponent: string; o
 export type TeamCardContext = { teamId: TeamId; players: CardPlayer[]; next: CardFixture | null; published: { fixtureId: string; pairs: Pair[] } | null; last: CardResult | null };
 // The next fixture split into short pieces: long sentences get cut on the front of a pass.
 export type CardNext = { round: string; opponent: string; day: string; time: string | null; venue: string };
-export type WalletCardData = { teamId: TeamId; playerSourceId: string; teamLabel: string; playerName: string; playerLine: string; next: CardNext | null; nextMatch: string; lineup: string; lineupShort: string; lastResult: string; snpPoints: string; teamPath: string; actaPath: string | null };
+// The whole match day in Madrid (ISO, UTC) and the start time, or the day's start when SNP gives no time.
+export type MatchDay = { start: string; end: string; at: string };
+export type WalletCardData = { teamId: TeamId; playerSourceId: string; teamLabel: string; playerName: string; playerLine: string; next: CardNext | null; matchDay: MatchDay | null; nextMatch: string; lineup: string; lineupShort: string; lastResult: string; snpPoints: string; teamPath: string; actaPath: string | null };
 export type NotifyKind = "lineup" | "result";
 // "Sáb 18/10" and "10:00" in Madrid time; dates without time have no hour.
 function dateParts(date: string): { day: string; time: string | null } | null {
@@ -26,6 +28,18 @@ function cardNext(next: CardFixture | null): CardNext | null {
   if (!next) return null;
   const parts = dateParts(next.date);
   return { round: `J${next.round}`, opponent: teamName(next.opponent), day: parts?.day ?? "Por confirmar", time: parts?.time ?? null, venue: next.home ? "Local" : "Visitante" };
+}
+// Midnight in Madrid of the match's local day: a UTC guess corrected by Madrid's offset that day.
+function madridMidnight(year: number, month: number, day: number): number {
+  const guess = Date.UTC(year, month - 1, day);
+  const wall = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Madrid", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(guess)).map(p => [p.type, Number(p.value)]));
+  return guess - (Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute) - guess);
+}
+export function matchDay(date: string): MatchDay | null {
+  const time = Date.parse(date); if (!date || Number.isNaN(time)) return null;
+  const local = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(time)).map(p => [p.type, Number(p.value)]));
+  const start = madridMidnight(local.year, local.month, local.day), end = madridMidnight(local.year, local.month, local.day + 1);
+  return { start: new Date(start).toISOString(), end: new Date(end).toISOString(), at: new Date(date.includes("T") ? time : start).toISOString() };
 }
 function nextMatch(next: CardFixture | null) {
   return next ? [`J${next.round}`, teamName(next.opponent), shortDate(next.date) ?? "Fecha por confirmar", next.home ? "Local" : "Visitante"].join(" · ") : "Sin partidos programados";
@@ -50,7 +64,7 @@ export function buildWalletCard(ctx: TeamCardContext, sourceId: string): WalletC
   return {
     teamId: ctx.teamId, playerSourceId: sourceId, teamLabel: `Equipo ${team}`, playerName: name,
     playerLine: player.position ? `${name} · ${POSITION_LABELS[player.position]}` : name,
-    next: cardNext(ctx.next), nextMatch: nextMatch(ctx.next), lineup: lineupText, lineupShort,
+    next: cardNext(ctx.next), matchDay: ctx.next ? matchDay(ctx.next.date) : null, nextMatch: nextMatch(ctx.next), lineup: lineupText, lineupShort,
     lastResult: ctx.last ? `J${ctx.last.round} · Fito Raya ${team} ${ctx.last.ours}–${ctx.last.theirs} ${teamName(ctx.last.opponent)}` : "Sin resultados todavía",
     snpPoints: player.points === null ? "—" : Math.round(player.points).toLocaleString("es-ES"),
     teamPath: `/equipos/${ctx.teamId}/jornadas`, actaPath: ctx.last ? `/equipos/${ctx.teamId}/jornadas/${ctx.last.fixtureId}` : null,

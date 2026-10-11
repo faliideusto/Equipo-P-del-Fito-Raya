@@ -6,7 +6,7 @@ import type { WalletCardData } from "../src/domain/wallet-card";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
 const config = { issuerId: "3388", clientEmail: "wallet@fito.iam.gserviceaccount.com", privateKey };
-const card: WalletCardData = { teamId: "b", playerSourceId: "1", teamLabel: "Equipo B", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "No convocado en J5", lineupShort: "No convocado", lastResult: "Sin resultados todavía", snpPoints: "900", teamPath: "/equipos/b/jornadas", actaPath: null };
+const card: WalletCardData = { teamId: "b", playerSourceId: "1", teamLabel: "Equipo B", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local" }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "No convocado en J5", lineupShort: "No convocado", lastResult: "Sin resultados todavía", snpPoints: "900", teamPath: "/equipos/b/jornadas", actaPath: null };
 const meta = { serial: "11111111-1111-4111-8111-111111111111", baseUrl: "https://fito.example.com" };
 const decode = (part: string) => JSON.parse(Buffer.from(part, "base64url").toString());
 
