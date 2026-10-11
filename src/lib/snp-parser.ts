@@ -51,9 +51,10 @@ export function normalizePlayerStats(value: unknown): SnpPlayerStats[] {
   return Object.values(value).flatMap((phase: Row) => {
     if (!phase || typeof phase.J !== "object" || !phase.J) return [];
     const jornadas = Object.entries(phase.J as Record<string,Row>).filter(([,row])=>row && typeof row === "object").sort(([a],[b])=>snpNumber(a)-snpNumber(b)).map(([round,row])=>{
-      const won=["p3p_g2s","p3p_g3s","p2p_g2s","p2p_g3s"].reduce((n,k)=>n+snpNumber(row[k]),0);
-      const lost=["p3p_p2s","p3p_p3s","p2p_p2s","p2p_p3s"].reduce((n,k)=>n+snpNumber(row[k]),0);
-      return {label:round === "retos" || round === "1000" ? "Retos" : `J${round}`,points:row.puntos == null?null:snpNumber(row.puntos),played:snpNumber(row.pd),won,lost,setsWon:snpNumber(row.sg),setsLost:snpNumber(row.sp)};
+      const count=(keys:string[])=>keys.reduce((n,k)=>n+snpNumber(row[k]),0);
+      const won2=count(["p3p_g2s","p2p_g2s"]),won3=count(["p3p_g3s","p2p_g3s"]),lost2=count(["p3p_p2s","p2p_p2s"]),lost3=count(["p3p_p3s","p2p_p3s"]);
+      // SNP does not send set totals per round; they follow from how each match ended (2-0, 2-1, 1-2, 0-2).
+      return {label:round === "retos" || round === "1000" ? "Retos" : `J${round}`,points:row.puntos == null?null:snpNumber(row.puntos),played:snpNumber(row.pd),won:won2+won3,lost:lost2+lost3,setsWon:2*(won2+won3)+lost3,setsLost:2*(lost2+lost3)+won3};
     });
     const sum=(key:"played"|"won"|"lost"|"setsWon"|"setsLost")=>jornadas.reduce((n,j)=>n+j[key],0);
     return [{phase:String(phase.nombre || phase.div || "Fase SNP"),played:sum("played"),won:sum("won"),lost:sum("lost"),setsWon:sum("setsWon"),setsLost:sum("setsLost"),jornadas:jornadas.map(({label,points,played,won,lost})=>({label,points,played,won,lost}))}];

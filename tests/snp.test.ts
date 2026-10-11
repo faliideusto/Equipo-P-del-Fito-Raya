@@ -33,6 +33,10 @@ test("historial ordenado y contadores booleanos de SNP",()=>{
   const stats=normalizePlayerStats({fase:{nombre:"Regular",J:{2:{pd:false,puntos:100},1:{pd:true,p3p_g2s:1,sg:2,sp:0,puntos:2500}}}});
   assert.equal(stats[0].played,1);assert.equal(stats[0].won,1);assert.deepEqual(stats[0].jornadas.map(j=>j.label),["J1","J2"]);
 });
+test("sets ganados y perdidos salen de cómo acabó cada partido",()=>{
+  const [stats]=normalizePlayerStats({fase:{nombre:"Playoff",J:{1:{pd:4,p3p_g2s:1,p3p_g3s:1,p3p_p2s:1,p2p_p3s:1}}}});
+  assert.equal(stats.won,2);assert.equal(stats.lost,2);assert.equal(stats.setsWon,2+2+0+1);assert.equal(stats.setsLost,0+1+2+2);
+});
 test("lee acta L/V con set parcial y conserva IDs de jugadores",()=>{
   const html=`<h4>Enfrentamiento (#55252)</h4><h2>6 - 6</h2><div class="partido_equipo_nombre_new" equipo="1" idequipo1="7778">Fito A</div><div class="partido_equipo_nombre_new" equipo="2" idequipo2="2598">Vibra</div><div class="enf_partido_container"><div class="partido_jug_div" idjugador="368641" idpartido="270263">Daniel - 57229.17</div><div class="partido_jug_div" idjugador="376502">José Luis - 67924.11</div><div class="partido_jug_div" idjugador="317854">Ignacio - 58645.83</div><div class="partido_jug_div" idjugador="317859">Manuel - 52232.14</div><div class="table_partidos"><table><tbody><tr><td>L</td><td class="td_part_res" set="1" eq="1">6</td><td class="td_part_res" set="2" eq="1"></td></tr><tr><td>V</td><td class="td_part_res" set="1" eq="2">2</td><td class="td_part_res" set="2" eq="2"></td></tr></tbody></table></div></div>`;
   const match=parseMatch(html,"55252");assert.deepEqual(match.teamIds,["7778","2598"]);assert.equal(match.games[0].home?.[0].id,"368641");assert.equal(match.games[0].id,"270263");assert.deepEqual(match.games[0].sets,[[6,2]]);assert.deepEqual(match.games[0].homePlayers,["Daniel","José Luis"]);assert.equal(match.games[0].home?.[0].points,57229.17);
