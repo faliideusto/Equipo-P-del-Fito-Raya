@@ -24,6 +24,8 @@ export function notifyKindFor(fixtures: Fixture[], fixtureId: string, now = Date
   if (fixtures.find(f => f.status === "pending")?.id === fixtureId) return "lineup";
   return lastPlayedFixture(fixtures, now)?.id === fixtureId ? "result" : null;
 }
+// Where "Preparar la alineación" leads: whoever can publish goes straight to the builder on the fixture, everyone else to the lab.
+export const lineupHref = (teamId: string, fixtureId: string, canPublish: boolean) => canPublish ? `/equipos/${teamId}/jornadas/${fixtureId}#convocatoria` : `/equipos/${teamId}/parejas`;
 // Published pairs ready to edit again: players who left the roster become free slots.
 export function usablePairs(pairs: Pair[], playerIds: string[]): Pair[] | null {
   if (!Array.isArray(pairs) || pairs.length !== 5) return null;

@@ -4,6 +4,8 @@ import { clubRepository } from "@/data/repository";
 import { NextMatchBoard, ResultRow } from "@/components/sports";
 import { TeamLogo } from "@/components/team-logo";
 import { formatDate, formatTime } from "@/lib/format";
+import { lineupHref } from "@/domain/wallet-ui";
+import { canPublishLineup } from "@/lib/wallet-notify-service";
 export default async function Home() {
   const teams = await clubRepository.getTeams();
   const cards = await Promise.all(
@@ -30,6 +32,7 @@ export default async function Home() {
   );
   const featured = [...cards].filter((c) => c.next).sort((a, b) => (Date.parse(a.next!.date) || Infinity) - (Date.parse(b.next!.date) || Infinity))[0];
   const others = cards.filter((c) => c !== featured && c.next);
+  const canPublish = featured ? await canPublishLineup(featured.team.id) : false;
   const results = cards.flatMap((c) => (c.last ? [{ team: c.team, fixture: c.last }] : []));
   return (
     <>
@@ -45,6 +48,7 @@ export default async function Home() {
         <NextMatchBoard
           fixture={featured.next!}
           team={featured.team}
+          lineupHref={lineupHref(featured.team.id, featured.next!.id, canPublish)}
           standing={featured.own ? { position: featured.position, points: featured.own.points } : undefined}
           opponentStanding={featured.opponent}
         />

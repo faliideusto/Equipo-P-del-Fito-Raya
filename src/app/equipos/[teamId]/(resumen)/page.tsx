@@ -5,6 +5,8 @@ import type { TeamId } from "@/domain/types";
 import { NextMatchBoard, ResultRow, StandingsTable } from "@/components/sports";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { formatPoints } from "@/lib/format";
+import { lineupHref } from "@/domain/wallet-ui";
+import { canPublishLineup } from "@/lib/wallet-notify-service";
 export default async function TeamPage({
   params,
 }: {
@@ -12,10 +14,11 @@ export default async function TeamPage({
 }) {
   const { teamId } = await params;
   const team = (await clubRepository.getTeam(teamId))!;
-  const [players, rows, fixtures] = await Promise.all([
+  const [players, rows, fixtures, canPublish] = await Promise.all([
     clubRepository.getPlayers(teamId),
     clubRepository.getStandings(teamId),
     clubRepository.getFixtures(teamId),
+    canPublishLineup(teamId),
   ]);
   const ownIndex = rows.findIndex((r) => r.own);
   const division = teamId === "a" ? "2318" : "2326";
@@ -31,6 +34,7 @@ export default async function TeamPage({
         <NextMatchBoard
           fixture={next}
           team={team}
+          lineupHref={lineupHref(teamId, next.id, canPublish)}
           standing={ownIndex >= 0 ? { position: ownIndex + 1, points: rows[ownIndex].points } : undefined}
           opponentStanding={opponentIndex >= 0 ? { position: opponentIndex + 1, points: rows[opponentIndex].points } : undefined}
         />

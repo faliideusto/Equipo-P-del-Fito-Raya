@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { notifyKindFor, notifySummaryText, usablePairs, walletPlatforms } from "../src/domain/wallet-ui";
+import { lineupHref, notifyKindFor, notifySummaryText, usablePairs, walletPlatforms } from "../src/domain/wallet-ui";
 
 const both = { apple: true, google: true };
 test("plataformas según el dispositivo y la configuración", () => {
@@ -35,4 +35,8 @@ test("la convocatoria publicada se puede volver a editar aunque alguien haya sal
   const pairs = [{ id: "p0", players: ["a-1", "a-9"] as [string, string] }, ...[1, 2, 3, 4].map(i => ({ id: `p${i}`, players: [null, null] as [null, null] }))];
   assert.deepEqual(usablePairs(pairs, ["a-1", "a-2"])![0], { id: "p0", players: ["a-1", null] });
   assert.equal(usablePairs(pairs.slice(0, 3), ["a-1"]), null);
+});
+test("preparar la alineación lleva a la jornada a quien puede publicarla", () => {
+  assert.equal(lineupHref("a", "55262", true), "/equipos/a/jornadas/55262#convocatoria");
+  assert.equal(lineupHref("a", "55262", false), "/equipos/a/parejas");
 });

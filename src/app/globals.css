@@ -4085,3 +4085,4 @@ a.fifa-card:focus-visible {outline:none}
 .wallet-result.ok { background: var(--green-soft); border: 1px solid var(--green); color: var(--green); }
 .wallet-result.error { background: var(--warn-soft); border: 1px solid var(--warn-line); }
 @media (max-width: 700px) { .wallet-body { padding: 16px; } .wallet-send .button { width: 100%; justify-content: center; } }
+#convocatoria { scroll-margin-top: 96px; }
