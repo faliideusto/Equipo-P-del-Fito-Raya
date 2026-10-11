@@ -16,11 +16,13 @@ export async function requireNotifier(teamId: TeamId) {
   const user = await currentAccount(); if (!user) throw new AccountError("Inicia sesión para acceder a la web.", 401);
   if (!(await shareableTeams(user)).includes(teamId)) throw new AccountError("Solo el entrenador o el capitán pueden avisar al equipo.", 403);
 }
+export const selectableLineup = (saved: { id: string }[], id: string | null) => saved.some(l => l.id === id) ? id : null;
 export async function notifyOptions(teamId: TeamId) {
   const store = walletStore();
   const [ctx, saved] = await Promise.all([loadTeamContext(teamId, store), lineups(teamId, "list")]);
   const published = ctx.next ? await store.publishedLineup(teamId, ctx.next.id) : null;
-  return { nextFixtureId: ctx.next?.id ?? null, lastFixtureId: ctx.last?.fixtureId ?? null, lineups: saved.map(l => ({ id: l.id, name: l.name })), publishedLineupId: published?.lineup_id ?? null };
+  // The published lineup may have been deleted since: only offer it while it is still saved.
+  return { nextFixtureId: ctx.next?.id ?? null, lastFixtureId: ctx.last?.fixtureId ?? null, lineups: saved.map(l => ({ id: l.id, name: l.name })), publishedLineupId: selectableLineup(saved, published?.lineup_id ?? null) };
 }
 export async function publishAndNotify({ teamId, kind, fixtureId, lineupId }: { teamId: TeamId; kind: NotifyKind; fixtureId: string; lineupId?: string }, now = new Date()): Promise<NotifySummary> {
   const apple = appleConfig(); const google = googleConfig(); const baseUrl = publicBaseUrl();
