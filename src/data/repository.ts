@@ -5,7 +5,7 @@ import { readPositions } from "@/lib/player-positions";
 import { clubRoster, additionalPlayers } from "./club-roster";
 import { registeredPositions } from "@/lib/account-profile";
 import { clubMembers, localPlayerId, memberSports } from "@/lib/club-members";
-const sourceTeams = { a: "7778", b: "803902" };
+export const sourceTeams: Record<TeamId, string> = { a: "7778", b: "803902" };
 export interface ClubRepository {
   getTeams(): Promise<Team[]>;
   getTeam(id: TeamId): Promise<Team | undefined>;
