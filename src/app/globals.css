@@ -3965,6 +3965,85 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .score-banner > strong {font-family:var(--font-display);font-weight:800;color:var(--accent);letter-spacing:0;font-variant-numeric:tabular-nums}
 .score-banner .score-team {color:var(--ink)}
 .score-banner > small {color:var(--muted)}
+
+/* Vista «Cartas»: cartas de jugador sobre una pista de pádel vista desde arriba. */
+.view-toggle {display:inline-flex;padding:3px;gap:2px;border:1px solid var(--line-strong);border-radius:999px;background:var(--bg-deep)}
+.view-toggle a {display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+.view-toggle a:hover {color:var(--ink)}
+.view-toggle a[aria-current="page"] {background:var(--accent);color:var(--accent-ink);font-weight:700}
+.panel-heading:has(.view-toggle) {gap:12px;flex-wrap:wrap}
+
+.squad {padding:20px;background:radial-gradient(ellipse at top,var(--panel-2),var(--bg-deep) 70%)}
+.padel-court {
+  --court: #1f5fa8; --court-dark: #184c88; --court-line: rgba(255,255,255,.85);
+  position:relative;container-type:inline-size;max-width:620px;margin:0 auto;padding:28px 12px 32px;
+  display:flex;flex-direction:column;justify-content:space-around;gap:clamp(14px,4cqi,30px);
+  border:6px solid rgba(190,220,255,.22);border-radius:6px;
+  box-shadow:0 0 0 3px #0d2a4a,0 24px 60px rgba(0,0,0,.45);
+  background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(255,255,255,.025) 22px 44px),linear-gradient(180deg,var(--court),var(--court-dark) 50%,var(--court));
+}
+.court-lines,.court-lines i {position:absolute;pointer-events:none}
+.court-lines {inset:0}
+.court-service {left:0;right:0;height:3px;background:var(--court-line)}
+.court-service.top {top:15.25%}
+.court-service.bottom {bottom:15.25%}
+.court-center {left:50%;top:15.25%;bottom:15.25%;width:3px;margin-left:-1.5px;background:var(--court-line)}
+.court-net {left:-6px;right:-6px;top:50%;height:12px;margin-top:-6px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 2px,transparent 2px 7px),#0b1b2c;border-top:3px solid #f4f6f8;box-shadow:0 6px 12px rgba(0,0,0,.35)}
+.court-row {position:relative;z-index:1;display:flex;justify-content:center;gap:clamp(8px,4cqi,28px)}
+.court-pair {display:flex;flex-direction:column;align-items:center;gap:6px}
+.court-pair h3 {margin:0;padding:2px 8px;border-radius:999px;background:rgba(7,18,28,.55);font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;white-space:nowrap}
+.court-pair h3 small {font-size:inherit;font-weight:400;color:var(--accent)}
+.court-pair>div {display:flex;gap:clamp(3px,1.4cqi,8px)}
+.court-slot {display:flex}
+.padel-court .fifa-card {--cw:min(118px,21cqi)}
+
+.squad-bench {max-width:620px;margin:22px auto 0;padding:14px 12px 16px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+.squad-bench h3 {margin:0 0 12px;font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em}
+.squad-bench h3 small {margin-left:8px;font-family:var(--font-mono);font-size:11px;font-weight:400;letter-spacing:.06em;color:var(--muted);text-transform:none}
+.bench-row {container-type:inline-size;display:flex;flex-wrap:wrap;gap:10px}
+.bench-row .fifa-card {--cw:min(104px,calc((100cqi - 30px) / 4))}
+
+.fifa-card {
+  --cw:110px; --c1:#fbe7a1; --c2:#e3bb4f; --c3:#a97a1f; --ink:#3a2805; --rule:rgba(58,40,5,.35);
+  position:relative;display:flow-root;flex-shrink:0;width:var(--cw);height:calc(var(--cw) * 1.5);font-size:calc(var(--cw) / 10);
+  color:var(--ink);text-align:center;
+  background:radial-gradient(circle at 30% 18%,rgba(255,255,255,.55),transparent 38%),linear-gradient(155deg,var(--c1),var(--c2) 48%,var(--c3));
+  clip-path:polygon(16% 0,84% 0,100% 8%,100% 88%,50% 100%,0 88%,0 8%);
+  transition:transform .18s ease;
+}
+.fifa-card::before {content:"";position:absolute;inset:.35em;clip-path:inherit;border:1px solid var(--rule);background:repeating-linear-gradient(135deg,transparent 0 .6em,rgba(255,255,255,.07) .6em 1.2em)}
+a.fifa-card:hover,a.fifa-card:focus-visible {transform:translateY(-3px) scale(1.03)}
+a.fifa-card:focus-visible {outline:none}
+.court-slot,.mvp-if,.card-shadow {filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.court-slot:has(.fifa-card:focus-visible),.mvp-if:has(.fifa-card:focus-visible) {outline:3px solid var(--accent);outline-offset:3px;border-radius:10px}
+.fifa-silver {--c1:#f4f7f9;--c2:#c3ccd3;--c3:#8b979f;--ink:#1d2730;--rule:rgba(29,39,48,.3)}
+.fifa-bronze {--c1:#f1c39a;--c2:#c98a55;--c3:#8a5530;--ink:#3a1f0b;--rule:rgba(58,31,11,.35)}
+.fifa-if {--c1:#3a3a3a;--c2:#121212;--c3:#000;--ink:#f3d27a;--rule:rgba(243,210,122,.45)}
+.fifa-if::after {content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(243,210,122,.18) 45%,transparent 60%)}
+.fifa-card-rating {position:absolute;z-index:1;top:1.1em;left:.9em;display:flex;flex-direction:column;align-items:center;min-width:2.6em;line-height:1}
+.fifa-card-rating b {font-family:var(--font-display);font-weight:800;font-size:2.5em;letter-spacing:-.02em}
+.fifa-card-rating small,.fifa-card-rating em {font-family:var(--font-display);font-weight:700;font-style:normal;font-size:.95em;letter-spacing:.06em}
+.fifa-card-rating em {margin-top:.35em;padding-top:.3em;border-top:1px solid var(--rule)}
+.fifa-card-tag {position:absolute;z-index:1;top:1.1em;right:.8em;padding:.15em .45em;border-radius:.3em;background:#f3d27a;color:#000;font-family:var(--font-display);font-weight:800;font-size:.9em}
+.fifa-card-photo {position:absolute;top:.3em;right:0;width:66%;height:54%;display:grid;place-items:center;
+  -webkit-mask-image:linear-gradient(180deg,#000 30%,transparent 85%),linear-gradient(90deg,transparent 2%,#000 48%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(180deg,#000 30%,transparent 85%),linear-gradient(90deg,transparent 2%,#000 48%);mask-composite:intersect}
+.fifa-card-photo img {width:100%;height:100%;object-fit:cover;object-position:center 20%}
+.fifa-card-photo>span {font-family:var(--font-display);font-weight:800;font-size:3.2em;opacity:.3}
+.fifa-card-name {position:relative;display:block;margin:6.7em .55em 0;padding-bottom:.2em;border-bottom:1px solid var(--rule);font-family:var(--font-display);font-weight:800;font-size:1.1em;line-height:1.1;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fifa-card-stats {position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:.35em .1em;margin:.45em .8em 0;font-family:var(--font-display);font-weight:600;font-size:.8em;line-height:1;letter-spacing:.02em}
+.fifa-card-stats:has(> :nth-child(2):last-child) {grid-template-columns:repeat(2,1fr)}
+.fifa-card-stats span {display:flex;flex-direction:column;align-items:center;gap:.15em;opacity:.85}
+.fifa-card-stats b {font-size:1.4em;font-weight:800;opacity:1}
+.fifa-large {--cw:220px}
+.fifa-long-rating .fifa-card-rating b {font-size:1.6em;letter-spacing:-.01em}
+.fifa-if .fifa-card-photo>span,.fifa-if .fifa-card-stats span {opacity:.95}
+
+.mvp-if {display:flex;justify-content:center;margin:18px 0 6px}
+@media (max-width:640px){.squad {padding:12px 8px}.padel-court {padding:22px 6px 26px;border-width:4px}.view-toggle a {padding:7px 10px}.fifa-large {--cw:min(220px,62vw)}}
+@media (prefers-reduced-motion:reduce){.fifa-card {transition:none}}
+.profile-card-aside {flex-shrink:0}
+.profile-card-aside .fifa-card {--cw:92px}
 /* Puntos SNP de cada jugador en el momento del encuentro, tal como los guarda el acta. */
 .acta-points {margin-left:10px;font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:.02em;color:var(--accent);white-space:nowrap}
 .acta-points::after {content:" pts";color:var(--faint);font-size:11px}

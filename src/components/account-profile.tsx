@@ -10,8 +10,11 @@ import { RosterChoice } from "./roster-choice";
 import { PositionOptions } from "./account-access";
 import { CoachDashboard } from "./coach-dashboard";
 import type { PlayerLink } from "@/lib/account-profile";
+import { FifaCard } from "./fifa-card";
+import { compactPoints, pointsTier, sideShort } from "@/domain/squad";
+import type { Position } from "@/domain/types";
 type Account = { user: { id: string; email: string; role?: string; position?: string } | null; link: PlayerLink | null };
-type TeamStats = { id: string; position: string | null; rank: number; played: number; won: number; lost: number; setsWon: number; setsLost: number; points: number; partial: boolean; stale: boolean; acts: number };
+type TeamStats = { id: string; name: string; photoUrl: string | null; snpPoints: number | null; snpRank: number | null; position: Position | null; rank: number; played: number; won: number; lost: number; setsWon: number; setsLost: number; points: number; partial: boolean; stale: boolean; acts: number };
 export function AccountProfile() {
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null); const [error, setError] = useState(""); const [message, setMessage] = useState("");
@@ -58,7 +61,8 @@ export function AccountProfile() {
       {statsError && <p className="snp-warning" role="status">{statsError}</p>}{teams === null && !statsError && <div role="status" aria-live="polite"><span className="sr-only">Consultando las actas de tus equipos…</span><TeamStatsSkeleton/></div>}
       <div className="profile-teams">{teams?.map(team => <section className="panel player-stats" key={team.id}><div className="panel-heading"><h2>Equipo {team.id.toUpperCase()}</h2><Link className="text-link" href={`/equipos/${team.id}/estadisticas`}>Ranking del equipo →</Link></div><div className="profile-metrics">{[[team.points, "Puntos para el equipo"], [team.played, "Partidos jugados"], [team.won, "Ganados"], [team.lost, "Perdidos"], [team.setsWon, "Sets ganados"], [team.setsLost, "Sets perdidos"]].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div><p className="data-note account-stat-note">{team.acts} actas consultadas. {team.partial && "Estadísticas parciales: hay actas o participaciones sin identificar. "}{team.stale && "Se muestran los últimos datos guardados. "}Posición actual: {team.position === "LEFT" ? "Revés" : team.position === "RIGHT" ? "Derecha" : team.position === "BOTH" ? "Ambos" : "Por confirmar"}.</p></section>)}</div>
       {teams?.length === 0 && <p className="data-note">Tu ficha no aparece en las plantillas actuales del A o del B. Debajo puedes consultar tu historial SNP.</p>}<p className="data-note">Los puntos para el equipo se calculan con las actas de la fase actual. Cada jugador recibe los puntos que ganó su pareja; son distintos de los puntos de ranking SNP.</p>
-      <ExplorerPlayer id={account.link.player_id} hideBack/>
+      <ExplorerPlayer id={account.link.player_id} hideBack card={teams?.[0] && <div className="card-shadow profile-card-aside"><FifaCard name={teams[0].name} photoUrl={teams[0].photoUrl} rating={compactPoints(teams[0].snpPoints)} ratingLabel={sideShort(teams[0].position)} tier={pointsTier(teams[0].snpPoints)}
+        stats={[{ label: "RANK", value: teams[0].snpRank ?? "—" }, { label: "PTS SNP", value: teams[0].snpPoints === null ? "—" : Math.round(teams[0].snpPoints).toLocaleString("es-ES") }]}/></div>}/>
       <div className="section-title"><h2>Cuenta y posición</h2></div>
       <section className="panel account-settings">
         <form method="post" className="account-form" onSubmit={e => { e.preventDefault(); void action("position", { position }); }}><label>Mi posición en pista<PositionOptions value={position} onChange={setPosition}/></label><p className="data-note">Al guardar sustituirás la posición actual en tus equipos. El entrenador podrá cambiarla después.</p><button className="button" disabled={busy}>Guardar mi posición</button></form>

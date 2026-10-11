@@ -3,11 +3,14 @@ import { useIsCoach } from "./app-shell";
 import { useState } from "react";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
-import { PlayerAvatar } from "./player-avatar";
+import { FifaCard, type CardStat } from "./fifa-card";
+import { cardPhoto } from "@/data/player-photos";
+import { sideShort } from "@/domain/squad";
 import type { Player, TeamId } from "@/domain/types";
 import type { MvpAward } from "@/lib/mvp";
+export type MvpCardStats = Record<string, { points: number; stats: CardStat[] }>;
 function monthLabel(month: string) { return new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric", timeZone: "Europe/Madrid" }).format(new Date(`${month}-15T12:00:00Z`)); }
-export function MvpBoard({ players, initialAwards, initialMonth, initialError }: { players: Record<TeamId, Player[]>; initialAwards: MvpAward[]; initialMonth: string; initialError: string }) {
+export function MvpBoard({ players, initialAwards, initialMonth, initialError, cardStats }: { players: Record<TeamId, Player[]>; initialAwards: MvpAward[]; initialMonth: string; initialError: string; cardStats: Record<TeamId, MvpCardStats> }) {
   const [awards, setAwards] = useState(initialAwards); const [month, setMonth] = useState(initialMonth);
   const isCoach = useIsCoach();
   const [draft, setDraft] = useState<Record<TeamId, string>>({ a: "", b: "" });
@@ -28,7 +31,9 @@ export function MvpBoard({ players, initialAwards, initialMonth, initialError }:
     <div className="mvp-grid">{(["a", "b"] as const).map(team => {
       const award = awards.find(row => row.team_id === team && row.month === month);
       const person = award ? players[team].find(p => p.id === award.player_id) : undefined;
-      return <section className="panel mvp-card" key={team}><span className="badge blue">Equipo {team.toUpperCase()}</span><Trophy className="mvp-trophy" size={38}/><p className="eyebrow">{monthLabel(month)}</p>{award ? <><PlayerAvatar name={award.name} photoUrl={person?.photoUrl ?? award.photo_url}/><h2>{person?.name ?? award.name}</h2><p>Elegido por el entrenador</p><Link className="text-link" href={`/competicion/jugadores/${award.source_id}`}>Ver ficha del jugador →</Link></> : <><h2>El próximo MVP</h2><p>El entrenador todavía no ha elegido al MVP de este mes.</p></>}</section>;
+      return <section className="panel mvp-card" key={team}><span className="badge blue">Equipo {team.toUpperCase()}</span><Trophy className="mvp-trophy" size={38}/><p className="eyebrow">{monthLabel(month)}</p>{award ? <><div className="mvp-if"><FifaCard tier="if" size="large" name={person?.name ?? award.name} photoUrl={person ? cardPhoto(person) : award.photo_url}
+        rating={String(cardStats[team][award.player_id]?.points ?? "—")} ratingLabel="PTS" badge={person ? sideShort(person.position) : undefined}
+        stats={cardStats[team][award.player_id]?.stats ?? []}/></div><h2>{person?.name ?? award.name}</h2><p>Elegido por el entrenador</p><Link className="text-link" href={`/competicion/jugadores/${award.source_id}`}>Ver ficha del jugador →</Link></> : <><h2>El próximo MVP</h2><p>El entrenador todavía no ha elegido al MVP de este mes.</p></>}</section>;
     })}</div>
     {isCoach && <section className="position-editor"><h2>Elección del entrenador</h2><p>Elige un reconocimiento para cada equipo.</p><div className="mvp-grid">{(["a", "b"] as const).map(team => <form method="post" key={team} onSubmit={e => { e.preventDefault(); void submit(team); }}><label htmlFor={`mvp-player-${team}`}>MVP equipo {team.toUpperCase()} · {monthLabel(month)}</label><select id={`mvp-player-${team}`} value={draft[team]} disabled={busy} onChange={e => setDraft({ ...draft, [team]: e.target.value })}><option value="">Selecciona un jugador</option>{players[team].map(player => <option key={player.id} value={player.id}>{player.name}</option>)}</select><button className="button" disabled={busy}>Guardar MVP del {team.toUpperCase()}</button><button type="button" className="button secondary" disabled={busy || !awards.some(row => row.team_id === team && row.month === month)} onClick={() => void submit(team, true)}>Dejar sin MVP</button></form>)}</div><p role="status">{message}</p></section>}
     <section className="panel"><div className="panel-heading"><h2>Historial de MVP</h2></div>{awards.length ? <div className="table-scroll"><table className="standings"><thead><tr><th>MES</th><th>EQUIPO</th><th>JUGADOR</th></tr></thead><tbody>{awards.map(award => <tr key={`${award.team_id}-${award.month}`}><td>{monthLabel(award.month)}</td><td>{award.team_id.toUpperCase()}</td><td><Link href={`/competicion/jugadores/${award.source_id}`}>{award.name}</Link></td></tr>)}</tbody></table></div> : <p className="data-note">Los reconocimientos aparecerán aquí cuando el entrenador los guarde.</p>}</section>

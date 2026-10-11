@@ -1,5 +1,6 @@
 import { snpClient } from "./snp-client";
 import { cachedSnp } from "./snp-cache";
+import { readWinRates, reusableWinRates, saveWinRates, winRateFingerprint } from "./winrate-cache";
 import { normalizeFixtures, normalizeStandings, parseOptions, parseMatch } from "./snp-parser";
 import { fetchSnpTeam } from "./snp-team";
 import type { SnpCompetition, SnpOption, SnpTeam } from "@/domain/snp";
@@ -99,11 +100,17 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
     const entity=ranking.entity as Record<string,unknown>|undefined;
     if(!entity) return base;
     const profile = {...base,points:snpNumber(entity.puntos),nationalRank:entity.orden?String(entity.orden):base.nationalRank,stats:normalizePlayerStats(ranking.datos),previousStats:normalizePlayerStats(ranking.datos_ant)};
+    const winRateKey = `${id}-${group}`; const fingerprint = winRateFingerprint(profile);
+    // A manual refresh always recalculates; otherwise the stored winrate is kept until the data changes.
+    const stored = force ? undefined : reusableWinRates(await readWinRates(winRateKey), fingerprint);
+    if (stored) return {...profile, winRates: stored};
     try {
       // The group's selector changes the detailed ranking, but the win rates
       // cover every group in which the player has competed.
       const rankings = await Promise.all(groups.map(option => option.id === group ? ranking : snpClient.ajax("ajaxGetByJugadorAndGrupo", {idjugador:id,idgrupo:option.id}, "ranking")));
-      return {...profile, winRates: playerWinRates(rankings.flatMap(row => normalizePlayerStats(row.datos)), rankings.flatMap(row => normalizePlayerStats(row.datos_ant)))};
+      const winRates = playerWinRates(rankings.flatMap(row => normalizePlayerStats(row.datos)), rankings.flatMap(row => normalizePlayerStats(row.datos_ant)));
+      await saveWinRates(winRateKey, fingerprint, winRates);
+      return {...profile, winRates};
     } catch {
       return {...profile, winRatesError: "No se pudo consultar el winrate de todos los grupos. Se volverá a intentar en la próxima actualización."};
     }
