@@ -3863,5 +3863,12 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .provisional-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .provisional-note { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
 .provisional-buttons { display: inline-flex; gap: 8px; }
-.acta-set-input { width: 3.2em; text-align: center; font-size: 16px; padding: 6px 0; border-radius: 6px; border: 1px solid var(--accent-line); background: var(--bg); color: var(--ink); }
+.acta-set-input { box-sizing: border-box; width: 100%; max-width: 48px; min-width: 0; height: 38px; text-align: center; font-size: 16px; padding: 0; border-radius: 6px; border: 1px solid var(--accent-line); background: var(--bg); color: var(--ink); }
+@media (max-width: 640px) {
+  /* Set columns are ~34px wide on phones; 16px font avoids iOS zoom on focus. */
+  .acta-set-input { max-width: 28px; height: 32px; border-radius: 5px; }
+  .result-number small.provisional-tag { display: flex; justify-content: center; }
+  .provisional-tag span { display: none; }
+  .provisional-row td { padding: 10px 6px 12px; }
+}
 .acta-set-input:disabled { opacity: 0.35; }
