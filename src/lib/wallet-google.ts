@@ -1,4 +1,4 @@
-import { createSign } from "node:crypto";
+import { createHash, createSign } from "node:crypto";
 import type { TeamId } from "@/domain/types";
 import type { WalletCardData } from "@/domain/wallet-card";
 import type { GoogleConfig } from "./wallet-config";
@@ -7,11 +7,15 @@ export type GoogleOutcome = "ok" | "rateLimited" | "missing" | "failed";
 const text = (value: string) => ({ defaultValue: { language: "es", value } });
 export const googleClassId = (issuerId: string, teamId: TeamId) => `${issuerId}.fito-raya-${teamId}`;
 export const googleObjectId = (issuerId: string, serial: string) => `${issuerId}.${serial}`;
+// Google caches images by URL, so the hero URL carries a hash of what it draws and changes when that does.
+export const heroVersion = (card: WalletCardData) => createHash("sha256").update(JSON.stringify([card.next, card.lineupShort])).digest("hex").slice(0, 12);
+// Same look as the Apple pass: pink card, round logo, and the match and lineup drawn by the server in the hero image.
 export function googleObject(card: WalletCardData, { issuerId, serial, baseUrl }: { issuerId: string; serial: string; baseUrl: string }): Record<string, unknown> {
   return {
-    id: googleObjectId(issuerId, serial), classId: googleClassId(issuerId, card.teamId), state: "ACTIVE", hexBackgroundColor: "#0a1825",
-    logo: { sourceUri: { uri: `${baseUrl}/logo-fito.png` } }, heroImage: { sourceUri: { uri: `${baseUrl}/wallet/strip@3x.png` } },
-    cardTitle: text(`Fito Raya · ${card.teamLabel}`), header: text(card.playerLine), subheader: text(card.teamLabel),
+    id: googleObjectId(issuerId, serial), classId: googleClassId(issuerId, card.teamId), state: "ACTIVE", hexBackgroundColor: "#c2287a",
+    logo: { sourceUri: { uri: `${baseUrl}/wallet/logo@3x.png` } },
+    heroImage: { sourceUri: { uri: `${baseUrl}/api/wallet/google/hero/${serial}?v=${heroVersion(card)}` }, contentDescription: text(card.nextMatch) },
+    cardTitle: text(`Fito Raya · ${card.teamLabel}`), subheader: text(`Puntos SNP · ${card.snpPoints}`), header: text(card.playerName),
     textModulesData: [
       { id: "next", header: "Próximo partido", body: card.nextMatch },
       { id: "lineup", header: "Convocatoria", body: card.lineup },

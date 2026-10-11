@@ -6,6 +6,8 @@ import type { WalletCardData } from "@/domain/wallet-card";
 // The strip of the Apple event ticket (375x98 pt), drawn per card: Wallet fields allow neither icons nor a colour per text,
 // so the match ("Fito Raya vs rival", date, time and venue) and the player's lineup are an image on the kit gradient.
 export const STRIP = { width: 375, height: 98 };
+// The same drawing as the hero image of the Google card, 1032x336 px at 3x.
+export const HERO = { width: 344, height: 112 };
 const BLUSH = "#FFE3F1", LILAC = "#E3D4FF", YELLOW = "#FFE066";
 // Long rival names get a smaller title so most of them fit on one line; the rest end in "…".
 export function titleSize(opponent: string): number {
@@ -67,8 +69,8 @@ function stripFonts(): Promise<Font[]> {
     .catch(error => { fonts = null; throw error; });
   return fonts;
 }
-// PNG of the strip at the given scale (2 → 750x196 px).
-export async function renderStrip(card: WalletCardData, scale: number): Promise<Buffer> {
-  const image = new ImageResponse(strip(card, scale), { width: STRIP.width * scale, height: STRIP.height * scale, fonts: await stripFonts() });
+// PNG of the strip at the given scale (2 → 750x196 px), or of the Google hero with size HERO.
+export async function renderStrip(card: WalletCardData, scale: number, size = STRIP): Promise<Buffer> {
+  const image = new ImageResponse(strip(card, scale), { width: size.width * scale, height: size.height * scale, fonts: await stripFonts() });
   return Buffer.from(await image.arrayBuffer());
 }

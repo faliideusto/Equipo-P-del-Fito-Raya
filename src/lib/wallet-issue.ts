@@ -9,6 +9,7 @@ import { teamResultScore } from "./team-result-service";
 import { appleConfig, googleConfig, publicBaseUrl } from "./wallet-config";
 import { signApplePass } from "./wallet-apple";
 import { googleObjectId, googleSaveUrl } from "./wallet-google";
+import { HERO, renderStrip } from "./wallet-strip";
 import type { WalletPass, WalletStore } from "./wallet-store";
 type ScoreOf = (teamId: TeamId, fixture: Fixture) => Promise<[number, number] | null>;
 // Our side's score for a fixture: app/acta pairs first, then SNP's published score.
@@ -49,6 +50,11 @@ export async function applePassBuffer(pass: WalletPass, store: WalletStore): Pro
   const config = appleConfig(); const baseUrl = publicBaseUrl(); if (!config || !baseUrl) return null;
   const card = buildWalletCard(await loadTeamContext(pass.team_id, store), pass.player_id);
   return card ? signApplePass(card, { serial: pass.serial, authToken: pass.auth_token, baseUrl }, config) : null;
+}
+// The hero image of a Google card, drawn from current data; null if the player left the roster.
+export async function googleHeroImage(pass: WalletPass, store: WalletStore): Promise<Buffer | null> {
+  const card = buildWalletCard(await loadTeamContext(pass.team_id, store), pass.player_id);
+  return card ? renderStrip(card, 3, HERO) : null;
 }
 export async function googleSaveLink(pass: WalletPass, store: WalletStore): Promise<string | null> {
   const config = googleConfig(); const baseUrl = publicBaseUrl(); if (!config || !baseUrl) return null;
