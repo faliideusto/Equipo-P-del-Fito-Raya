@@ -63,3 +63,9 @@ test("textos cortos para el frente de la tarjeta", () => {
   assert.deepEqual(buildWalletCard(ctx({ next: { ...next, date: "2026-10-18", home: false } }), "1")!.next, { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: null, venue: "Visitante" });
   assert.equal(buildWalletCard(ctx({ next: { ...next, date: "" } }), "1")!.next!.day, "Por confirmar");
 });
+test("los nombres de club de SNP salen con espacios en lugar de guiones bajos", () => {
+  const card = buildWalletCard(ctx({ next: { ...next, opponent: "CD_PADEL_ARCOS" }, last: { fixtureId: "40", round: 4, opponent: "CLUB_RIVAL_X", ours: 7, theirs: 5 } }), "1")!;
+  assert.equal(card.next?.opponent, "CD PADEL ARCOS");
+  assert.equal(card.nextMatch, "J5 · CD PADEL ARCOS · Dom 18/10 10:00 · Local");
+  assert.equal(card.lastResult, "J4 · Fito Raya A 7–5 CLUB RIVAL X");
+});
