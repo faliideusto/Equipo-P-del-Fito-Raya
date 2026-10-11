@@ -1,4 +1,4 @@
-import { signInAccount } from "@/lib/account-password";
+import { changeAccountPassword, requestPasswordReset, resetAccountPassword, signInAccount } from "@/lib/account-password";
 import { registerAdditionalAccount, registerLinkedAccount } from "@/lib/account-registration";
 import { cookies } from "next/headers";
 import { accountBody, accountCookieOptions, accountFailure, accountReply, AccountError, authRequest, clearSession, currentAccount, limitAccountAttempts, saveSession } from "@/lib/account-auth";
@@ -24,6 +24,28 @@ export async function POST(request: Request) {
     if (body.action === "logout") {
       const token = (await cookies()).get("fito-access")?.value;
       try { if (token) await authRequest("logout?scope=local", {}, token); } catch { /* Clear local cookies even when the Auth service is unavailable. */ } finally { await clearSession(); }
+      return accountReply({ ok: true });
+    }
+    if (body.action === "change-password") {
+      const user = await currentAccount(); if (!user) throw new AccountError("Inicia sesión para cambiar tu contraseña.", 401);
+      if (user.role !== "player" || !user.email) throw new AccountError("Esta cuenta no puede cambiar la contraseña desde aquí.", 403);
+      limitAccountAttempts(`password:${user.id}`);
+      if (typeof body.currentPassword !== "string" || !body.currentPassword || body.currentPassword.length > 256) throw new AccountError("Introduce tu contraseña actual.");
+      await saveSession(await changeAccountPassword(user.email, body.currentPassword, newPassword(body.newPassword)));
+      return accountReply({ ok: true });
+    }
+    if (body.action === "recover") {
+      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) throw new AccountError("Introduce el correo con el que te registraste.");
+      limitAccountAttempts(`recover:${email}`);
+      // requireSameOrigin already checked this header against the request host.
+      await requestPasswordReset(email, new URL("/acceso", request.headers.get("origin")!).toString());
+      return accountReply({ ok: true });
+    }
+    if (body.action === "reset") {
+      if (typeof body.token !== "string" || !body.token || body.token.length > 4000) throw new AccountError("El enlace no es válido o ha caducado. Solicita otro.", 401);
+      limitAccountAttempts(`reset:${body.token.slice(-32)}`);
+      await saveSession(await resetAccountPassword(body.token, newPassword(body.password)));
       return accountReply({ ok: true });
     }
     if (body.action === "link" || body.action === "unlink" || body.action === "position") {
@@ -74,4 +96,8 @@ function credentials(body: Record<string, unknown>) {
   const password = body.password;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || password.length < 1 || password.length > 256) throw new AccountError("Introduce un correo y contraseña válidos.");
   return { email, password };
+}
+function newPassword(value: unknown) {
+  if (typeof value !== "string" || value.length < 1 || value.length > 256) throw new AccountError("Introduce una nueva contraseña válida.");
+  return value;
 }

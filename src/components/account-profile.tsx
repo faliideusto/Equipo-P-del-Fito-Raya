@@ -9,6 +9,7 @@ import { ExplorerPlayer } from "./explorer-player";
 import { RosterChoice } from "./roster-choice";
 import { PositionOptions } from "./account-access";
 import { CoachDashboard } from "./coach-dashboard";
+import { PasswordField } from "./password-field";
 import type { PlayerLink } from "@/lib/account-profile";
 type Account = { user: { id: string; email: string; role?: string; position?: string } | null; link: PlayerLink | null };
 type TeamStats = { id: string; position: string | null; rank: number; played: number; won: number; lost: number; setsWon: number; setsLost: number; points: number; partial: boolean; stale: boolean; acts: number };
@@ -52,7 +53,7 @@ export function AccountProfile() {
     {!account && error && <button className="button secondary" onClick={() => { setError(""); void refreshAccount().catch(e => setError(e.message)); }}>Volver a intentar</button>}
     {account && !account.user && <section className="panel account-card"><h2>Todo sobre tu temporada.</h2><p>Crea tu cuenta y elige tu ficha de jugador para ver tus estadísticas.</p><Link href="/acceso" className="button">Iniciar sesión o registrarme</Link></section>}
     {account?.user && !account.link && <><section className="panel account-toolbar"><span>{account.user.email}</span><button className="button secondary" disabled={busy} onClick={() => void action("logout")}>Cerrar sesión</button></section>
-      <section className="panel account-card"><h2>Elige tu ficha de jugador</h2><p>Asocia tu cuenta a tu nombre en la plantilla para ver tus estadísticas.</p><form method="post" className="account-form" onSubmit={event => { event.preventDefault(); const values = new FormData(event.currentTarget); void action("link", { teamId: values.get("teamId"), playerId: values.get("playerId"), position }); }}><RosterChoice/><label>Tu posición<PositionOptions value={position} onChange={setPosition}/></label><button className="button" disabled={busy}>{busy ? "Guardando…" : "Asociar mi jugador"}</button></form></section></>}
+      <section className="panel account-card"><h2>Elige tu ficha de jugador</h2><p>Asocia tu cuenta a tu nombre en la plantilla para ver tus estadísticas.</p><form method="post" className="account-form" onSubmit={event => { event.preventDefault(); const values = new FormData(event.currentTarget); void action("link", { teamId: values.get("teamId"), playerId: values.get("playerId"), position }); }}><RosterChoice/><label>Tu posición<PositionOptions value={position} onChange={setPosition}/></label><button className="button" disabled={busy}>{busy ? "Guardando…" : "Asociar mi jugador"}</button></form></section><ChangePassword/></>}
     {account?.user && account.link && <>
       <div className="section-title"><h2>Tu aportación esta temporada</h2><span>Puntos ganados para el equipo</span></div>
       {statsError && <p className="snp-warning" role="status">{statsError}</p>}{teams === null && !statsError && <div role="status" aria-live="polite"><span className="sr-only">Consultando las actas de tus equipos…</span><TeamStatsSkeleton/></div>}
@@ -68,6 +69,22 @@ export function AccountProfile() {
           <button className="button secondary danger" disabled={busy} onClick={() => { if (window.confirm("¿Desvincular tu ficha SNP? Tu cuenta de esta web seguirá disponible.")) void action("unlink"); }}>Desvincular ficha</button>
         </div>
       </section>
+      <ChangePassword/>
     </>}
   </>;
+}
+function ChangePassword() {
+  const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [message, setMessage] = useState("");
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setError(""); setMessage("");
+    const form = event.currentTarget; const values = new FormData(form);
+    try {
+      if (values.get("newPassword") !== values.get("confirmation")) throw new Error("Las contraseñas nuevas no coinciden.");
+      const response = await fetch("/api/account", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "change-password", currentPassword: values.get("currentPassword"), newPassword: values.get("newPassword") }) });
+      const data = await response.json(); if (!response.ok) throw new Error(data.error);
+      form.reset(); setMessage("Contraseña cambiada. Úsala la próxima vez que inicies sesión.");
+    } catch (e) { setError(e instanceof Error ? e.message : "No se pudo cambiar la contraseña."); }
+    finally { setBusy(false); }
+  }
+  return <section className="panel account-password"><h2>Cambiar contraseña</h2><form method="post" className="account-form" onSubmit={submit}><PasswordField name="currentPassword" label="Contraseña actual" autoComplete="current-password" disabled={busy}/><PasswordField name="newPassword" label="Nueva contraseña" autoComplete="new-password" disabled={busy}/><PasswordField name="confirmation" label="Repite la nueva contraseña" autoComplete="new-password" disabled={busy}/><button className="button" disabled={busy}>{busy ? "Guardando…" : "Guardar nueva contraseña"}</button></form>{error && <p className="snp-warning" role="alert">{error}</p>}{message && <p className="account-message" role="status">{message}</p>}</section>;
 }

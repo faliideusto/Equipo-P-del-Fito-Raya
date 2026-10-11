@@ -5,7 +5,7 @@
 1. Ejecutar `supabase/accounts.sql` en el SQL Editor del proyecto Supabase. Requiere la tabla `player_positions`, ya utilizada por el editor del entrenador. La operación es repetible.
 2. Supabase → Authentication → Sign In / Providers: permitir Email y nuevos registros. La confirmación de correo está desactivada por petición del propietario: el registro abre la sesión directamente.
 3. Authentication → URL Configuration: Site URL `https://escuelafitoraya.onrender.com/acceso`; permitir como Redirect URL `https://escuelafitoraya.onrender.com/acceso` y, para pruebas locales, `http://127.0.0.1:3000/acceso`.
-4. No hace falta SMTP para el registro directo. Si se incorpora recuperación de contraseña por email o confirmación en el futuro, configurar un proveedor SMTP propio.
+4. No hace falta SMTP para el registro directo, pero sí para «¿Has olvidado tu contraseña?»: configurar un proveedor SMTP propio (ver Contraseñas).
 5. Render ya necesita `SUPABASE_URL` y `SUPABASE_SECRET_KEY`. No hay claves nuevas en el navegador.
 
 ## Flujo
@@ -28,7 +28,11 @@ Las contraseñas de la web solo deben ser no vacías; no hay mínimo de longitud
 
 El botón Cerrar sesión está en la cabecera de todas las páginas privadas, además de Mi perfil y el panel de entrenador. Elimina las cookies y cierra la sesión local de Auth antes de regresar a /acceso.
 
-No hay recuperación de contraseña en la interfaz de esta primera versión; un administrador puede enviar el restablecimiento desde Supabase Auth.
+## Contraseñas
+
+Mi perfil incluye «Cambiar contraseña»: el servidor comprueba la contraseña actual iniciando sesión, guarda la nueva con la misma credencial derivada y renueva las cookies. La cuenta de visitante y el entrenador no usan este formulario (el entrenador cambia la suya en /entrenador).
+
+El acceso incluye «¿Has olvidado tu contraseña?». Supabase envía un enlace que vuelve a `/acceso` (ya permitido como Redirect URL); la página lee el token del fragmento sin guardarlo, pide la nueva contraseña y el servidor la guarda y abre la sesión. La respuesta no revela si el correo está registrado. Requiere un proveedor SMTP propio en Authentication → Emails → SMTP Settings: el correo integrado de Supabase solo entrega a miembros del equipo del proyecto y con un límite muy bajo por hora. La plantilla «Reset Password» puede traducirse al español en Authentication → Emails → Templates.
 
 ## Entrenador
 
