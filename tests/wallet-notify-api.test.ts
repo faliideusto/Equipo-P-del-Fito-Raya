@@ -11,6 +11,7 @@ test("la API de avisos rechaza otro origen, cuerpos grandes y datos no válidos 
   assert.equal((await POST(post("http://localhost", JSON.stringify({ teamId: "c", kind: "result", fixtureId: "40" })))).status, 400);
   assert.equal((await POST(post("http://localhost", JSON.stringify({ teamId: "a", kind: "lineup", fixtureId: "50", lineupId: "no-uuid" })))).status, 400);
   assert.equal((await POST(post("http://localhost", JSON.stringify({ teamId: "a", kind: "otro", fixtureId: "50" })))).status, 400);
+  assert.equal((await POST(post("http://localhost", JSON.stringify({ teamId: "a", kind: "result", fixtureId: "40" })))).status, 400);
   assert.equal((await POST(post("http://localhost", JSON.stringify({ teamId: "a", kind: "lineup", fixtureId: "50", pairs: "x" })))).status, 400);
   assert.equal((await POST(post("http://localhost", JSON.stringify({ teamId: "a", kind: "lineup", fixtureId: "50", pairs: [] })))).status, 400);
   assert.equal((await GET(new Request("http://localhost/api/wallet/notify?teamId=z"))).status, 400);

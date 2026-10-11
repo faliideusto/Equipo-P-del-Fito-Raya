@@ -4081,8 +4081,13 @@ a.fifa-card:focus-visible {outline:none}
 .wallet-send { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--accent) 7%, transparent); }
 .wallet-send > p:first-child { margin: 0; flex: 1 1 280px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .wallet-send .button { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.wallet-send-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+/* WhatsApp green for both share buttons (lineup and result). */
+.button.whatsapp { display: inline-flex; align-items: center; gap: 8px; background: #25d366; border-color: #25d366; color: #06301a; }
+.button.whatsapp:hover { background: #1ebe5b; border-color: #1ebe5b; }
+.button.whatsapp[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 .wallet-result { flex-basis: 100%; margin: 0; padding: 12px 14px; border-radius: 10px; font-size: 14px; line-height: 1.5; }
 .wallet-result.ok { background: var(--green-soft); border: 1px solid var(--green); color: var(--green); }
 .wallet-result.error { background: var(--warn-soft); border: 1px solid var(--warn-line); }
-@media (max-width: 700px) { .wallet-body { padding: 16px; } .wallet-send .button { width: 100%; justify-content: center; } }
+@media (max-width: 700px) { .wallet-body { padding: 16px; } .wallet-send-actions { width: 100%; } .wallet-send .button { width: 100%; justify-content: center; } }
 #convocatoria { scroll-margin-top: 96px; }

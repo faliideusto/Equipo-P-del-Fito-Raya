@@ -31,12 +31,12 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   // The captain and the coach see the WhatsApp message (once all five pairs have a result) and can correct any pair.
   const share=teams.includes(teamId)?await teamResultMessage(teamId,fixture,result?.data??null).catch(()=>null):null;
   const card=share&&<TeamResultCard message={share}/>;
-  // Lineup on the next fixture, result on the last played one; only for the coach and the captain.
+  // The lineup of the next fixture, only for the coach and the captains. Results go out by WhatsApp, not Wallet.
   const available=walletAvailability();
   const walletKind=teams.includes(teamId)&&(available.apple||available.google)?notifyKindFor(fixtures,fixtureId):null;
   // The coach builds the lineup right here, starting from the one already published for this fixture.
   const [roster,published]=walletKind==="lineup"?await Promise.all([clubRepository.getPlayers(teamId).catch(()=>[]),publishedPairs(teamId,fixtureId)]):[[],null];
-  const wallet=walletKind&&<WalletNotify teamId={teamId} fixtureId={fixtureId} kind={walletKind} round={fixture.round} players={roster} publishedPairs={published?usablePairs(published,roster.map(p=>p.id)):null}/>;
+  const wallet=walletKind==="lineup"&&<WalletNotify teamId={teamId} fixtureId={fixtureId} match={{round:fixture.round,opponent:fixture.opponent,date:fixture.date,home:fixture.home}} players={roster} publishedPairs={published?usablePairs(published,roster.map(p=>p.id)):null}/>;
   if(result){
     const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data,teams.includes(teamId));
     return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}{wallet}</MatchdaySlide>;
