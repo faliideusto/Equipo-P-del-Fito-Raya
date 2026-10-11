@@ -6,7 +6,11 @@ const both = { apple: true, google: true };
 test("plataformas según el dispositivo y la configuración", () => {
   assert.deepEqual(walletPlatforms("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)", both), ["apple"]);
   assert.deepEqual(walletPlatforms("Mozilla/5.0 (Linux; Android 15; Pixel 9)", both), ["google"]);
-  assert.deepEqual(walletPlatforms("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", both), ["apple", "google"]);
+  assert.deepEqual(walletPlatforms("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", both), ["apple"]);
+  assert.deepEqual(walletPlatforms("Mozilla/5.0 (Windows NT 10.0; Win64; x64)", both), ["google"]);
+  assert.deepEqual(walletPlatforms("Mozilla/5.0 (X11; Linux x86_64)", both), ["google"]);
+  assert.deepEqual(walletPlatforms("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", { apple: false, google: true }), ["google"]);
+  assert.deepEqual(walletPlatforms("Mozilla/5.0 (Linux; Android 15; Pixel 9)", { apple: true, google: false }), []);
   assert.deepEqual(walletPlatforms("Mozilla/5.0 (iPhone)", { apple: false, google: true }), []);
   assert.deepEqual(walletPlatforms("Mozilla/5.0 (Windows NT 10.0)", { apple: false, google: true }), ["google"]);
 });

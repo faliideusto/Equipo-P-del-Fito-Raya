@@ -4,8 +4,11 @@ import type { NotifyKind } from "./wallet-card";
 export type NotifySummary = { total: number; withoutPass: number; apple: { enabled: boolean; ok: number; failed: number }; google: { enabled: boolean; ok: number; failed: number; rateLimited: number } };
 export type WalletPlatform = "apple" | "google";
 export function walletPlatforms(userAgent: string, available: { apple: boolean; google: boolean }): WalletPlatform[] {
-  const wanted: WalletPlatform[] = /iPhone|iPad|iPod/.test(userAgent) ? ["apple"] : /Android/.test(userAgent) ? ["google"] : ["apple", "google"];
-  return wanted.filter(platform => available[platform]);
+  // One button only: the wallet of the device in hand. A computer without its own wallet configured falls back to the other one.
+  const phone = /iPhone|iPad|iPod|Android/.test(userAgent);
+  const own: WalletPlatform = /iPhone|iPad|iPod|Macintosh/.test(userAgent) ? "apple" : "google";
+  const other: WalletPlatform = own === "apple" ? "google" : "apple";
+  return available[own] ? [own] : !phone && available[other] ? [other] : [];
 }
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 export function notifySummaryText(s: NotifySummary): string {
