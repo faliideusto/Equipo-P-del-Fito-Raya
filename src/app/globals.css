@@ -3825,9 +3825,23 @@ input[type="radio"] {
 .schedule-group-heading h3 {display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-family:var(--font-display);text-transform:uppercase;font-size:22px;letter-spacing:.01em}
 .schedule-progress {font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:3px 8px;border:1px solid var(--accent-line);border-radius:999px}
 
-.result-chip { position: fixed; right: 20px; bottom: 20px; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--accent-line); background: var(--accent); color: var(--accent-ink); font-weight: 700; box-shadow: 0 8px 24px rgba(2, 8, 14, 0.45); cursor: pointer; }
+.chip-stack { position: fixed; right: 20px; bottom: 20px; z-index: 40; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.result-chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--accent-line); background: var(--accent); color: var(--accent-ink); font-weight: 700; box-shadow: 0 8px 24px rgba(2, 8, 14, 0.45); cursor: pointer; }
 .result-chip b { background: var(--accent-ink); color: var(--accent); border-radius: 999px; padding: 0 7px; font-size: 12px; }
 .result-chip:hover { background: var(--accent-hover); }
+.share-chip { padding: 0 6px 0 0; }
+.share-chip a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 4px 10px 14px; color: inherit; text-decoration: none; }
+.share-chip button { display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
+.team-share { margin-top: 24px; display: grid; gap: 12px; }
+.team-share-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.team-share-bar span { color: var(--muted); }
+.whatsapp-button { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: #25d366; color: #fff; box-shadow: 0 6px 18px rgba(2, 8, 14, 0.35); flex: none; }
+.whatsapp-button:hover { background: #1ebe5b; }
+.whatsapp-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.team-share-body { display: grid; gap: 10px; justify-items: start; }
+.team-share-text { white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; line-height: 1.5; margin: 0; padding: 14px; width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.captain-select { display: grid; gap: 6px; margin-top: 12px; font-weight: 600; }
+.captain-select select { max-width: 360px; }
 dialog.result-dialog { position: fixed; inset: 0; margin: auto; border: 1px solid var(--line); border-radius: 14px; padding: 0; background: var(--panel); color: var(--ink); width: min(440px, calc(100vw - 32px)); }
 dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filter: blur(4px); }
 .result-dialog-body { display: grid; gap: 18px; padding: 20px; }
@@ -3852,7 +3866,7 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .result-grid input:disabled { opacity: 0.35; }
 .result-existing { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-@media (max-width: 640px) { .result-chip { right: 16px; bottom: 16px; } .result-grid { grid-template-columns: 76px repeat(3, 1fr); } }
+@media (max-width: 640px) { .chip-stack { right: 16px; bottom: 16px; } .result-grid { grid-template-columns: 76px repeat(3, 1fr); } }
 
 .coach-results { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .coach-results li { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
