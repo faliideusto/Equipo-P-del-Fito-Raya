@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+  ArrowUpRight,
   CalendarCheck,
   ClipboardList,
   HeartHandshake,
@@ -32,16 +33,15 @@ const clubItems: Item[] = [
   { href: "/mvp", label: "MVP del mes", icon: Trophy, match: (path) => path === "/mvp" },
   { href: "/patrocinadores", label: "Patrocinadores", icon: HeartHandshake, match: (path) => path === "/patrocinadores" },
 ];
-const latest: Item = { href: "/ultima-jornada", label: "Última jornada", icon: CalendarCheck, match: (path) => path === "/ultima-jornada" };
 const home: Item = { href: "/", label: "Inicio", icon: House, match: (path) => path === "/" };
 const profile: Item = { href: "/mi-perfil", label: "Mi perfil", icon: UserRound, match: (path) => path === "/mi-perfil" || path === "/acceso" };
 const coach: Item = { href: "/entrenador", label: "Panel del entrenador", icon: ClipboardList, match: (path) => path === "/entrenador" };
 
-function NavLink({ item, pathname, onNavigate, href = item.href }: { item: Item; pathname: string; onNavigate: () => void; href?: string }) {
+function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string; onNavigate: () => void }) {
   const active = item.match(pathname);
   const Icon = item.icon;
   return (
-    <Link className={`nav-link ${active ? "active" : ""}`} aria-current={active ? "page" : undefined} href={href} onClick={onNavigate}>
+    <Link className={`nav-link ${active ? "active" : ""}`} aria-current={active ? "page" : undefined} href={item.href} onClick={onNavigate}>
       <Icon size={18} />
       <span>{item.label}</span>
       {item.detail && <small>{item.detail}</small>}
@@ -91,7 +91,8 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
           <div className="nav-group">
             <div className="nav-caption">Nuestros equipos</div>
             {teamItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} onNavigate={close} />)}
-            <NavLink item={latest} pathname={pathname} onNavigate={close} href={latestHref ?? latest.href} />
+            {/* A shortcut, not a section: styled apart and never marked as the current page. */}
+            <Link className="nav-shortcut" href={latestHref ?? "/ultima-jornada"} onClick={close}><CalendarCheck size={18} /><span>Última jornada</span><ArrowUpRight size={16} className="nav-shortcut-arrow" /></Link>
           </div>
           <div className="nav-group">
             <div className="nav-caption">Club</div>
