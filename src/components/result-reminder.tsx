@@ -54,7 +54,7 @@ export function ResultReminder() {
   return <>
     <button type="button" className="result-chip" onClick={open} aria-haspopup="dialog"><AlertTriangle size={16} aria-hidden/>Resultado pendiente · J{current.round}{pending.length > 1 && <b>{pending.length}</b>}</button>
     <dialog ref={dialog} className="result-dialog" aria-labelledby="result-title">
-      <form className="result-dialog-body" onSubmit={e => { e.preventDefault(); void send("result"); }}>
+      <form method="post" className="result-dialog-body" onSubmit={e => { e.preventDefault(); void send("result"); }}>
         <header><div><span className="result-eyebrow">¿Cómo fue tu partido?</span><h2 id="result-title">{title}</h2><p>{formatDate(current.date)}</p></div><button type="button" className="result-close" aria-label="Cerrar" onClick={() => dialog.current?.close()}><X size={18}/></button></header>
         <fieldset className="result-pairs" disabled={Boolean(current.pairLocked)}><legend>Pareja {current.pairLocked && <span className="result-locked"><Lock size={12} aria-hidden/> según acta SNP</span>}</legend>
           {[1, 2, 3, 4, 5].map(n => <label key={n} className={pair === n ? "is-active" : ""}><input type="radio" name="pair" value={n} checked={pair === n} onChange={() => update({ pair: n, existing: null })}/>{n}</label>)}
