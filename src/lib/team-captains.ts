@@ -1,8 +1,7 @@
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import type { TeamId } from "@/domain/types";
-import { devCaptainId, isTeamCaptain, type TeamCaptain } from "@/domain/team-captain";
-import { clubRepository } from "@/data/repository";
+import { isTeamCaptain, type TeamCaptain } from "@/domain/team-captain";
 import { playerLink } from "./account-profile";
 export class MissingCaptainsTable extends Error {}
 const FILE = ".club-private/team-captains.json";
@@ -39,10 +38,5 @@ export async function shareableTeams(user: { id: string; role?: string } | null)
   if (user.role === "coach") return ["a", "b"];
   const link = await playerLink(user.id).catch(() => null); if (!link) return [];
   const captains = await listCaptains().catch(() => []);
-  const dev = devCaptainId(process.env) === link.player_id;
-  const teams = await Promise.all((["a", "b"] as TeamId[]).map(async teamId => {
-    const onRoster = dev && (await clubRepository.getPlayers(teamId).catch(() => [])).some(p => p.sourceId === link.player_id);
-    return isTeamCaptain({ captains, teamId, playerId: link.player_id, onRoster, env: process.env }) ? teamId : null;
-  }));
-  return teams.filter((t): t is TeamId => t !== null);
+  return (["a", "b"] as TeamId[]).filter(teamId => isTeamCaptain({ captains, teamId, playerId: link.player_id }));
 }

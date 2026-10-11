@@ -20,6 +20,3 @@ Cuando las cinco parejas de una jornada tienen resultado (enviado en la app o co
 
 La app no envía nada a WhatsApp por sí sola: no hay bot ni número propio, de acuerdo con los términos de WhatsApp. Los nombres de cada pareja salen de la convocatoria del acta SNP. Sin convocatoria, aparece el jugador que envió el resultado. Si el resultado cambia después, la tarjeta muestra el texto actualizado.
 
-## Pruebas en local
-
-`DEV_CAPTAIN_PLAYER_ID=<player_id>` en `.env.local` marca a ese jugador como capitán de los equipos en cuya plantilla está. Se ignora en producción, Render y Vercel.

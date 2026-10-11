@@ -15,7 +15,6 @@ Cuando las cinco parejas de una jornada tienen resultado, la app prepara el mens
 | Envío | Lo hace una persona con `https://api.whatsapp.com/send?text=<mensaje>` (no `wa.me`: estropea los emojis) o con «Copiar». |
 | Quién | El capitán del equipo y el entrenador. El resto no ve el mensaje y la API responde 403. |
 | Capitán | Lo elige el entrenador en `/entrenador`, uno por equipo, en la tabla `team_captains`. |
-| Desarrollo | `DEV_CAPTAIN_PLAYER_ID` marca un `player_id` como capitán de sus equipos. Se ignora en producción. |
 | Completa | Las 5 parejas con resultado en la app o con sets publicados en el acta SNP. Si hay ambos, manda la app. |
 | Jornada | La misma que usan los resultados pendientes: la última del equipo, 1 h después del inicio (`lastPlayedFixture`). También se puede generar desde la vista de cualquier jornada completa. |
 | Aviso | Aviso fijo para capitán o entrenador cuando la última jornada está completa. Se descarta por jornada y dispositivo (`localStorage`). |
@@ -63,7 +62,7 @@ create table if not exists public.team_captains (
 ```
 
 - `listCaptains()` y `setCaptain(teamId, playerId | null)`, con el mismo patrón REST o archivo local que `mvp.ts`. Si la tabla no existe (`PGRST205` / `42P01`), `listCaptains` devuelve `[]` para que la app siga funcionando hasta que el propietario ejecute el SQL.
-- `isCaptain(playerId, teamId)`: compara con la tabla. Si `NODE_ENV !== "production"` y `RENDER`/`VERCEL` no están definidos, también acepta `DEV_CAPTAIN_PLAYER_ID` cuando ese jugador pertenece a la plantilla del equipo.
+- `isTeamCaptain`: compara con la tabla. (La variable de desarrollo `DEV_CAPTAIN_PLAYER_ID` se usó para las pruebas y se retiró antes de la PR.)
 - `canShareTeamResult(user, teamId)`: el entrenador siempre puede; un jugador con ficha vinculada, solo si es capitán.
 
 ## 3. Servicio y API
@@ -91,11 +90,11 @@ create table if not exists public.team_captains (
 ## 6. Pruebas
 
 - `tests/team-result-message.test.ts`: victoria, derrota y empate, tercer set, giro de sets SNP cuando somos visitantes, prioridad de la app sobre SNP, jornada incompleta → `null`, nombres sin convocatoria, fecha sin hora y codificación de la URL.
-- `tests/team-captains.test.ts`: permisos (entrenador, capitán, jugador normal, visitante) y que `DEV_CAPTAIN_PLAYER_ID` se ignore en producción.
-- Comprobación manual en local con `DEV_CAPTAIN_PLAYER_ID`: tarjeta, aviso, botón de WhatsApp y Copiar.
+- `tests/team-captains.test.ts`: el capitán guardado solo lo es de su equipo.
+- Comprobación manual en local: botón de WhatsApp, Ver texto, Copiar y aviso.
 
 ## Activación
 
 1. El propietario ejecuta `supabase/team-captains.sql` en Supabase.
 2. El entrenador elige los capitanes en `/entrenador`.
-3. No hay variables nuevas en producción. `DEV_CAPTAIN_PLAYER_ID` es solo para `.env.local`.
+3. No hay variables nuevas en producción.
