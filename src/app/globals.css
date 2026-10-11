@@ -3819,3 +3819,5 @@ input[type="radio"] {
 .team-tabs ~ .page-heading .eyebrow {display:none}
 .team-tabs ~ .page-heading h1 {font-size:clamp(28px,4vw,40px)}
 .access-main {background:radial-gradient(circle at 20% 0%,var(--panel-2),var(--bg) 60%)}
+.schedule-group-heading h3 {display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-family:var(--font-display);text-transform:uppercase;font-size:22px;letter-spacing:.01em}
+.schedule-progress {font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:3px 8px;border:1px solid var(--accent-line);border-radius:999px}
