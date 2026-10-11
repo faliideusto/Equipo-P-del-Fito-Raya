@@ -31,7 +31,7 @@ export function PageHeading({
     </div>
   );
 }
-export function StandingsTable({ rows, division, compact = false }: { rows: Standing[]; division?: string; compact?: boolean }) {
+export function StandingsTable({ rows, division, compact = false, ownLabel = "NOSOTROS" }: { rows: Standing[]; division?: string; compact?: boolean; ownLabel?: string }) {
   return (
     <div className="table-scroll">
       <table className={`standings ${compact ? "compact" : ""}`}>
@@ -56,7 +56,7 @@ export function StandingsTable({ rows, division, compact = false }: { rows: Stan
                   <TeamLogo name={row.name} />
                   <span>
                     {row.name}
-                    {row.own && <span className="you-badge">NOSOTROS</span>}
+                    {row.own && <span className="you-badge">{ownLabel}</span>}
                   </span>
                 </Link>
               </td>
@@ -131,25 +131,25 @@ function daysUntil(date: string) {
   if (diff < 0) return null;
   return diff === 0 ? "Hoy" : diff === 1 ? "Mañana" : `Faltan ${diff} días`;
 }
-export function NextMatchBoard({ fixture, team, standing, opponentStanding }: {
-  fixture: Fixture;
-  team: Team;
-  standing?: { position: number; points: number };
-  opponentStanding?: { position: number; points: number };
+type BoardSide = { name: string; logo: string; info?: { position: number; points: number } };
+export function MatchBoard({ label, meta, date, home, away, actions }: {
+  label: string;
+  meta: string;
+  date: string;
+  home: BoardSide;
+  away: BoardSide;
+  actions: React.ReactNode;
 }) {
-  const ours = { name: `Fito Raya ${team.id.toUpperCase()}`, logo: team.name, info: standing };
-  const theirs = { name: fixture.opponent.replaceAll("_", " "), logo: fixture.opponent, info: opponentStanding };
-  const [left, right] = fixture.home ? [ours, theirs] : [theirs, ours];
-  const countdown = daysUntil(fixture.date);
+  const countdown = daysUntil(date);
   return (
-    <section className="match-board" aria-label={`Próximo encuentro del equipo ${team.id.toUpperCase()}`}>
+    <section className="match-board" aria-label={label}>
       <div className="match-board-meta">
-        <span>Jornada {String(fixture.round).padStart(2, "0")} · {team.division}</span>
-        <span>{countdown && <b>{countdown}</b>} {formatDate(fixture.date)} · {formatTime(fixture.date)}</span>
+        <span>{meta}</span>
+        <span>{countdown && <b>{countdown}</b>} {formatDate(date)} · {formatTime(date)}</span>
       </div>
       <div className="match-board-versus">
-        {[left, right].map((side, index) => (
-          <div className={`match-board-team ${index ? "is-away" : ""}`} key={side.name}>
+        {[home, away].map((side, index) => (
+          <div className={`match-board-team ${index ? "is-away" : ""}`} key={index}>
             <TeamLogo name={side.logo} large />
             <div>
               <strong>{side.name}</strong>
@@ -166,12 +166,32 @@ export function NextMatchBoard({ fixture, team, standing, opponentStanding }: {
       </ol>
       <div className="match-board-actions">
         <span>12 puntos en juego. Las dos primeras parejas valen 3.</span>
-        <div>
-          <Link className="text-link" href={`/equipos/${team.id}/jornadas/${fixture.id}`}>Ver jornada <ArrowRight size={16} /></Link>
-          <Link className="button" href={`/equipos/${team.id}/parejas`}>Preparar la alineación</Link>
-        </div>
+        <div>{actions}</div>
       </div>
     </section>
+  );
+}
+export function NextMatchBoard({ fixture, team, standing, opponentStanding }: {
+  fixture: Fixture;
+  team: Team;
+  standing?: { position: number; points: number };
+  opponentStanding?: { position: number; points: number };
+}) {
+  const ours = { name: `Fito Raya ${team.id.toUpperCase()}`, logo: team.name, info: standing };
+  const theirs = { name: fixture.opponent.replaceAll("_", " "), logo: fixture.opponent, info: opponentStanding };
+  const [home, away] = fixture.home ? [ours, theirs] : [theirs, ours];
+  return (
+    <MatchBoard
+      label={`Próximo encuentro del equipo ${team.id.toUpperCase()}`}
+      meta={`Jornada ${String(fixture.round).padStart(2, "0")} · ${team.division}`}
+      date={fixture.date}
+      home={home}
+      away={away}
+      actions={<>
+        <Link className="text-link" href={`/equipos/${team.id}/jornadas/${fixture.id}`}>Ver jornada <ArrowRight size={16} /></Link>
+        <Link className="button" href={`/equipos/${team.id}/parejas`}>Preparar la alineación</Link>
+      </>}
+    />
   );
 }
 export function ResultRow({ fixture, team }: { fixture: Fixture; team: Team }) {

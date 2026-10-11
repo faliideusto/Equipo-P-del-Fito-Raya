@@ -5,6 +5,10 @@ const logos: Record<string, string> = {
   "REBELIÓN 3K": "/team-logos/rebelion-3k.png",
   "GLOBALPADEL CANDELA": "/team-logos/global-padel.png",
   "TOP BAL PÁDEL GAME B": "/team-logos/top-bal.jpg",
+  "LA CÚPULA GENERALIFE GAME": "/team-logos/la-cupula.png",
+  "ATLÉTICO PIEDRA OSTIONERA": "/team-logos/piedra-ostionera.png",
+  "IZENITRAVEL - HEIT CARBONEROS": "/team-logos/heit-carboneros.png",
+  "CENTRO MÉDICO MONTEALTO - JACARANDA": "/team-logos/jerez-padel-club.png",
 };
 
 export function TeamLogo({
