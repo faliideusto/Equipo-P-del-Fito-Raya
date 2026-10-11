@@ -4,6 +4,7 @@ import { normalizeFixtures,normalizeStandings,normalizePlayerStats,photoUrl,snpN
 import { normalizeTeamPlayer } from "../src/lib/snp-team";
 import { createSnpHttp } from "../src/lib/snp-auth";
 import { snpDate } from "../src/lib/snp-date";
+import { sessionCookie } from "../src/lib/snp-client";
 import { CookieJar } from "tough-cookie";
 
 test("normaliza fechas españolas independientemente de la zona del servidor",()=>{
@@ -41,4 +42,20 @@ test("no reenvía credenciales a un redirect de Google ni a otro dominio",async(
   globalThis.fetch=async()=>{calls++;return new Response(null,{status:307,headers:{location:"https://accounts.google.com/"}});};
   try {await assert.rejects(()=>createSnpHttp(new CookieJar())("https://snpgalaxy.com/usuario/login",{method:"POST",body:"secret"}));assert.equal(calls,1);}
   finally{globalThis.fetch=original;}
+});
+test("lee un acta convocada sin sets con jugadores y orden de parejas",()=>{
+  const pair=(n:number)=>`<div class="enf_partido_container"><div class="partido_jug_div" idjugador="${n}1" idpartido="9${n}">A${n} - 1000</div><div class="partido_jug_div" idjugador="${n}2">B${n} - 1000</div><div class="partido_jug_div" idjugador="${n}3">C${n} - 1000</div><div class="partido_jug_div" idjugador="${n}4">D${n} - 1000</div><div class="table_partidos"><table><tbody><tr><td>L</td><td class="td_part_res" set="1" eq="1"></td><td class="td_part_res" set="2" eq="1"></td><td class="td_part_res" set="3" eq="1"></td></tr><tr><td>V</td><td class="td_part_res" set="1" eq="2"></td><td class="td_part_res" set="2" eq="2"></td><td class="td_part_res" set="3" eq="2"></td></tr></tbody></table></div></div>`;
+  const html=`<h4>Enfrentamiento (#60000)</h4><h2>Sábado 17/10/2026</h2><div class="partido_equipo_nombre_new" equipo="1" idequipo1="7778">Fito A</div><div class="partido_equipo_nombre_new" equipo="2" idequipo2="3349">Arcos</div>${[1,2,3,4,5].map(pair).join("")}`;
+  const match=parseMatch(html,"60000");
+  assert.equal(match.score,null);assert.equal(match.games.length,5);
+  assert.deepEqual(match.games.map(g=>g.index+1),[1,2,3,4,5]);
+  assert.deepEqual(match.games[2].home?.map(p=>p.id),["31","32"]);
+  assert.ok(match.games.every(g=>g.sets.length===0));
+});
+test("una cookie de sesión de un solo host no se extiende a los subdominios de SNP",()=>{
+  const hostOnly=sessionCookie({name:"PHPSESSID",value:"a",domain:"snpgalaxy.com",path:"/",expires:-1,secure:false});
+  assert.equal(hostOnly?.url,"https://snpgalaxy.com");assert.doesNotMatch(hostOnly!.cookie,/Domain=/);
+  const shared=sessionCookie({name:"_ga",value:"b",domain:".snpgalaxy.com",path:"/",expires:2000000000,secure:true});
+  assert.match(shared!.cookie,/; Domain=snpgalaxy\.com/);assert.match(shared!.cookie,/; Secure/);assert.match(shared!.cookie,/Expires=/);
+  assert.equal(sessionCookie({name:"x",value:"c",domain:".google.com",path:"/",expires:-1,secure:true}),null);
 });

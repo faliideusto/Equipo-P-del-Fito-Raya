@@ -9,6 +9,16 @@ const ROOT = "https://seriesnacionalesdepadel.snpgalaxy.com";
 const allowedHost = isSnpHost;
 const sessionPath = () => path.resolve(process.env.SNP_SESSION_FILE || ".snp-private/session.json");
 export class SnpAccessError extends Error {}
+type SavedCookie = { name: string; value: string; domain: string; path?: string; expires?: number; secure?: boolean };
+// Browser cookies without a leading dot are host-only. Giving them a Domain
+// attribute would also send snpgalaxy.com's PHPSESSID to the competition host,
+// next to its own, and SNP would then answer with its login page.
+export function sessionCookie(cookie: SavedCookie): { cookie: string; url: string } | null {
+  const raw = String(cookie.domain); const domain = raw.replace(/^\./, "");
+  if (!allowedHost(domain)) return null;
+  const expiry = (cookie.expires ?? 0) > 0 ? `; Expires=${new Date(cookie.expires! * 1000).toUTCString()}` : "";
+  return { cookie: `${cookie.name}=${cookie.value}${raw.startsWith(".") ? `; Domain=${domain}` : ""}; Path=${cookie.path || "/"}${cookie.secure ? "; Secure" : ""}${expiry}`, url: `https://${domain}` };
+}
 class SnpClient {
   private stamp = 0;
   private jar = new CookieJar();
@@ -47,10 +57,8 @@ class SnpClient {
     if (!allowedHost(url.hostname) || url.protocol !== "https:") throw new SnpAccessError("El archivo de sesión no pertenece a SNP.");
     this.jar = new CookieJar(); this.fetch = createSnpHttp(this.jar);
     for (const cookie of session.cookies ?? []) {
-      const domain = String(cookie.domain).replace(/^\./, "");
-      if (!allowedHost(domain)) continue;
-      const expiry = cookie.expires > 0 ? `; Expires=${new Date(cookie.expires * 1000).toUTCString()}` : "";
-      await this.jar.setCookie(`${cookie.name}=${cookie.value}; Domain=${domain}; Path=${cookie.path || "/"}${cookie.secure ? "; Secure" : ""}${expiry}`, `https://${domain}`);
+      const entry = sessionCookie(cookie);
+      if (entry) await this.jar.setCookie(entry.cookie, entry.url);
     }
     this.chain = ""; this.season = "";
     this.frameUrl = url.toString();
