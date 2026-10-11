@@ -114,6 +114,9 @@
 }
 html {
   scroll-behavior: smooth;
+  /* No scroll anchoring: when a skeleton is replaced by a taller page it would keep the footer
+     on screen and push the view to the middle of the new page. */
+  overflow-anchor: none;
 }
 body {
   margin: 0;
@@ -3907,7 +3910,9 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 ::view-transition { pointer-events: none; }
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 ::view-transition-group(app-topbar), ::view-transition-group(app-sidebar), ::view-transition-group(app-bottom-nav), ::view-transition-group(app-mobile-header) { animation: none; z-index: 100; }
-::view-transition-old(app-topbar), ::view-transition-old(app-sidebar), ::view-transition-old(app-bottom-nav), ::view-transition-old(app-mobile-header) { display: none; }
+/* Keep the old snapshot visible (not display: none): until the new one is ready it is the
+   only copy, and hiding it left a gap where page content showed through the header. */
+::view-transition-old(app-topbar), ::view-transition-old(app-sidebar), ::view-transition-old(app-bottom-nav), ::view-transition-old(app-mobile-header) { animation: none; }
 ::view-transition-new(app-topbar), ::view-transition-new(app-sidebar), ::view-transition-new(app-bottom-nav), ::view-transition-new(app-mobile-header) { animation: none; }
 /* Crossfade only: skeleton and content differ in height, so never morph the box size. */
 ::view-transition-group(.page-fade) { animation: none; }
