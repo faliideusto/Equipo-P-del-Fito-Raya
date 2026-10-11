@@ -3,10 +3,12 @@ import assert from "node:assert/strict";
 import { applePassJson } from "../src/lib/wallet-apple";
 import type { WalletCardData } from "../src/domain/wallet-card";
 
-const card: WalletCardData = { teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerLine: "Carlos Martin · Revés", nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "Convocado J5 · Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X", snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40" };
+const card: WalletCardData = { teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "Convocado J5 · Pareja 2 con Juan Perez", lineupShort: "Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X", snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40" };
 const meta = { serial: "11111111-1111-4111-8111-111111111111", authToken: "t".repeat(43), baseUrl: "https://fito.example.com", passTypeId: "pass.com.fitoraya.equipo", teamIdentifier: "ABCDE12345" };
+type Fields = Record<string, { key: string; label: string; value: string; changeMessage?: string }[]>;
+const ticket = (data: WalletCardData) => applePassJson(data, meta).eventTicket as Fields;
 
-test("pass.json genérico con web service, colores y QR", () => {
+test("pass.json de entrada con web service, colores y QR", () => {
   const json = applePassJson(card, meta);
   assert.equal(json.formatVersion, 1);
   assert.equal(json.passTypeIdentifier, "pass.com.fitoraya.equipo");
@@ -16,16 +18,28 @@ test("pass.json genérico con web service, colores y QR", () => {
   assert.equal(json.webServiceURL, "https://fito.example.com/api/wallet/apple");
   assert.equal(json.backgroundColor, "rgb(10, 24, 37)");
   assert.equal(json.foregroundColor, "rgb(242, 197, 0)");
+  assert.equal(json.generic, undefined);
   assert.deepEqual(json.barcodes, [{ format: "PKBarcodeFormatQR", message: "https://fito.example.com/mi-perfil", messageEncoding: "iso-8859-1" }]);
 });
+test("nombre y puntos arriba, rival sobre la pista y datos cortos debajo", () => {
+  const fields = ticket(card);
+  assert.equal(applePassJson(card, meta).logoText, "Carlos Martin");
+  assert.deepEqual(fields.headerFields, [{ key: "points", label: "PUNTOS SNP", value: "20.313" }]);
+  assert.deepEqual(fields.primaryFields, [{ key: "rival", label: "J5 · PRÓXIMO RIVAL", value: "Rival" }]);
+  assert.deepEqual(fields.secondaryFields.map(f => [f.label, f.value]), [["FECHA", "Dom 18/10"], ["HORA", "10:00"], ["CAMPO", "Local"]]);
+  assert.deepEqual(fields.auxiliaryFields, [{ key: "lineup", label: "TU CONVOCATORIA J5", value: "Pareja 2 con Juan Perez", changeMessage: "Convocatoria J5: %@" }]);
+});
 test("solo convocatoria y resultado avisan al cambiar", () => {
-  const generic = applePassJson(card, meta).generic as Record<string, { key: string; value: string; changeMessage?: string }[]>;
-  const fields = Object.values(generic).flat();
-  assert.deepEqual(fields.filter(f => f.changeMessage).map(f => [f.key, f.changeMessage]), [["lineup", "%@"], ["result", "%@"]]);
-  assert.equal(fields.find(f => f.key === "points")?.value, "20.313");
+  const fields = Object.values(ticket(card)).flat();
+  assert.deepEqual(fields.filter(f => f.changeMessage).map(f => [f.key, f.changeMessage]), [["lineup", "Convocatoria J5: %@"], ["result", "%@"]]);
+  assert.equal(fields.find(f => f.key === "result")?.value, "J4 · Fito Raya A 7–5 Rival X");
   assert.equal(fields.find(f => f.key === "acta")?.value, "https://fito.example.com/equipos/a/jornadas/40");
 });
-test("sin acta no hay campo de acta en el reverso", () => {
-  const generic = applePassJson({ ...card, actaPath: null }, meta).generic as Record<string, { key: string }[]>;
-  assert.equal(generic.backFields.some(f => f.key === "acta"), false);
+test("sin hora, sin próximo partido y sin acta", () => {
+  assert.deepEqual(ticket({ ...card, next: { ...card.next!, time: null } }).secondaryFields.map(f => f.key), ["day", "venue"]);
+  const none = ticket({ ...card, next: null, lineupShort: "Sin convocatoria", actaPath: null });
+  assert.deepEqual(none.primaryFields, [{ key: "rival", label: "PRÓXIMO PARTIDO", value: "Sin partidos programados" }]);
+  assert.deepEqual(none.secondaryFields, []);
+  assert.deepEqual(none.auxiliaryFields, [{ key: "lineup", label: "TU CONVOCATORIA", value: "Sin convocatoria", changeMessage: "Convocatoria: %@" }]);
+  assert.equal(none.backFields.some(f => f.key === "acta"), false);
 });

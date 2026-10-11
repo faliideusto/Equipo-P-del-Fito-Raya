@@ -8,7 +8,7 @@ test("blocks unauthenticated pages and all data APIs while allowing access and h
     assert.equal(response.status, 307); assert.equal(new URL(response.headers.get("location")!).pathname, "/acceso");
   }
   for (const path of ["/api/snp/competition", "/api/positions", "/api/mvp", "/api/account/stats"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).status, 401);
-  for (const path of ["/acceso", "/api/account", "/api/account/roster?team=a", "/api/health", "/team-logos/top-bal.jpg", "/team-logos/padel-arcos.png", "/sponsors/logo.png", "/equipacion.png"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).headers.get("x-middleware-next"), "1");
+  for (const path of ["/acceso", "/api/account", "/api/account/roster?team=a", "/api/health", "/team-logos/top-bal.jpg", "/team-logos/padel-arcos.png", "/sponsors/logo.png", "/wallet/strip@3x.png", "/equipacion.png"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).headers.get("x-middleware-next"), "1");
   // Wallet's own web service authenticates with the pass token; the session-bound Wallet routes stay closed.
   for (const path of ["/api/wallet/apple/v1/log", "/api/wallet/apple/v1/passes/pass.x/11111111-1111-4111-8111-111111111111", "/api/wallet/apple/v1/devices/abc/registrations/pass.x"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).headers.get("x-middleware-next"), "1");
   for (const path of ["/api/wallet", "/api/wallet/apple?team=a", "/api/wallet/google?team=a", "/api/wallet/notify?teamId=a", "/api/wallet/apple/v1"]) assert.equal((await proxy(new NextRequest(`https://club.example.invalid${path}`))).status, 401);
