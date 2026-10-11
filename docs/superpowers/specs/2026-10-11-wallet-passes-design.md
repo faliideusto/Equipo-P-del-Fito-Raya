@@ -15,12 +15,12 @@ Los avisos son **actualizaciones de la tarjeta**, no un chat: Apple avisa cuando
 | Tema | Decisión |
 |---|---|
 | Plataformas | Apple Wallet y Google Wallet desde el principio. El owner crea las cuentas (Apple Developer Program y emisor de Google Pay & Wallet Console). |
-| Implementación | Propia: `passkit-generator` para el `.pkpass`, web service de Apple en rutas de Next.js, APNs por HTTP/2 con `node:http2`, API REST de Google Wallet con `google-auth-library`. Datos en Supabase. |
+| Implementación | Propia: `passkit-generator` para el `.pkpass`, web service de Apple en rutas de Next.js, APNs por HTTP/2 con `node:http2`, API REST de Google Wallet con `fetch`; los JWT (guardar y token OAuth de la service account) se firman con `node:crypto`, sin dependencias extra. Datos en Supabase. |
 | Tipo de tarjeta | Personal por jugador y equipo. Si un jugador está inscrito en A y B, tiene una tarjeta por equipo. |
 | Contenido avisable | Convocatoria / próximo partido y resultado de la jornada. |
 | Disparador | Botón manual del entrenador o de un capitán de ese equipo. |
 | Generación | Siempre al vuelo con el estado actual. No se guardan `.pkpass` ni contenido de la tarjeta. |
-| Convocatoria | Nueva tabla `published_lineups` que liga una alineación guardada (copia congelada de las parejas) a una jornada. |
+| Convocatoria | Nueva tabla `published_lineups` que liga una alineación guardada (copia congelada de las parejas, ya ordenadas con `sortPairs` como en «Preparar parejas») a una jornada. Solo se publica para el próximo partido; el resultado solo se notifica para la última jornada jugada. |
 
 ## Contenido de la tarjeta
 
@@ -37,15 +37,20 @@ Apple: tipo `generic`. Google: `GenericClass` / `GenericObject`.
 | Reverso / detalles | Enlaces | Web del equipo y acta de la última jornada | No |
 | Código | QR | URL de `/mi-perfil` | — |
 
-Diseño visual: fondo oscuro con texto amarillo (identidad del club), logo de `public/`. Sin campos vacíos: si no hay próximo partido, «Sin partidos programados».
+Diseño visual: fondo `#0a1825`, valores en amarillo `#f2c500` y etiquetas blancas (variables `--bg` y `--accent` de `globals.css`), logo `public/logo-fito.png` e icono `public/apple-touch-icon.png`. Sin campos vacíos: si no hay próximo partido, «Sin partidos programados».
 
 ### Textos de aviso
 
-- Convocado: `Convocado J5: sáb 18/10 10:00 · Pareja 2 con Juan`
-- No convocado: `No convocado en J5`
-- Resultado: `J4: Fito Raya A 3–2 Rival X`
+En Apple, `changeMessage: "%@"` muestra el **valor nuevo del campo**, así que el texto del aviso es el propio valor del campo. Google usa el mismo texto para que ambos coincidan:
 
-En Google el mismo texto va en el mensaje (`header` = «Convocatoria J5» o «Resultado J4», `body` = el texto).
+| Caso | Campo «Convocatoria» / «Último resultado» (= aviso) |
+|---|---|
+| Convocado | `Convocado J5 · Pareja 2 con Juan Pérez` (sin compañero: `Convocado J5 · Pareja 2`) |
+| No convocado | `No convocado en J5` |
+| Sin publicar | `Convocatoria J5 pendiente` (sin próximo partido: `Sin convocatoria`) |
+| Resultado | `J4 · Fito Raya A 7–5 C.D. VibraPadel` (siempre nuestro marcador primero) |
+
+En Google: `header` = «Convocatoria J5» o «Resultado J4», `body` = el valor del campo.
 
 ## Flujo del jugador
 
@@ -70,7 +75,7 @@ Patrón del repo: lógica pura en `src/domain`, servicios en `src/lib`, rutas en
 - `src/lib/wallet-card-service.ts`: reúne los datos reales (SNP, `match-results`, `published_lineups`, posiciones) y llama a `buildWalletCard`.
 - `src/lib/wallet-apple.ts`: `WalletCardData` → `.pkpass` firmado (`passkit-generator`). Incluye `webServiceURL = ${PUBLIC_BASE_URL}/api/wallet/apple` y el `authenticationToken` de la tarjeta.
 - `src/lib/wallet-apns.ts`: push vacío a `api.push.apple.com` por HTTP/2 con el certificado del Pass Type ID (`apns-topic = APPLE_PASS_TYPE_ID`).
-- `src/lib/wallet-google.ts`: crea o actualiza la clase del equipo y el objeto del jugador, firma el JWT de «Guardar» y llama a `addMessage`.
+- `src/lib/wallet-google.ts`: firma el JWT de «Guardar» (incluye la clase del equipo y el objeto del jugador, que Google crea al guardar), actualiza el objeto y llama a `addMessage`.
 - `src/lib/wallet-notify.ts`: orquesta un aviso (ver «Flujo de un aviso»).
 
 ### Rutas API
@@ -134,7 +139,7 @@ Se añaden a `.env.example` y a `render.yaml` (`sync: false`).
 
 ### UI
 
-- `/mi-perfil`: bloque «Tarjeta del equipo» con los botones oficiales de Apple y Google (uno por equipo inscrito).
+- `/mi-perfil`: bloque «Tarjeta del equipo» con botones del estilo de la web y el texto oficial («Añadir a Apple Wallet», «Guardar en Google Wallet»), uno por equipo inscrito. Las insignias gráficas oficiales quedan fuera de esta versión.
 - Pantalla de la jornada, visible solo para el entrenador y los capitanes de ese equipo:
   - «Publicar convocatoria y notificar»: elige una alineación guardada y confirma.
   - «Notificar resultado»: activo cuando la jornada tiene resultado.
