@@ -1,8 +1,8 @@
 "use client";
 import { useEffect,useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 export function SnpStatus() {
-  const [label,setLabel]=useState("SNP · No disponible"); const router=useRouter();
+  const [label,setLabel]=useState("SNP · No disponible"); const router=useRouter(); const pathname=usePathname();
   useEffect(()=>{
     let cancelled=false; let busy=false;
     async function update(){if(busy||document.hidden)return;busy=true;try{
@@ -15,6 +15,7 @@ export function SnpStatus() {
       if(result.ok)router.refresh();
     }catch{if(!cancelled)setLabel("SNP · Sin conexión");}finally{busy=false;}}
     void update();const timer=setInterval(()=>void update(),60000);return()=>{cancelled=true;clearInterval(timer);};
-  },[router]);
+    // Re-run on every section change so each page is refreshed with SNP on entry.
+  },[router,pathname]);
   return <span className="snp-status"><span className="status-dot"/>{label}</span>;
 }

@@ -88,14 +88,15 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
   const backHref = filters.division ? `/competicion?${query}` : "/competicion";
   const noDivision = <section className="panel connection-panel"><h2>Jornadas y clasificación</h2><p>Selecciona la división del equipo en competición para consultar su calendario y su clasificación.</p><Link href="/competicion" className="text-link">Buscar en competición →</Link></section>;
   const loadingCompetition = !calendarError && <section className="panel connection-panel"><p role="status">Consultando jornadas y clasificación…</p></section>;
-  const loadingTeam = error || result?.error
+  const loadingTeam = error || (result && !result.data)
     ? <section className="panel empty-state"><h2>Plantilla no disponible.</h2><p>SNP no ha devuelto la plantilla de este equipo. Vuelve a intentarlo en un rato.</p></section>
     : <section className="panel connection-panel"><p role="status">Consultando la plantilla…</p></section>;
-  const warnings = [...new Set([error || result?.error, calendarError || competition?.error].filter(Boolean))];
+  // Only explain a failure when there is nothing to show; saved data is shown quietly.
+  const warnings = [...new Set([!result && error, !competition && calendarError].filter((warning): warning is string => Boolean(warning)))];
 
   const roster = team && (
     <section className="panel">
-      <div className="panel-heading"><h2>Plantilla</h2><span className="badge blue">{result.stale ? "Consulta guardada" : "SNP"}</span></div>
+      <div className="panel-heading"><h2>Plantilla</h2><span className="badge blue">SNP</span></div>
       <div className="roster-list">
         {players.map((player, index) => (
           <Link className="roster-row" key={player.id} href={`/competicion/jugadores/${player.id}?equipo=${id}${query ? `&${query}` : ""}`}>
@@ -209,7 +210,7 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
         </section>
       ) : loadingTeam)}
 
-      {result && <p className="data-note">Consulta: {new Date(result.updatedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })} · {result.stale ? "Datos guardados" : "Fuente original SNP"}</p>}
+      {result && <p className="data-note">Consulta: {new Date(result.updatedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })} · SNP</p>}
     </>
   );
 }

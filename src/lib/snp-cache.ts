@@ -30,7 +30,9 @@ export async function cachedSnp<T>(key: string, loader: () => Promise<T>, fallba
         await writeFile(temporary,JSON.stringify(result),{mode:0o600}); await rename(temporary,file);
       } catch { /* A cache write failure must never discard a successful SNP response. */ }
       latestSuccess = result.updatedAt; latestError = null;
-      return { ...result, source: Date.now() - Date.parse(result.updatedAt) > 1000 ? "cache" : "live", stale: Date.now() - Date.parse(result.updatedAt) >= ttl };
+      // A successful read is never "stale": on Vercel the shared cache may serve the previous
+      // copy while it refreshes in the background, and the next visit gets the new one.
+      return { ...result, source: Date.now() - Date.parse(result.updatedAt) > 1000 ? "cache" : "live", stale: false };
     } catch(error) {
       const message = error instanceof Error ? error.message : "No se pudo consultar SNP.";
       latestError = message;
