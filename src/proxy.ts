@@ -14,6 +14,8 @@ export async function proxy(request: NextRequest) {
   if (path === "/acceso" || path === "/api/account" || path === "/api/account/roster" || path === "/api/account/search" || path === "/api/health") return NextResponse.next({ request: { headers } });
   // Apple Wallet calls its web service from the phone without cookies; those routes check the pass token themselves.
   if (path.startsWith("/api/wallet/apple/v1/")) return NextResponse.next({ request: { headers } });
+  // Google fetches the hero image of each card without cookies; the unguessable serial is the key.
+  if (path.startsWith("/api/wallet/google/hero/")) return NextResponse.next({ request: { headers } });
   let session: Session | undefined;
   try {
     const token = request.cookies.get("fito-access")?.value;

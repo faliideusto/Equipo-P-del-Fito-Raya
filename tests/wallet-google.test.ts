@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createVerify, generateKeyPairSync } from "node:crypto";
-import { googleObject, googleSaveUrl, googleWalletClient, signJwt } from "../src/lib/wallet-google";
+import { googleObject, googleSaveUrl, googleWalletClient, heroVersion, signJwt } from "../src/lib/wallet-google";
 import type { WalletCardData } from "../src/domain/wallet-card";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
@@ -10,15 +10,18 @@ const card: WalletCardData = { teamId: "b", playerSourceId: "1", teamLabel: "Equ
 const meta = { serial: "11111111-1111-4111-8111-111111111111", baseUrl: "https://fito.example.com" };
 const decode = (part: string) => JSON.parse(Buffer.from(part, "base64url").toString());
 
-test("objeto genérico con módulos de texto, enlace y QR", () => {
-  const object = googleObject(card, { issuerId: "3388", ...meta }) as { id: string; classId: string; state: string; hexBackgroundColor: string; textModulesData: { id: string; body: string }[]; linksModuleData: { uris: unknown[] }; barcode: unknown; heroImage: unknown };
+test("objeto genérico rosa con logo redondo, imagen generada, módulos de texto, enlace y QR", () => {
+  const object = googleObject(card, { issuerId: "3388", ...meta }) as { id: string; classId: string; state: string; hexBackgroundColor: string; logo: unknown; header: unknown; subheader: unknown; textModulesData: { id: string; body: string }[]; linksModuleData: { uris: unknown[] }; barcode: unknown; heroImage: unknown };
   assert.equal(object.id, "3388.11111111-1111-4111-8111-111111111111");
   assert.equal(object.classId, "3388.fito-raya-b");
   assert.equal(object.state, "ACTIVE");
-  assert.equal(object.hexBackgroundColor, "#0a1825");
+  assert.equal(object.hexBackgroundColor, "#c2287a");
+  assert.deepEqual(object.logo, { sourceUri: { uri: "https://fito.example.com/wallet/logo@3x.png" } });
+  assert.deepEqual(object.header, { defaultValue: { language: "es", value: "Carlos Martin" } });
+  assert.deepEqual(object.subheader, { defaultValue: { language: "es", value: "Puntos SNP · 900" } });
   assert.deepEqual(object.textModulesData.map(m => [m.id, m.body]), [["next", card.nextMatch], ["lineup", card.lineup], ["result", card.lastResult], ["points", "900"]]);
   assert.deepEqual(object.linksModuleData.uris, [{ id: "web", uri: "https://fito.example.com/equipos/b/jornadas", description: "Web del equipo" }]);
-  assert.deepEqual(object.heroImage, { sourceUri: { uri: "https://fito.example.com/wallet/strip@3x.png" } });
+  assert.deepEqual(object.heroImage, { sourceUri: { uri: `https://fito.example.com/api/wallet/google/hero/${meta.serial}?v=${heroVersion(card)}` }, contentDescription: { defaultValue: { language: "es", value: card.nextMatch } } });
   assert.deepEqual(object.barcode, { type: "QR_CODE", value: "https://fito.example.com/mi-perfil" });
 });
 test("JWT de guardar firmado RS256 con clase y objeto", () => {
@@ -60,4 +63,10 @@ test("cliente: token cacheado, PATCH + addMessage y resultados", async () => {
   patchStatus = 500; assert.equal(await client.update("3388.s", {}, notice, "w"), "failed");
   const broken = googleWalletClient(config, (async () => { throw new Error("red"); }) as typeof fetch);
   assert.equal(await broken.update("3388.s", {}, null, "v"), "failed");
+});
+test("la URL de la imagen cambia solo cuando cambia lo que dibuja", () => {
+  assert.match(heroVersion(card), /^[0-9a-f]{12}$/);
+  assert.equal(heroVersion({ ...card, snpPoints: "1.000", lastResult: "J4 · Fito Raya B 7–5 X" }), heroVersion(card));
+  assert.notEqual(heroVersion({ ...card, lineupShort: "Pareja 1 con Ana" }), heroVersion(card));
+  assert.notEqual(heroVersion({ ...card, next: { ...card.next!, opponent: "Otro" } }), heroVersion(card));
 });
