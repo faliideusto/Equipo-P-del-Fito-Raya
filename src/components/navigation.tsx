@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+  CalendarCheck,
   ClipboardList,
   HeartHandshake,
   House,
@@ -30,6 +31,7 @@ const clubItems: Item[] = [
   { href: "/mvp", label: "MVP del mes", icon: Trophy, match: (path) => path === "/mvp" },
   { href: "/patrocinadores", label: "Patrocinadores", icon: HeartHandshake, match: (path) => path === "/patrocinadores" },
 ];
+const latest: Item = { href: "/ultima-jornada", label: "Última jornada", icon: CalendarCheck, match: (path) => path === "/ultima-jornada" };
 const home: Item = { href: "/", label: "Inicio", icon: House, match: (path) => path === "/" };
 const profile: Item = { href: "/mi-perfil", label: "Mi perfil", icon: UserRound, match: (path) => path === "/mi-perfil" || path === "/acceso" };
 const coach: Item = { href: "/entrenador", label: "Panel del entrenador", icon: ClipboardList, match: (path) => path === "/entrenador" };
@@ -81,6 +83,7 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
           <div className="nav-group">
             <div className="nav-caption">Nuestros equipos</div>
             {teamItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} onNavigate={close} />)}
+            <NavLink item={latest} pathname={pathname} onNavigate={close} />
           </div>
           <div className="nav-group">
             <div className="nav-caption">Club</div>

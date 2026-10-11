@@ -3854,3 +3854,12 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .coach-results { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .coach-results li { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
 .coach-results small { color: var(--muted); }
+
+.fixture-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.fixture-nav-steps { display: flex; gap: 16px; }
+.my-result { display: grid; gap: 14px; margin: 16px 0; }
+.my-result-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.my-result-heading h2 { margin: 0; font-size: 18px; }
+.my-result-heading p { margin: 2px 0 0; color: var(--muted); }
+.my-result-sets { font-size: 20px; color: var(--accent); }
+.my-result .button { justify-self: start; }
