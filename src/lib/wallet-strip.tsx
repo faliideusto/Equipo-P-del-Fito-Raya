@@ -3,14 +3,14 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
 import type { WalletCardData } from "@/domain/wallet-card";
-// The strip of the Apple store card (375x144 pt), drawn per card: Wallet fields allow neither icons nor a colour per text,
+// The strip of the Apple event ticket (375x98 pt), drawn per card: Wallet fields allow neither icons nor a colour per text,
 // so the match ("Fito Raya vs rival", date, time and venue) and the player's lineup are an image on the kit gradient.
-export const STRIP = { width: 375, height: 144 };
+export const STRIP = { width: 375, height: 98 };
 const BLUSH = "#FFE3F1", LILAC = "#E3D4FF", YELLOW = "#FFE066";
 // Long rival names get a smaller title so most of them fit on one line; the rest end in "…".
 export function titleSize(opponent: string): number {
   const length = `Fito Raya vs ${opponent}`.length;
-  return length <= 26 ? 26 : length <= 32 ? 22 : 18;
+  return length <= 26 ? 22 : length <= 32 ? 18 : 15;
 }
 type Icon = "ball" | "calendar" | "clock" | "home" | "away" | "lineup";
 const PATHS: Record<Icon, ReactNode> = {
@@ -24,16 +24,17 @@ const PATHS: Record<Icon, ReactNode> = {
 const icon = (name: Icon, size: number, color: string) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">{PATHS[name]}</svg>
 );
+// Icons, the round, the rival, the venue and the pair number are yellow; the rest is white.
 function strip(card: WalletCardData, s: number) {
   const next = card.next;
-  const details: [Icon, string][] = next ? [["calendar", next.day], ...(next.time ? [["clock", next.time] as [Icon, string]] : []), [next.venue === "Local" ? "home" : "away", next.venue]] : [];
+  const details: [Icon, string, string][] = next ? [["calendar", next.day, "#fff"], ...(next.time ? [["clock", next.time, "#fff"] as [Icon, string, string]] : []), [next.venue === "Local" ? "home" : "away", next.venue, YELLOW]] : [];
   const title = next ? titleSize(next.opponent) * s : 20 * s;
   // "Pareja 2 con Juan" shows the pair number in yellow; "Pendiente" or "No convocado" stay white.
   const [, pair, rest] = card.lineupShort.match(/^(Pareja \d+)(.*)$/) ?? [null, null, card.lineupShort];
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", gap: 7 * s, padding: `0 ${16 * s}px`, color: "#fff", fontFamily: "Geist", background: "linear-gradient(110deg, #C2287A 0%, #8E2A9E 55%, #4C1D95 100%)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 5 * s, fontSize: 10 * s, fontWeight: 600, letterSpacing: 0.6 * s, color: BLUSH }}>
-        {icon("ball", 12 * s, BLUSH)}{next ? `${next.round} · PRÓXIMO PARTIDO` : "PRÓXIMO PARTIDO"}
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 * s, padding: `0 ${16 * s}px`, color: "#fff", fontFamily: "Geist", background: "linear-gradient(110deg, #C2287A 0%, #8E2A9E 55%, #4C1D95 100%)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 5 * s, fontSize: 9 * s, fontWeight: 600, letterSpacing: 0.6 * s, color: BLUSH }}>
+        {icon("ball", 11 * s, YELLOW)}{next && <span style={{ color: YELLOW }}>{next.round}</span>}{next ? "· PRÓXIMO PARTIDO" : "PRÓXIMO PARTIDO"}
       </div>
       {next ? (
         <div style={{ display: "flex", alignItems: "baseline", gap: 7 * s, fontSize: title, fontWeight: 700, lineHeight: 1.1, whiteSpace: "nowrap" }}>
@@ -43,14 +44,13 @@ function strip(card: WalletCardData, s: number) {
         </div>
       ) : <div style={{ display: "flex", fontSize: title, fontWeight: 700 }}>Sin partidos programados</div>}
       {details.length > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: 16 * s, fontSize: 14 * s, fontWeight: 600 }}>
-          {details.map(([name, text]) => <div key={name} style={{ display: "flex", alignItems: "center", gap: 6 * s }}>{icon(name, 14 * s, LILAC)}{text}</div>)}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 * s, fontSize: 12 * s, fontWeight: 600 }}>
+          {details.map(([name, text, color]) => <div key={name} style={{ display: "flex", alignItems: "center", gap: 5 * s, color }}>{icon(name, 12 * s, YELLOW)}{text}</div>)}
         </div>
       )}
       {next && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 * s, marginTop: 2 * s, paddingTop: 9 * s, borderTop: `${s}px solid rgba(255, 227, 241, 0.28)`, fontSize: 14 * s, fontWeight: 600, whiteSpace: "nowrap" }}>
-          {icon("lineup", 14 * s, YELLOW)}
-          <span style={{ flexShrink: 0, color: BLUSH }}>Convocatoria:</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 * s, fontSize: 12 * s, fontWeight: 600, whiteSpace: "nowrap" }}>
+          {icon("lineup", 12 * s, YELLOW)}
           {pair && <span style={{ flexShrink: 0, color: YELLOW }}>{pair}</span>}
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{rest.trim()}</span>
         </div>

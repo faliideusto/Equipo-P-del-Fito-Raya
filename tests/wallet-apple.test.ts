@@ -6,9 +6,9 @@ import type { WalletCardData } from "../src/domain/wallet-card";
 const card: WalletCardData = { teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "Convocado J5 · Pareja 2 con Juan Perez", lineupShort: "Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X", snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40" };
 const meta = { serial: "11111111-1111-4111-8111-111111111111", authToken: "t".repeat(43), baseUrl: "https://fito.example.com", passTypeId: "pass.com.fitoraya.equipo", teamIdentifier: "ABCDE12345" };
 type Fields = Record<string, { key: string; label: string; value: string; changeMessage?: string }[]>;
-const ticket = (data: WalletCardData) => applePassJson(data, meta).storeCard as Fields;
+const ticket = (data: WalletCardData) => applePassJson(data, meta).eventTicket as Fields;
 
-test("pass.json de tarjeta con web service, colores y QR", () => {
+test("pass.json de entrada con web service, colores y QR", () => {
   const json = applePassJson(card, meta);
   assert.equal(json.formatVersion, 1);
   assert.equal(json.passTypeIdentifier, "pass.com.fitoraya.equipo");
@@ -19,7 +19,7 @@ test("pass.json de tarjeta con web service, colores y QR", () => {
   assert.equal(json.backgroundColor, "rgb(76, 29, 149)");
   assert.equal(json.foregroundColor, "rgb(255, 255, 255)");
   assert.equal(json.generic, undefined);
-  assert.equal(json.eventTicket, undefined);
+  assert.equal(json.storeCard, undefined);
   assert.deepEqual(json.barcodes, [{ format: "PKBarcodeFormatQR", message: "https://fito.example.com/mi-perfil", messageEncoding: "iso-8859-1" }]);
 });
 test("nombre y puntos arriba; partido y convocatoria en la franja y en el reverso", () => {
