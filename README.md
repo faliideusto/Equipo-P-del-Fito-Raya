@@ -114,3 +114,5 @@ La instalación requiere `supabase/accounts.sql` y las variables de Supabase ya
 utilizadas por el club. El proyecto actual usa registro directo sin confirmación
 de correo por decisión del propietario. Detalles: [cuentas](docs/cuentas.md).
 
+El capitán de cada equipo, elegido por el entrenador, puede enviar al grupo de WhatsApp el resultado completo de la jornada: [mensaje para WhatsApp](docs/whatsapp-resultado.md).
+
