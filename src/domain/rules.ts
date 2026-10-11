@@ -15,7 +15,7 @@ export function positionLabel(position: Position | null): string {
     ? "Posición por confirmar"
     : POSITION_LABELS[position];
 }
-export function pairPoints(pair: Pair, players: Player[]): number | null {
+export function pairPoints(pair: Pair, players: Pick<Player, "id" | "points">[]): number | null {
   let sum = 0;
   for (const id of pair.players) {
     if (id === null) continue;
@@ -25,7 +25,7 @@ export function pairPoints(pair: Pair, players: Player[]): number | null {
   }
   return Math.round(sum * 100) / 100;
 }
-export function sortPairs(pairs: Pair[], players: Player[]): Pair[] {
+export function sortPairs(pairs: Pair[], players: Pick<Player, "id" | "points">[]): Pair[] {
   return [...pairs].sort(
     (a, b) =>
       (pairPoints(b, players) ?? -1) - (pairPoints(a, players) ?? -1) ||
