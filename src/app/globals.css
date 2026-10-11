@@ -3850,3 +3850,7 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .result-existing { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 @media (max-width: 640px) { .result-chip { right: 16px; bottom: 16px; } .result-grid { grid-template-columns: 76px repeat(3, 1fr); } }
+
+.coach-results { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.coach-results li { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+.coach-results small { color: var(--muted); }
