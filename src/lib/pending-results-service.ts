@@ -60,3 +60,9 @@ export async function latestFixtureFor(playerId: string | null, now = Date.now()
   const teams = mine.length === 1 ? mine : TEAMS;
   return latestStarted(await Promise.all(teams.map(async teamId => ({ teamId, fixtures: await clubRepository.getFixtures(teamId).catch(() => []) }))), now);
 }
+// Provisional app results shown inside the acta; only the user's own pair is editable.
+export async function fixtureProvisional(userId: string | null, playerId: string | null, teamId: TeamId, fixture: Fixture, teamIds: [string, string] | undefined) {
+  const [rows, mine] = await Promise.all([listResults([fixture.id]).catch(() => []), userId && playerId ? myFixtureResult(userId, playerId, teamId, fixture.id).catch(() => null) : null]);
+  const ownIndex = teamIds?.indexOf(sourceTeams[teamId]) ?? -1;
+  return { fixtureId: fixture.id, teamId, ownSide: (ownIndex >= 0 ? ownIndex : fixture.home ? 0 : 1) as 0 | 1, results: Object.fromEntries(rows.filter(r => r.team_id === teamId).map(r => [r.pair_index, r.sets])), editablePair: mine?.editable ? mine.pairIndex : null };
+}

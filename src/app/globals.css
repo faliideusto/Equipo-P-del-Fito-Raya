@@ -3857,9 +3857,11 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 
 .fixture-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
 .fixture-nav-steps { display: flex; gap: 16px; }
-.my-result { display: grid; gap: 14px; margin: 16px 0; }
-.my-result-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.my-result-heading h2 { margin: 0; font-size: 18px; }
-.my-result-heading p { margin: 2px 0 0; color: var(--muted); }
-.my-result-sets { font-size: 20px; color: var(--accent); }
-.my-result .button { justify-self: start; }
+.provisional-tag { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; color: var(--accent); font-weight: 700; }
+.result-group.is-provisional .result-set span { color: var(--accent); font-style: italic; }
+.provisional-row td { padding: 10px 14px 14px; }
+.provisional-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.provisional-note { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.provisional-buttons { display: inline-flex; gap: 8px; }
+.acta-set-input { width: 3.2em; text-align: center; font-size: 16px; padding: 6px 0; border-radius: 6px; border: 1px solid var(--accent-line); background: var(--bg); color: var(--ink); }
+.acta-set-input:disabled { opacity: 0.35; }

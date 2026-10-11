@@ -14,3 +14,5 @@ export function myResult({ results, userId, playerId, confirmedPair, acta, ownSn
   const published = Boolean(acta?.games.find(g => g.index + 1 === result.pairIndex)?.sets.length);
   return { ...result, editable: !published };
 }
+// App results are stored [nosotros, rivales]; the acta shows [local, visitante].
+export const toActaSets = (sets: SetScore[], ownSide: 0 | 1): SetScore[] => sets.map(([ours, theirs]) => ownSide === 0 ? [ours, theirs] : [theirs, ours]);

@@ -30,3 +30,8 @@ test("cuando SNP publica los sets de esa pareja ya no se puede modificar", () =>
 test("sin resultado guardado no hay nada que mostrar", () => {
   assert.equal(myResult({ ...base, results: [] }), null);
 });
+test("el resultado provisional se coloca en las filas local y visitante del acta", async () => {
+  const { toActaSets } = await import("../src/domain/result-edit");
+  assert.deepEqual(toActaSets([[6, 4], [3, 6], [10, 8]], 0), [[6, 4], [3, 6], [10, 8]]);
+  assert.deepEqual(toActaSets([[6, 4], [3, 6], [10, 8]], 1), [[4, 6], [6, 3], [8, 10]]);
+});
