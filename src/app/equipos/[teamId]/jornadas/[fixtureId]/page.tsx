@@ -11,6 +11,6 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   if(!fixture)notFound();
   const backHref=`/equipos/${teamId}/jornadas`;
   const result=await getSnpMatch(fixtureId).catch(()=>null);
-  if(result)return <SnpMatchView result={result} backHref={backHref} backLabel="Volver al calendario"/>;
+  if(result)return <SnpMatchView result={result} backHref={backHref} backLabel="Volver al calendario" teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>;
   return <><Link href={backHref} className="text-link back-link">← Volver al calendario</Link><PageHeading eyebrow={`JORNADA ${fixture.round}`} title={fixture.opponent} text="El acta no está disponible en esta consulta."/><section className="panel connection-panel"><p>SNP no ha permitido consultar las parejas y los sets. Vuelve a intentarlo más tarde.</p><Link href={`/equipos/${teamId}/parejas`} className="button secondary">Preparar parejas</Link></section></>;
 }

@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowUpRight, Trophy, Users, CalendarDays } from "lucide-react";
 import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
-import { FixtureCard, PageHeading, StandingsTable } from "@/components/sports";
+import { PageHeading, StandingsTable } from "@/components/sports";
+import { TeamSchedule } from "@/components/team-schedule";
+import { fixtureScore } from "@/domain/rules";
 export default async function TeamPage({
   params,
 }: {
@@ -16,7 +18,15 @@ export default async function TeamPage({
     clubRepository.getFixtures(teamId),
   ]);
   const own = rows.find((r) => r.own)!;
-  const next = fixtures.find((f) => f.status === "pending");
+  const sourceId = teamId === "a" ? "7778" : "803902";
+  const division = teamId === "a" ? "2318" : "2326";
+  const calendar = fixtures.map(f => ({
+    id: f.id, round: f.round, date: f.date,
+    homeId: f.home ? sourceId : "", awayId: f.home ? "" : sourceId,
+    homeName: f.home ? team.name : f.opponent, awayName: f.home ? f.opponent : team.name,
+    score: f.score || (f.status === "played" ? [fixtureScore(f.matches).home, fixtureScore(f.matches).away] as [number, number] : null),
+    state: f.status,
+  }));
   return (
     <>
       <PageHeading
@@ -30,6 +40,7 @@ export default async function TeamPage({
           </Link>
         }
       />
+      <TeamSchedule fixtures={calendar} teamId={sourceId} matchBaseHref={`/equipos/${teamId}/jornadas`}/>
       <div className="summary-stats">
         <div>
           <Trophy />
@@ -51,18 +62,11 @@ export default async function TeamPage({
         </div>
       </div>
       <div className="section-title">
-        <h2>Próxima jornada</h2>
-        <Link href={`/equipos/${teamId}/jornadas`} className="text-link">
-          Ver calendario <ArrowUpRight size={16} />
-        </Link>
-      </div>
-      {next && <FixtureCard fixture={next} team={team} prominent />}
-      <div className="section-title">
         <h2>Así va la liga</h2>
         <span>{team.division} · SNP</span>
       </div>
       <section className="panel">
-        <StandingsTable rows={rows} />
+        <StandingsTable rows={rows} division={division} />
       </section>
     </>
   );

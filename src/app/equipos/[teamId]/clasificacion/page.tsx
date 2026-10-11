@@ -21,7 +21,7 @@ export default async function StandingsPage({
           <h2>Clasificación</h2>
           <span className="badge blue">{team.shortName}</span>
         </div>
-        <StandingsTable rows={rows} />
+        <StandingsTable rows={rows} division={teamId === "a" ? "2318" : "2326"} />
       </section>
       <p className="data-note">
         Clasificación publicada por SNP. Se conserva

@@ -31,7 +31,7 @@ export function PageHeading({
     </div>
   );
 }
-export function StandingsTable({ rows }: { rows: Standing[] }) {
+export function StandingsTable({ rows, division }: { rows: Standing[]; division?: string }) {
   return (
     <div className="table-scroll">
       <table className="standings">
@@ -52,7 +52,7 @@ export function StandingsTable({ rows }: { rows: Standing[] }) {
                 <span className="rank">{i + 1}</span>
               </td>
               <td>
-                <Link href={row.teamId?`/competicion/equipos/${row.teamId}`:"/competicion"} className="standing-team">
+                <Link href={row.teamId?`/competicion/equipos/${row.teamId}${division ? `?division=${division}` : ""}`:"/competicion"} className="standing-team">
                   <TeamLogo name={row.name} />
                   <span>
                     {row.name}
