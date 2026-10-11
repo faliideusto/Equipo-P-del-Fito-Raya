@@ -35,7 +35,7 @@ export default async function RootLayout({
   await connection();
 
   return (
-    <html lang="es" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="es" data-scroll-behavior="smooth" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
         <AppShell>{children}</AppShell>
       </body>
