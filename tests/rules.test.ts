@@ -12,6 +12,7 @@ import {
   pairPoints,
   removePlayer,
   sortPairs,
+  validLineupPairs,
 } from "../src/domain/rules";
 import type { Match, Player } from "../src/domain/types";
 const players: Player[] = [
@@ -111,4 +112,17 @@ test("detecta IDs duplicados", () => {
   pairs[0].players = ["a1", "a2"];
   pairs[2].players = ["a1", null];
   assert.deepEqual(duplicatePlayers(pairs), ["a1"]);
+});
+test("una alineación enviada desde la jornada: cinco parejas, jugadores del equipo, sin repetir y no vacía", () => {
+  const ids = ["a-1", "a-2", "a-3"];
+  const lineup = (first: unknown[] = ["a-1", "a-2"]) => [{ id: "slot-0", players: first }, ...[1, 2, 3, 4].map(i => ({ id: `slot-${i}`, players: [null, null] }))];
+  assert.equal(validLineupPairs(lineup(), ids), true);
+  assert.equal(validLineupPairs(lineup(["a-1", null]), ids), true);
+  assert.equal(validLineupPairs(lineup([null, null]), ids), false);
+  assert.equal(validLineupPairs(lineup(["a-1", "a-1"]), ids), false);
+  assert.equal(validLineupPairs(lineup(["a-1", "b-9"]), ids), false);
+  assert.equal(validLineupPairs(lineup(["a-1", 7]), ids), false);
+  assert.equal(validLineupPairs(lineup().slice(0, 4), ids), false);
+  assert.equal(validLineupPairs([...lineup().slice(0, 4), { id: "slot-0", players: [null, null] }], ids), false);
+  assert.equal(validLineupPairs("x", ids), false);
 });

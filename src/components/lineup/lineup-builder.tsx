@@ -26,17 +26,22 @@ import { PairCard } from "./pair-card";
 import { useIsCoach } from "../app-shell";
 import { PositionEditor } from "./position-editor";
 import { SavedLineups } from "./saved-lineups";
+// With `actions` the builder is embedded in a fixture: it starts from the published pairs and shows the given controls under the lineup.
 export function LineupBuilder({
   players: initialPlayers,
   teamId,
+  initialPairs,
+  actions,
 }: {
   players: Player[];
   teamId: TeamId;
+  initialPairs?: Pair[];
+  actions?: (pairs: Pair[]) => React.ReactNode;
 }) {
   const isCoach = useIsCoach();
   const [players, setPlayers] = useState(initialPlayers);
   const [selected, setSelected] = useState<string[]>(players.map((p) => p.id));
-  const [pairs, setPairs] = useState<Pair[]>(emptyLineup);
+  const [pairs, setPairs] = useState<Pair[]>(() => initialPairs ?? emptyLineup());
   const [armed, setArmed] = useState<string | null>(null);
   const [picker, setPicker] = useState<{ pairId: string; slot: 0 | 1 } | null>(
     null,
@@ -125,8 +130,8 @@ export function LineupBuilder({
           aria-expanded={selectionOpen}
         >
           <span>
-            <strong>Convocatoria de prueba</strong>
-            <small>La selección es temporal</small>
+            <strong>{actions ? "Jugadores disponibles" : "Convocatoria de prueba"}</strong>
+            <small>{actions ? "Marca a los que se han apuntado" : "La selección es temporal"}</small>
           </span>
           <ChevronDown size={17} />
         </button>
@@ -192,7 +197,7 @@ export function LineupBuilder({
       <div className="lineup-workspace">
         <div className="lab-toolbar">
           <div>
-            <span className="badge blue">LABORATORIO</span>
+            <span className="badge blue">{actions ? "CONVOCATORIA" : "LABORATORIO"}</span>
             <span>{complete} / 5 parejas completas</span>
           </div>
           <button
@@ -296,13 +301,14 @@ export function LineupBuilder({
             {formatPoints(total)} <small>pts SNP totales</small>
           </strong>
         </div>
-        <p className="data-note">
+        {actions?.(ordered)}
+        {!actions && <p className="data-note">
           Las parejas se ordenan por suma de puntos. Los empates mantienen el
           orden de los huecos originales. Los campos de puntos vacíos en SNP se
           han importado como 0. Puedes definir las posiciones en el apartado inferior. Los
           conflictos de posición son avisos y permiten seguir probando.
-        </p>
-        <PositionEditor players={players} teamId={teamId} onSaved={setPlayers} />
+        </p>}
+        {!actions && <PositionEditor players={players} teamId={teamId} onSaved={setPlayers} />}
         <SavedLineups teamId={teamId} pairs={ordered} players={players} onLoad={saved => { setPairs(saved); setSelected(players.map(p => p.id)); setArmed(null); setPicker(null); setNotice("Alineación privada recuperada. Puedes seguir ajustándola sin cambiar la copia guardada."); }} />
       </div>
       {picker && (
