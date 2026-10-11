@@ -28,3 +28,28 @@ export function PageSkeleton({ variant = "page", label = "Cargando…", heading 
     {variant === "profile" && <ProfileSkeleton/>}
   </div>;
 }
+// Mi perfil: skeletons built from the same containers as the real content, so the
+// page keeps its shape while each part loads (no jumps between phases).
+function MetricsSkeleton({ count, className = "" }: { count: number; className?: string }) {
+  return <div className={`profile-metrics ${className}`}>{Array.from({ length: count }, (_, i) => <div key={i}><Skeleton className="skeleton-metric"/><Skeleton className="skeleton-line skeleton-eyebrow"/></div>)}</div>;
+}
+export function TeamStatsSkeleton() {
+  return <div className="profile-teams"><section className="panel player-stats"><div className="panel-heading skeleton-panel-heading"><Skeleton className="skeleton-line skeleton-subtitle"/></div><MetricsSkeleton count={6}/></section></div>;
+}
+export function PlayerCardSkeleton() {
+  return <>
+    <section className="panel player-profile"><Skeleton className="skeleton-avatar skeleton-avatar-large"/><div className="skeleton-profile-lines"><Skeleton className="skeleton-line skeleton-subtitle"/><Skeleton className="skeleton-line skeleton-title"/><Skeleton className="skeleton-line skeleton-eyebrow"/><Skeleton className="skeleton-line skeleton-eyebrow"/></div></section>
+    <MetricsSkeleton count={2} className="player-winrates"/>
+    <div className="profile-tabs"><Skeleton className="skeleton-button"/><Skeleton className="skeleton-button"/></div>
+    <section className="panel player-stats"><div className="panel-heading skeleton-panel-heading"><Skeleton className="skeleton-line skeleton-subtitle"/></div><MetricsSkeleton count={4}/><div className="points-chart"><Skeleton className="skeleton-chart"/></div></section>
+  </>;
+}
+export function MyProfileSkeleton() {
+  return <div role="status" aria-live="polite">
+    <span className="sr-only">Cargando tu perfil…</span>
+    <div className="section-title"><h2>Tu aportación esta temporada</h2><span>Puntos ganados para el equipo</span></div>
+    <TeamStatsSkeleton/>
+    <div className="section-title"><h2>Tu ficha SNP</h2><span>Puntos, ranking e historial deportivo</span></div>
+    <PlayerCardSkeleton/>
+  </div>;
+}

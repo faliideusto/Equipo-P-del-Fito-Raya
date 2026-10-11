@@ -3921,3 +3921,9 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
   ::view-transition-old(.nav-forward), ::view-transition-old(.nav-back) { animation: 150ms ease-in both vt-fade reverse; }
   ::view-transition-new(.nav-forward), ::view-transition-new(.nav-back) { animation: 210ms ease-out 150ms both vt-fade; }
 }
+.skeleton-metric { height: 38px; width: 70%; border-radius: 8px; }
+.skeleton-subtitle { width: 34%; max-width: 260px; height: 22px; }
+.skeleton-panel-heading { padding: 28px 28px 0; }
+.skeleton-avatar-large { width: 110px; height: 110px; }
+.skeleton-button { width: 160px; height: 44px; border-radius: 10px; }
+.skeleton-profile .profile-metrics, .page-skeleton .profile-metrics { padding: 0; }
