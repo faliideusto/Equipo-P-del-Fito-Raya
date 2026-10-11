@@ -10,7 +10,7 @@ export const googleObjectId = (issuerId: string, serial: string) => `${issuerId}
 export function googleObject(card: WalletCardData, { issuerId, serial, baseUrl }: { issuerId: string; serial: string; baseUrl: string }): Record<string, unknown> {
   return {
     id: googleObjectId(issuerId, serial), classId: googleClassId(issuerId, card.teamId), state: "ACTIVE", hexBackgroundColor: "#0a1825",
-    logo: { sourceUri: { uri: `${baseUrl}/logo-fito.png` } },
+    logo: { sourceUri: { uri: `${baseUrl}/logo-fito.png` } }, heroImage: { sourceUri: { uri: `${baseUrl}/wallet/strip@3x.png` } },
     cardTitle: text(`Fito Raya · ${card.teamLabel}`), header: text(card.playerLine), subheader: text(card.teamLabel),
     textModulesData: [
       { id: "next", header: "Próximo partido", body: card.nextMatch },

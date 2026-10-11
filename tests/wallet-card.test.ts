@@ -12,9 +12,9 @@ const ctx = (over: Partial<TeamCardContext> = {}): TeamCardContext => ({ teamId:
 
 test("tarjeta completa de un jugador convocado", () => {
   assert.deepEqual(buildWalletCard(ctx(), "1"), {
-    teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerLine: "Carlos Martin · Revés",
-    nextMatch: "J5 · C.D. VibraPadel · Dom 18/10 10:00 · Local",
-    lineup: "Convocado J5 · Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X",
+    teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés",
+    next: { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: "10:00", venue: "Local" }, nextMatch: "J5 · C.D. VibraPadel · Dom 18/10 10:00 · Local",
+    lineup: "Convocado J5 · Pareja 2 con Juan Perez", lineupShort: "Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X",
     snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40",
   });
 });
@@ -52,4 +52,14 @@ test("avisos de convocatoria y resultado", () => {
   assert.deepEqual(walletNotice(ctx(), card, "result"), { header: "Resultado J4", body: "J4 · Fito Raya A 7–5 Rival X" });
   assert.equal(walletNotice(ctx({ next: null }), card, "lineup"), null);
   assert.equal(walletNotice(ctx({ last: null }), card, "result"), null);
+});
+test("textos cortos para el frente de la tarjeta", () => {
+  assert.equal(buildWalletCard(ctx(), "3")!.lineupShort, "Pareja 1 con Juan Perez");
+  assert.equal(buildWalletCard(ctx({ published: { fixtureId: "50", pairs: [{ id: "p1", players: ["a-2", null] }] } }), "1")!.lineupShort, "No convocado");
+  assert.equal(buildWalletCard(ctx({ published: null }), "1")!.lineupShort, "Pendiente");
+  const none = buildWalletCard(ctx({ next: null, published: null }), "1")!;
+  assert.equal(none.lineupShort, "Sin convocatoria");
+  assert.equal(none.next, null);
+  assert.deepEqual(buildWalletCard(ctx({ next: { ...next, date: "2026-10-18", home: false } }), "1")!.next, { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: null, venue: "Visitante" });
+  assert.equal(buildWalletCard(ctx({ next: { ...next, date: "" } }), "1")!.next!.day, "Por confirmar");
 });

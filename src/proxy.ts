@@ -9,7 +9,7 @@ export async function proxy(request: NextRequest) {
   headers.set("x-fito-access-page", path === "/acceso" ? "1" : "0");
   // Public brand assets must be readable by Next's image optimizer, which
   // fetches source files without forwarding the visitor's session cookies.
-  const brandAsset = /^\/(?:team-logos|sponsors)\/[^/]+\.(?:png|jpe?g|webp|svg)$/i.test(path) || path === "/equipacion.png";
+  const brandAsset = /^\/(?:team-logos|sponsors|wallet)\/[^/]+\.(?:png|jpe?g|webp|svg)$/i.test(path) || path === "/equipacion.png";
   if (brandAsset) return NextResponse.next({ request: { headers } });
   if (path === "/acceso" || path === "/api/account" || path === "/api/account/roster" || path === "/api/account/search" || path === "/api/health") return NextResponse.next({ request: { headers } });
   // Apple Wallet calls its web service from the phone without cookies; those routes check the pass token themselves.

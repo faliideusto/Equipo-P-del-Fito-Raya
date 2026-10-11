@@ -4,27 +4,37 @@ import { PKPass } from "passkit-generator";
 import type { WalletCardData } from "@/domain/wallet-card";
 import type { AppleConfig } from "./wallet-config";
 export type ApplePassMeta = { serial: string; authToken: string; baseUrl: string; passTypeId: string; teamIdentifier: string };
+type Field = { key: string; label: string; value: string; changeMessage?: string };
+// Event ticket: player and points on top, the opponent over the court strip, then short fields so nothing is cut.
 // Apple notifies on a field whose value changed only when it has a changeMessage.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
+  const next = card.next; const round = next ? ` ${next.round}` : "";
+  const back: Field[] = [
+    { key: "player", label: "Jugador", value: card.playerLine }, { key: "team", label: "Equipo", value: `Fito Raya ${card.teamId.toUpperCase()}` },
+    { key: "result", label: "Último resultado", value: card.lastResult, changeMessage: "%@" }, { key: "next", label: "Próximo partido", value: card.nextMatch },
+    { key: "web", label: "Web del equipo", value: `${meta.baseUrl}${card.teamPath}` },
+    ...(card.actaPath ? [{ key: "acta", label: "Acta de la última jornada", value: `${meta.baseUrl}${card.actaPath}` }] : []),
+  ];
   return {
     formatVersion: 1, passTypeIdentifier: meta.passTypeId, teamIdentifier: meta.teamIdentifier, serialNumber: meta.serial,
     authenticationToken: meta.authToken, webServiceURL: `${meta.baseUrl}/api/wallet/apple`,
-    organizationName: "Escuela Fito Raya", description: `Tarjeta Fito Raya · ${card.teamLabel}`, logoText: "Fito Raya",
+    organizationName: "Escuela Fito Raya", description: `Tarjeta Fito Raya · ${card.teamLabel}`, logoText: card.playerName,
     backgroundColor: "rgb(10, 24, 37)", foregroundColor: "rgb(242, 197, 0)", labelColor: "rgb(255, 255, 255)",
-    generic: {
-      headerFields: [{ key: "team", label: "EQUIPO", value: card.teamId.toUpperCase() }],
-      primaryFields: [{ key: "player", label: "JUGADOR", value: card.playerLine }],
-      secondaryFields: [{ key: "next", label: "PRÓXIMO PARTIDO", value: card.nextMatch }, { key: "lineup", label: "CONVOCATORIA", value: card.lineup, changeMessage: "%@" }],
-      auxiliaryFields: [{ key: "result", label: "ÚLTIMO RESULTADO", value: card.lastResult, changeMessage: "%@" }, { key: "points", label: "PUNTOS SNP", value: card.snpPoints }],
-      backFields: [{ key: "web", label: "Web del equipo", value: `${meta.baseUrl}${card.teamPath}` }, ...(card.actaPath ? [{ key: "acta", label: "Acta de la última jornada", value: `${meta.baseUrl}${card.actaPath}` }] : [])],
+    eventTicket: {
+      headerFields: [{ key: "points", label: "PUNTOS SNP", value: card.snpPoints }],
+      primaryFields: [{ key: "rival", label: next ? `${next.round} · PRÓXIMO RIVAL` : "PRÓXIMO PARTIDO", value: next ? next.opponent : "Sin partidos programados" }],
+      secondaryFields: next ? [{ key: "day", label: "FECHA", value: next.day }, ...(next.time ? [{ key: "time", label: "HORA", value: next.time }] : []), { key: "venue", label: "CAMPO", value: next.venue }] : [],
+      auxiliaryFields: [{ key: "lineup", label: `TU CONVOCATORIA${round}`, value: card.lineupShort, changeMessage: `Convocatoria${round}: %@` }],
+      backFields: back,
     },
     barcodes: [{ format: "PKBarcodeFormatQR", message: `${meta.baseUrl}/mi-perfil`, messageEncoding: "iso-8859-1" }],
   };
 }
 let images: Promise<Record<string, Buffer>> | null = null;
 function passImages() {
-  images ??= Promise.all([readFile(join(process.cwd(), "public", "apple-touch-icon.png")), readFile(join(process.cwd(), "public", "logo-fito.png"))])
-    .then(([icon, logo]) => ({ "icon.png": icon, "icon@2x.png": icon, "logo.png": logo, "logo@2x.png": logo }))
+  const file = (...path: string[]) => readFile(join(process.cwd(), "public", ...path));
+  images ??= Promise.all([file("apple-touch-icon.png"), file("logo-fito.png"), file("wallet", "strip.png"), file("wallet", "strip@2x.png"), file("wallet", "strip@3x.png")])
+    .then(([icon, logo, strip, strip2, strip3]) => ({ "icon.png": icon, "icon@2x.png": icon, "logo.png": logo, "logo@2x.png": logo, "strip.png": strip, "strip@2x.png": strip2, "strip@3x.png": strip3 }))
     .catch(error => { images = null; throw error; });
   return images;
 }

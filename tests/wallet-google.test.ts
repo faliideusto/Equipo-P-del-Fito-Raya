@@ -6,18 +6,19 @@ import type { WalletCardData } from "../src/domain/wallet-card";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
 const config = { issuerId: "3388", clientEmail: "wallet@fito.iam.gserviceaccount.com", privateKey };
-const card: WalletCardData = { teamId: "b", playerSourceId: "1", teamLabel: "Equipo B", playerLine: "Carlos Martin · Revés", nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "No convocado en J5", lastResult: "Sin resultados todavía", snpPoints: "900", teamPath: "/equipos/b/jornadas", actaPath: null };
+const card: WalletCardData = { teamId: "b", playerSourceId: "1", teamLabel: "Equipo B", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "No convocado en J5", lineupShort: "No convocado", lastResult: "Sin resultados todavía", snpPoints: "900", teamPath: "/equipos/b/jornadas", actaPath: null };
 const meta = { serial: "11111111-1111-4111-8111-111111111111", baseUrl: "https://fito.example.com" };
 const decode = (part: string) => JSON.parse(Buffer.from(part, "base64url").toString());
 
 test("objeto genérico con módulos de texto, enlace y QR", () => {
-  const object = googleObject(card, { issuerId: "3388", ...meta }) as { id: string; classId: string; state: string; hexBackgroundColor: string; textModulesData: { id: string; body: string }[]; linksModuleData: { uris: unknown[] }; barcode: unknown };
+  const object = googleObject(card, { issuerId: "3388", ...meta }) as { id: string; classId: string; state: string; hexBackgroundColor: string; textModulesData: { id: string; body: string }[]; linksModuleData: { uris: unknown[] }; barcode: unknown; heroImage: unknown };
   assert.equal(object.id, "3388.11111111-1111-4111-8111-111111111111");
   assert.equal(object.classId, "3388.fito-raya-b");
   assert.equal(object.state, "ACTIVE");
   assert.equal(object.hexBackgroundColor, "#0a1825");
   assert.deepEqual(object.textModulesData.map(m => [m.id, m.body]), [["next", card.nextMatch], ["lineup", card.lineup], ["result", card.lastResult], ["points", "900"]]);
   assert.deepEqual(object.linksModuleData.uris, [{ id: "web", uri: "https://fito.example.com/equipos/b/jornadas", description: "Web del equipo" }]);
+  assert.deepEqual(object.heroImage, { sourceUri: { uri: "https://fito.example.com/wallet/strip@3x.png" } });
   assert.deepEqual(object.barcode, { type: "QR_CODE", value: "https://fito.example.com/mi-perfil" });
 });
 test("JWT de guardar firmado RS256 con clase y objeto", () => {
