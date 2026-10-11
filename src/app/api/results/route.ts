@@ -2,7 +2,10 @@ import { accountBody, accountFailure, accountReply, AccountError, currentAccount
 import { playerLink } from "@/lib/account-profile";
 import { isCoachSession } from "@/lib/coach-session";
 import { checkSets } from "@/domain/match-result";
-import { coachResults, myFixtureResult, pendingResults, resolvePair } from "@/lib/pending-results-service";
+import { coachResults, managedPairs, myFixtureResult, pendingResults, resolvePair } from "@/lib/pending-results-service";
+import { shareableTeams } from "@/lib/team-captains";
+import { clubRepository } from "@/data/repository";
+import { getSnpMatch } from "@/lib/snp-service";
 import { deleteResult, DuplicateResultError, listResults, replaceResult, saveAbsence, saveResult } from "@/lib/match-results";
 import type { TeamId } from "@/domain/types";
 export const runtime = "nodejs";
@@ -19,6 +22,21 @@ export async function POST(request: Request) {
     const body = await accountBody(request);
     const user = await currentAccount();
     if (!user) throw new AccountError("Inicia sesión para registrar resultados.", 401);
+    if (body.action === "edit" && isTeam(body.teamId) && isFixture(body.fixtureId) && (await shareableTeams(user)).includes(body.teamId)) {
+      // Coach or captain: correct any pair, keeping who originally sent it.
+      limitAccountAttempts(`result:${user.id}`);
+      const fixture = (await clubRepository.getFixtures(body.teamId)).find(f => f.id === body.fixtureId);
+      if (!fixture) throw new AccountError("No se encontró la jornada.", 404);
+      const rows = await listResults([fixture.id]);
+      const existing = rows.find(r => r.team_id === body.teamId && r.pair_index === body.pairIndex);
+      if (!existing) throw new AccountError("Esa pareja no tiene resultado en la app.", 404);
+      const acta = await getSnpMatch(fixture.id).then(r => r.data).catch(() => null);
+      if (!managedPairs(rows, body.teamId, fixture, acta).includes(existing.pair_index)) throw new AccountError("Este resultado ya no se puede modificar: aún no ha pasado una hora desde el inicio o SNP ya lo ha publicado.", 409);
+      const check = checkSets(body.sets);
+      if (!check.ok) throw new AccountError(check.error);
+      await replaceResult({ ...existing, sets: check.sets });
+      return accountReply({ ok: true });
+    }
     if (user.role === "coach" || user.role === "visitor") throw new AccountError("Solo los jugadores registran resultados.", 403);
     limitAccountAttempts(`result:${user.id}`);
     if (!isTeam(body.teamId) || !isFixture(body.fixtureId) || !["result", "absent", "confirm", "edit"].includes(String(body.action))) throw new AccountError("Petición no válida.");

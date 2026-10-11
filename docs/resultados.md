@@ -22,4 +22,4 @@ El menú incluye «Última jornada», que abre la jornada ya empezada más recie
 
 ## Límites
 
-La app no escribe en SNP: el capitán sigue completando el acta en SNP. Un fallo de SNP no crea avisos. Se reintenta al cambiar de sección. Los resultados se pueden modificar desde la vista de la jornada («Tu resultado en la app» → Modificar) mientras SNP no publique los sets de ese partido. Puede hacerlo quien lo envió, el compañero convocado en esa pareja o quien lo confirmó con «Es mi partido».
+La app no escribe en SNP: el capitán sigue completando el acta en SNP. Un fallo de SNP no crea avisos. Se reintenta al cambiar de sección. Los resultados se pueden modificar desde la vista de la jornada («Tu resultado en la app» → Modificar) mientras SNP no publique los sets de ese partido. Puede hacerlo quien lo envió, el compañero convocado en esa pareja o quien lo confirmó con «Es mi partido». El entrenador y el capitán de cada equipo pueden modificar el de cualquier pareja de su equipo desde la misma vista, también a partir de una hora después del inicio; se conserva quién lo envió.

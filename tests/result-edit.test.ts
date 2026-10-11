@@ -35,3 +35,14 @@ test("el resultado provisional se coloca en las filas local y visitante del acta
   assert.deepEqual(toActaSets([[6, 4], [3, 6], [10, 8]], 0), [[6, 4], [3, 6], [10, 8]]);
   assert.deepEqual(toActaSets([[6, 4], [3, 6], [10, 8]], 1), [[4, 6], [6, 3], [8, 10]]);
 });
+
+test("entrenador y capitanes pueden corregir cualquier pareja una hora después del inicio", async () => {
+  const { managedEditablePairs } = await import("../src/domain/result-edit");
+  const hour = 3600_000; const start = Date.parse("2026-10-10T18:00:00Z");
+  const results = [{ pairIndex: 2 }, { pairIndex: 1 }];
+  assert.deepEqual(managedEditablePairs({ results, acta: convoked, start, now: start + hour, delay: hour }), [1, 2]);
+  assert.deepEqual(managedEditablePairs({ results, acta: convoked, start, now: start + hour - 1, delay: hour }), []);
+  assert.deepEqual(managedEditablePairs({ results, acta: convoked, start: null, now: start + hour, delay: hour }), []);
+  const published = acta([{ home: ["10", "11"], sets: [[6, 4], [6, 3]] }, { home: ["12", "13"] }]);
+  assert.deepEqual(managedEditablePairs({ results, acta: published, start, now: start + hour, delay: hour }), [2]);
+});

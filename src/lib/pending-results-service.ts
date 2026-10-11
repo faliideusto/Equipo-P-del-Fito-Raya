@@ -1,8 +1,8 @@
 import { clubRepository, sourceTeams } from "@/data/repository";
 import { getSnpMatch } from "./snp-service";
-import { lastPlayedFixture, pendingFor, readActa, type ActaReading, type PendingResult } from "@/domain/pending-results";
+import { fixtureStart, lastPlayedFixture, pendingFor, readActa, RESULT_DELAY_MS, type ActaReading, type PendingResult } from "@/domain/pending-results";
 import { latestStarted } from "@/domain/fixture-navigation";
-import { myResult } from "@/domain/result-edit";
+import { managedEditablePairs, myResult } from "@/domain/result-edit";
 import type { SetScore } from "@/domain/match-result";
 import type { SnpMatch } from "@/domain/snp";
 import { listAbsences, listResults, type MatchResultRow } from "./match-results";
@@ -64,9 +64,15 @@ export async function latestFixtureFor(playerId: string | null, now = Date.now()
   const teams = mine.length === 1 ? mine : TEAMS;
   return latestStarted(await Promise.all(teams.map(async teamId => ({ teamId, fixtures: await clubRepository.getFixtures(teamId).catch(() => []) }))), now);
 }
-// Provisional app results shown inside the acta; only the user's own pair is editable.
-export async function fixtureProvisional(userId: string | null, playerId: string | null, teamId: TeamId, fixture: Fixture, acta: SnpMatch) {
+// Pairs whose app result the coach or a captain may correct (see managedEditablePairs).
+export function managedPairs(rows: MatchResultRow[], teamId: TeamId, fixture: Fixture, acta: SnpMatch | null, now = Date.now()) {
+  return managedEditablePairs({ results: rows.filter(r => r.team_id === teamId).map(r => ({ pairIndex: r.pair_index })), acta, start: fixtureStart(fixture.date), now, delay: RESULT_DELAY_MS });
+}
+// Provisional app results shown inside the acta: players edit their own pair; the coach
+// and the team's captain (manager) can edit every pair that SNP has not published yet.
+export async function fixtureProvisional(userId: string | null, playerId: string | null, teamId: TeamId, fixture: Fixture, acta: SnpMatch, manager = false) {
   const { own, mine } = await ownResult(userId, playerId, teamId, fixture, acta).catch(() => ({ own: [], mine: null }));
   const ownIndex = acta.teamIds?.indexOf(sourceTeams[teamId]) ?? -1;
-  return { fixtureId: fixture.id, teamId, ownSide: (ownIndex >= 0 ? ownIndex : fixture.home ? 0 : 1) as 0 | 1, results: Object.fromEntries(own.map(r => [r.pair_index, r.sets])), editablePair: mine?.editable ? mine.pairIndex : null };
+  const editablePairs = manager ? managedPairs(own, teamId, fixture, acta) : mine?.editable ? [mine.pairIndex] : [];
+  return { fixtureId: fixture.id, teamId, ownSide: (ownIndex >= 0 ? ownIndex : fixture.home ? 0 : 1) as 0 | 1, results: Object.fromEntries(own.map(r => [r.pair_index, r.sets])), editablePairs };
 }

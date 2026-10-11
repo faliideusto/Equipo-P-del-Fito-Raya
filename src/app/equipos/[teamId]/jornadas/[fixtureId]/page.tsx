@@ -24,11 +24,11 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   // The acta and the user's identity are independent: load them in parallel.
   const [result,user]=await Promise.all([getSnpMatch(fixtureId).catch(()=>null),currentAccount().catch(()=>null)]);
   const [link,teams]=await Promise.all([user&&user.role!=="coach"&&user.role!=="visitor"?playerLink(user.id).catch(()=>null):null,shareableTeams(user).catch(():TeamId[]=>[])]);
-  // Only the captain and the coach see the WhatsApp message, once all five pairs have a result.
+  // The captain and the coach see the WhatsApp message (once all five pairs have a result) and can correct any pair.
   const share=teams.includes(teamId)?await teamResultMessage(teamId,fixture,result?.data??null).catch(()=>null):null;
   const card=share&&<TeamResultCard message={share}/>;
   if(result){
-    const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data);
+    const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data,teams.includes(teamId));
     return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}</MatchdaySlide>;
   }
   return <MatchdaySlide fixtureId={fixtureId}>{nav}<PageHeading eyebrow={`JORNADA ${fixture.round}`} title={fixture.opponent} text="El acta no está disponible en esta consulta."/><section className="panel connection-panel"><p>SNP no ha permitido consultar las parejas y los sets. Vuelve a intentarlo más tarde.</p><Link href={`/equipos/${teamId}/parejas`} className="button secondary">Preparar parejas</Link></section>{card}</MatchdaySlide>;
