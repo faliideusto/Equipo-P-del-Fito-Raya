@@ -12,7 +12,7 @@ export function WalletNotify({ teamId, fixtureId, kind }: { teamId: TeamId; fixt
     if (kind !== "lineup") return;
     const controller = new AbortController();
     void fetch(`/api/wallet/notify?teamId=${teamId}`, { signal: controller.signal, cache: "no-store" })
-      .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error); setOptions(data); setLineupId(data.publishedLineupId ?? data.lineups[0]?.id ?? ""); })
+      .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error); setOptions(data); const ids: string[] = data.lineups.map((l: { id: string }) => l.id); setLineupId(ids.includes(data.publishedLineupId) ? data.publishedLineupId : ids[0] ?? ""); })
       .catch(e => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "No se pudieron cargar las alineaciones."); });
     return () => controller.abort();
   }, [kind, teamId]);
