@@ -16,17 +16,18 @@ test("pass.json de entrada con web service, colores y QR", () => {
   assert.equal(json.serialNumber, meta.serial);
   assert.equal(json.authenticationToken, meta.authToken);
   assert.equal(json.webServiceURL, "https://fito.example.com/api/wallet/apple");
-  assert.equal(json.backgroundColor, "rgb(167, 51, 159)");
+  assert.equal(json.backgroundColor, "rgb(76, 29, 149)");
   assert.equal(json.foregroundColor, "rgb(255, 255, 255)");
   assert.equal(json.generic, undefined);
   assert.deepEqual(json.barcodes, [{ format: "PKBarcodeFormatQR", message: "https://fito.example.com/mi-perfil", messageEncoding: "iso-8859-1" }]);
 });
-test("nombre y puntos arriba, Fito Raya vs rival y datos cortos debajo", () => {
+test("nombre y puntos arriba, el partido en la franja y la convocatoria debajo", () => {
   const fields = ticket(card);
   assert.equal(applePassJson(card, meta).logoText, "Carlos Martin");
   assert.deepEqual(fields.headerFields, [{ key: "points", label: "PUNTOS SNP", value: "20.313" }]);
-  assert.deepEqual(fields.primaryFields, [{ key: "rival", label: "J5 · PRÓXIMO PARTIDO", value: "Fito Raya vs Rival" }]);
-  assert.deepEqual(fields.secondaryFields.map(f => [f.label, f.value]), [["FECHA", "Dom 18/10"], ["HORA", "10:00"], ["CAMPO", "Local"]]);
+  assert.equal(fields.primaryFields, undefined);
+  assert.equal(fields.secondaryFields, undefined);
+  assert.equal(fields.backFields.find(f => f.key === "next")?.value, "J5 · Rival · Dom 18/10 10:00 · Local");
   assert.deepEqual(fields.auxiliaryFields, [{ key: "lineup", label: "TU CONVOCATORIA J5", value: "Pareja 2 con Juan Perez", changeMessage: "Convocatoria J5: %@" }]);
 });
 test("solo convocatoria y resultado avisan al cambiar", () => {
@@ -35,11 +36,8 @@ test("solo convocatoria y resultado avisan al cambiar", () => {
   assert.equal(fields.find(f => f.key === "result")?.value, "J4 · Fito Raya A 7–5 Rival X");
   assert.equal(fields.find(f => f.key === "acta")?.value, "https://fito.example.com/equipos/a/jornadas/40");
 });
-test("sin hora, sin próximo partido y sin acta", () => {
-  assert.deepEqual(ticket({ ...card, next: { ...card.next!, time: null } }).secondaryFields.map(f => f.key), ["day", "venue"]);
+test("sin próximo partido y sin acta", () => {
   const none = ticket({ ...card, next: null, lineupShort: "Sin convocatoria", actaPath: null });
-  assert.deepEqual(none.primaryFields, [{ key: "rival", label: "PRÓXIMO PARTIDO", value: "Sin partidos programados" }]);
-  assert.deepEqual(none.secondaryFields, []);
   assert.deepEqual(none.auxiliaryFields, [{ key: "lineup", label: "TU CONVOCATORIA", value: "Sin convocatoria", changeMessage: "Convocatoria: %@" }]);
   assert.equal(none.backFields.some(f => f.key === "acta"), false);
 });

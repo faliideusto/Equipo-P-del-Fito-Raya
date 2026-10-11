@@ -1,5 +1,5 @@
-// Draws the Wallet pass art at 1x, 2x and 3x: the pink-to-purple kit gradient (background, 180x220 pt)
-// and the round logo (50x50 pt) cut from public/logo-fito.png. Run: node scripts/make-wallet-art.mjs
+// Draws the round logo of the Wallet pass (50x50 pt) at 1x, 2x and 3x, cut from public/logo-fito.png.
+// The strip is drawn per card by src/lib/wallet-strip.tsx. Run: node scripts/make-wallet-art.mjs
 import { deflateSync, inflateSync } from "node:zlib";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
@@ -37,13 +37,8 @@ function readPng(file) {
   }
   return { width, height, rows };
 }
-const PINK = [236, 64, 150], PURPLE = [98, 38, 168], WHITE = [255, 255, 255];
+const WHITE = [255, 255, 255];
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
-// Diagonal gradient, pink at the top left. Wallet blurs the background, so a smooth gradient survives it.
-function background(scale) {
-  const width = 180 * scale, height = 220 * scale;
-  return png(width, height, (x, y) => [...mix(PINK, PURPLE, Math.min(1, (x / width) * 0.35 + (y / height) * 0.75)), 255]);
-}
 // White disc with the logo shrunk inside it, so no letter touches the edge; 4x4 samples per pixel smooth the scaling and the rim.
 const logo = readPng("public/logo-fito.png");
 function sample(x, y) {
@@ -66,7 +61,4 @@ function roundLogo(scale) {
   });
 }
 mkdirSync("public/wallet", { recursive: true });
-for (const [scale, suffix] of [[1, ""], [2, "@2x"], [3, "@3x"]]) {
-  writeFileSync(`public/wallet/background${suffix}.png`, background(scale));
-  writeFileSync(`public/wallet/logo${suffix}.png`, roundLogo(scale));
-}
+for (const [scale, suffix] of [[1, ""], [2, "@2x"], [3, "@3x"]]) writeFileSync(`public/wallet/logo${suffix}.png`, roundLogo(scale));
