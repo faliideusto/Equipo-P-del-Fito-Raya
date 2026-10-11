@@ -1,4 +1,6 @@
 "use client";
+import { PageSkeleton } from "./skeletons";
+import { SNP_CHECKED_EVENT } from "@/lib/snp-updates";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,8 +31,8 @@ export function AccountProfile() {
       try { const response = await fetch("/api/account/stats", { signal: controller.signal, cache: "no-store" }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setTeams(data.teams); setStatsError(""); }
       catch (e) { if (!controller.signal.aborted) setStatsError(e instanceof Error ? e.message : "No se pudieron consultar tus estadísticas."); }
     }
-    setTeams(null); void update(); const timer = setInterval(() => { if (!document.hidden) void update(); }, 60000);
-    return () => { controller.abort(); clearInterval(timer); };
+    setTeams(null); void update(); const onCheck = () => void update(); window.addEventListener(SNP_CHECKED_EVENT, onCheck);
+    return () => { controller.abort(); window.removeEventListener(SNP_CHECKED_EVENT, onCheck); };
   }, [playerId, linkedPosition]);
   async function action(action: string, fields: object = {}) {
     setBusy(true); setError(""); setMessage("");
@@ -46,14 +48,14 @@ export function AccountProfile() {
   if (account?.user?.role === "coach") return <CoachDashboard/>;
   if (account?.user?.role === "visitor") return <><PageHeading eyebrow="ESCUELA FITO RAYA" title="Cuenta de visitante." text="Consulta los equipos, las jornadas y las estadísticas del club."/><section className="panel account-card"><p>Este acceso no está asociado a ningún jugador.</p><Link href="/" className="button">Ver el club</Link></section></>;
   return <><PageHeading eyebrow="TU ESPACIO EN EL CLUB" title="Mi perfil." text="Tu jugador y lo que aportas a tu equipo."/>{error && <p className="snp-warning" role="alert">{error}</p>}{message && <p className="account-message" role="status">{message}</p>}
-    {!account && !error && <p role="status">Comprobando tu sesión…</p>}
+    {!account && !error && <PageSkeleton variant="profile" heading={false} label="Comprobando tu sesión…"/>}
     {!account && error && <button className="button secondary" onClick={() => { setError(""); void refreshAccount().catch(e => setError(e.message)); }}>Volver a intentar</button>}
     {account && !account.user && <section className="panel account-card"><h2>Todo sobre tu temporada.</h2><p>Crea tu cuenta y elige tu ficha de jugador para ver tus estadísticas.</p><Link href="/acceso" className="button">Iniciar sesión o registrarme</Link></section>}
     {account?.user && !account.link && <><section className="panel account-toolbar"><span>{account.user.email}</span><button className="button secondary" disabled={busy} onClick={() => void action("logout")}>Cerrar sesión</button></section>
       <section className="panel account-card"><h2>Elige tu ficha de jugador</h2><p>Asocia tu cuenta a tu nombre en la plantilla para ver tus estadísticas.</p><form className="account-form" onSubmit={event => { event.preventDefault(); const values = new FormData(event.currentTarget); void action("link", { teamId: values.get("teamId"), playerId: values.get("playerId"), position }); }}><RosterChoice/><label>Tu posición<PositionOptions value={position} onChange={setPosition}/></label><button className="button" disabled={busy}>{busy ? "Guardando…" : "Asociar mi jugador"}</button></form></section></>}
     {account?.user && account.link && <>
       <div className="section-title"><h2>Tu aportación esta temporada</h2><span>Puntos ganados para el equipo</span></div>
-      {statsError && <p className="snp-warning" role="status">{statsError}</p>}{teams === null && !statsError && <p role="status" className="panel panel-empty">Consultando las actas de tus equipos…</p>}
+      {statsError && <p className="snp-warning" role="status">{statsError}</p>}{teams === null && !statsError && <PageSkeleton variant="cards" heading={false} label="Consultando las actas de tus equipos…"/>}
       <div className="profile-teams">{teams?.map(team => <section className="panel player-stats" key={team.id}><div className="panel-heading"><h2>Equipo {team.id.toUpperCase()}</h2><Link className="text-link" href={`/equipos/${team.id}/estadisticas`}>Ranking del equipo →</Link></div><div className="profile-metrics">{[[team.points, "Puntos para el equipo"], [team.played, "Partidos jugados"], [team.won, "Ganados"], [team.lost, "Perdidos"], [team.setsWon, "Sets ganados"], [team.setsLost, "Sets perdidos"]].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div><p className="data-note account-stat-note">{team.acts} actas consultadas. {team.partial && "Estadísticas parciales: hay actas o participaciones sin identificar. "}{team.stale && "Se muestran los últimos datos guardados. "}Posición actual: {team.position === "LEFT" ? "Revés" : team.position === "RIGHT" ? "Derecha" : team.position === "BOTH" ? "Ambos" : "Por confirmar"}.</p></section>)}</div>
       {teams?.length === 0 && <p className="data-note">Tu ficha no aparece en las plantillas actuales del A o del B. Debajo puedes consultar tu historial SNP.</p>}<p className="data-note">Los puntos para el equipo se calculan con las actas de la fase actual. Cada jugador recibe los puntos que ganó su pareja; son distintos de los puntos de ranking SNP.</p>
       <ExplorerPlayer id={account.link.player_id} hideBack/>

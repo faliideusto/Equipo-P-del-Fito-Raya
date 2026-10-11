@@ -3873,11 +3873,23 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 }
 .acta-set-input:disabled { opacity: 0.35; }
 
-.fixture-loading { display: grid; gap: 18px; }
-.skeleton { border-radius: 12px; background: linear-gradient(90deg, var(--panel) 25%, var(--line) 50%, var(--panel) 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.2s ease-in-out infinite; }
-.skeleton-line { height: 20px; width: 60%; }
+.page-skeleton { display: grid; gap: 18px; }
+.skeleton-heading { display: grid; gap: 10px; margin-bottom: 6px; }
+.skeleton-line { height: 18px; border-radius: 8px; }
+.skeleton-eyebrow { width: 28%; max-width: 220px; height: 12px; }
+.skeleton-title { width: 62%; max-width: 520px; height: 30px; }
 .skeleton-banner { height: 150px; }
-.skeleton-table { height: 320px; }
+.skeleton-rows { display: grid; gap: 8px; }
+.skeleton-row { height: 44px; border-radius: 8px; }
+.skeleton-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.skeleton-card { height: 130px; }
+.skeleton-profile { display: grid; gap: 18px; }
+.skeleton-profile-head { display: flex; align-items: center; gap: 16px; }
+.skeleton-avatar { width: 72px; height: 72px; border-radius: 50%; flex: none; }
+.skeleton-profile-lines { display: grid; gap: 10px; flex: 1; }
+.skeleton-chart { height: 180px; }
+.skeleton-inline { display: inline-block; width: 64px; height: 14px; border-radius: 6px; vertical-align: middle; }
+@media (max-width: 640px) { .skeleton-cards { grid-template-columns: 1fr 1fr; } .skeleton-card { height: 96px; } .skeleton-banner { height: 120px; } }
 @keyframes skeleton-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 

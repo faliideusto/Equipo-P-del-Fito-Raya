@@ -12,6 +12,8 @@ import { formatDate, formatPoints } from "@/lib/format";
 import { MiniLineup } from "./lineup/mini-lineup";
 import { TeamSchedule } from "./team-schedule";
 import { RivalTabs, type RivalView } from "./team-tabs";
+import { PageSkeleton } from "./skeletons";
+import { SNP_CHECKED_EVENT } from "@/lib/snp-updates";
 
 export function ExplorerTeam({ id, filters, view }: { id: string; filters: Partial<SnpCompetition["filters"]>; view: RivalView }) {
   const [result, setResult] = useState<SnpResult<SnpTeam> | null>(null);
@@ -39,8 +41,9 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
       }
     }
     void update();
-    const timer = setInterval(() => { if (!document.hidden) void update(); }, 60000);
-    return () => { controller.abort(); clearInterval(timer); };
+    const onCheck = () => void update();
+    window.addEventListener(SNP_CHECKED_EVENT, onCheck);
+    return () => { controller.abort(); window.removeEventListener(SNP_CHECKED_EVENT, onCheck); };
   }, [filterKey]);
 
   useEffect(() => {
@@ -57,8 +60,9 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
       }
     }
     void update();
-    const timer = setInterval(() => { if (!document.hidden) void update(); }, 60000);
-    return () => { cancelled = true; clearInterval(timer); };
+    const onCheck = () => void update();
+    window.addEventListener(SNP_CHECKED_EVENT, onCheck);
+    return () => { cancelled = true; window.removeEventListener(SNP_CHECKED_EVENT, onCheck); };
   }, [id]);
 
   const team = result?.data;
@@ -87,10 +91,10 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
   const played = calendar.filter(f => f.score).sort((a, b) => b.round - a.round);
   const backHref = filters.division ? `/competicion?${query}` : "/competicion";
   const noDivision = <section className="panel connection-panel"><h2>Jornadas y clasificación</h2><p>Selecciona la división del equipo en competición para consultar su calendario y su clasificación.</p><Link href="/competicion" className="text-link">Buscar en competición →</Link></section>;
-  const loadingCompetition = !calendarError && <section className="panel connection-panel"><p role="status">Consultando jornadas y clasificación…</p></section>;
+  const loadingCompetition = !calendarError && <PageSkeleton variant="table" heading={false} label="Consultando jornadas y clasificación…"/>;
   const loadingTeam = error || (result && !result.data)
     ? <section className="panel empty-state"><h2>Plantilla no disponible.</h2><p>SNP no ha devuelto la plantilla de este equipo. Vuelve a intentarlo en un rato.</p></section>
-    : <section className="panel connection-panel"><p role="status">Consultando la plantilla…</p></section>;
+    : <PageSkeleton variant="cards" heading={false} label="Consultando la plantilla…"/>;
   // Only explain a failure when there is nothing to show; saved data is shown quietly.
   const warnings = [...new Set([!result && error, !competition && calendarError].filter((warning): warning is string => Boolean(warning)))];
 

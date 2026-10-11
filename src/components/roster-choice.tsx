@@ -1,4 +1,5 @@
 "use client";
+import { TableSkeleton } from "./skeletons";
 import { useEffect, useState } from "react";
 import { NewMemberChoice } from "./new-member-choice";
 type Choice = { id: string; name: string; available: boolean };
@@ -22,7 +23,7 @@ export function RosterChoice({ allowAdditional = false }: { allowAdditional?: bo
   const person = ready ? result.players.find(player => player.id === selected) : undefined;
   return <div className="account-snp-registration"><h2>¿Quién eres en el equipo?</h2><p>Elige tu equipo y busca tu nombre en la plantilla.</p>
     <label>Tu equipo<select name="teamId" required value={team} onChange={event => { setTeam(event.target.value); setQuery(""); setSelected(""); }}><option value="" disabled>Selecciona A o B</option><option value="a">Escuela Fito Raya · Equipo A</option><option value="b">Escuela Fito Raya · Equipo B</option></select></label>
-    {team && additional ? <NewMemberChoice key={team}/> : <>{team && !ready && <p role="status">Cargando plantilla…</p>}
+    {team && additional ? <NewMemberChoice key={team}/> : <>{team && !ready && <div role="status" aria-live="polite"><span className="sr-only">Cargando plantilla…</span><TableSkeleton rows={4}/></div>}
     {ready && result.error && <><p role="alert" className="snp-warning">{result.error}</p><button type="button" className="button secondary" onClick={() => setRetry(value => value + 1)}>Volver a cargar plantilla</button></>}
     {ready && !result.error && <><label>Buscar tu nombre<input type="search" placeholder="Escribe tu nombre o apellidos" value={query} onChange={event => { setQuery(event.target.value); setSelected(""); }}/></label><label>Tu jugador<select className="roster-select" name="playerId" size={6} value={selected} onChange={event => setSelected(event.target.value)} required><option value="" disabled>Selecciona tu nombre</option>{matches.map(player => <option value={player.id} key={player.id} disabled={!player.available}>{player.name}{!player.available ? " · Ya tiene cuenta" : ""}</option>)}</select></label>{!matches.length && <p role="status">No hay jugadores con ese nombre en este equipo.</p>}{person && <p className="account-message" role="status">Jugador seleccionado: <strong>{person.name}</strong> · Equipo {team.toUpperCase()}</p>}</>}</>}
     {team && allowAdditional && <button type="button" className="text-link new-member-toggle" onClick={() => { setAdditional(value => !value); setSelected(""); }}>{additional ? "Volver a la plantilla" : "¿No encuentras tu nombre?"}</button>}

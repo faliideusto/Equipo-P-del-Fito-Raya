@@ -1,4 +1,5 @@
 "use client";
+import { Skeleton } from "./skeletons";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -45,7 +46,7 @@ export function SeasonRankingTable({ rows, teamId }: { rows: Row[]; teamId: Team
     const rate = result?.winRates?.[period];
     const description = !result ? "Consultando winrate…" : result.note ?? (rate ? rate.decided ? `${rate.won} ganados y ${rate.lost} perdidos, en todos los grupos SNP.` : "Sin partidos con resultado." : "Historial SNP no disponible.");
     const value = !result ? "…" : formatWinRate(rate?.percentage ?? null);
-    return <td title={description}><span aria-label={`${value}. ${description}`}>{value}</span></td>;
+    return <td title={description}><span aria-label={`${value}. ${description}`}>{result ? value : <Skeleton className="skeleton-inline"/>}</span></td>;
   }
 
   return <div className="table-scroll"><table className="standings">

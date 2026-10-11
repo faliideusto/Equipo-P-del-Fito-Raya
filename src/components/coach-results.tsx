@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { CoachTeamResults } from "@/lib/pending-results-service";
+import { TableSkeleton } from "./skeletons";
 export function CoachResults() {
   const [teams, setTeams] = useState<CoachTeamResults[] | null>(null);
   const [message, setMessage] = useState("");
@@ -11,6 +12,7 @@ export function CoachResults() {
     const data = await response.json(); if (data.teams) setTeams(data.teams); else setMessage(data.error || "No se pudo borrar.");
   }
   return <section className="panel account-card"><h2>Resultados enviados</h2><p>Lo que los jugadores han registrado en la última jornada, para completar el acta en SNP.</p>
+    {teams === null && !message && <div role="status" aria-live="polite"><span className="sr-only">Cargando resultados…</span><TableSkeleton rows={3}/></div>}
     {teams?.map(team => <div key={team.teamId}><h3>Equipo {team.teamId.toUpperCase()}{team.fixture && ` · Jornada ${team.fixture.round} vs ${team.fixture.opponent}`}</h3>
       {!team.fixture ? <p>Sin jornada disputada.</p> : team.results.length === 0 ? <p>Nadie ha enviado resultado todavía.</p> :
         <ul className="coach-results">{team.results.map(r => <li key={r.pair_index}><b>Pareja {r.pair_index}</b><span>{r.sets.map(s => s.join("-")).join(" · ")}</span><small>{r.player_name}</small><button type="button" className="text-link" onClick={() => void remove(r.fixture_id, r.team_id, r.pair_index)}>Borrar</button></li>)}</ul>}
