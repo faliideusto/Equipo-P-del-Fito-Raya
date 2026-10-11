@@ -38,4 +38,5 @@ export function buildTeamResultMessage({ round, teamId, opponent, home, date, pa
   const blocks = pairs.map(pair => [`*Pareja ${pair.index}* (${MATCH_VALUES[pair.index - 1]} pts) ${won(pair.sets) ? "✅" : "❌"}`, ...(pair.names.length ? [pair.names.join(" / ")] : []), pair.sets.map(s => s.join("-")).join(" · ")].join("\n"));
   return [header.join("\n"), result, ...blocks, "💪 ¡Vamos Fito Raya!"].join("\n\n");
 }
-export const whatsappShareUrl = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
+// Not wa.me: its redirect replaces emojis with "�" before WhatsApp opens.
+export const whatsappShareUrl = (text: string) => `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;

@@ -12,7 +12,7 @@ Cuando las cinco parejas de una jornada tienen resultado, la app prepara el mens
 
 | Tema | Decisión |
 |---|---|
-| Envío | Lo hace una persona con `https://wa.me/?text=<mensaje>` o con «Copiar». |
+| Envío | Lo hace una persona con `https://api.whatsapp.com/send?text=<mensaje>` (no `wa.me`: estropea los emojis) o con «Copiar». |
 | Quién | El capitán del equipo y el entrenador. El resto no ve el mensaje y la API responde 403. |
 | Capitán | Lo elige el entrenador en `/entrenador`, uno por equipo, en la tabla `team_captains`. |
 | Desarrollo | `DEV_CAPTAIN_PLAYER_ID` marca un `player_id` como capitán de sus equipos. Se ignora en producción. |

@@ -14,7 +14,7 @@ Cuando las cinco parejas de una jornada tienen resultado (enviado en la app o co
 - Un aviso «Resultado del equipo · J4» en la esquina inferior derecha para la última jornada (la misma que usan los resultados pendientes). Se puede descartar; queda descartado en ese dispositivo.
 - En la vista de la jornada, la tarjeta «Mensaje para WhatsApp» con la vista previa, «Enviar al grupo» y «Copiar».
 
-«Enviar al grupo» abre WhatsApp con el texto escrito (`https://wa.me/?text=…`). La persona elige el grupo y pulsa enviar.
+«Enviar al grupo» abre WhatsApp con el texto escrito (`https://api.whatsapp.com/send?text=…`; no se usa `wa.me` porque su redirección cambia los emojis por «�»). La persona elige el grupo y pulsa enviar.
 
 ## Límites
 

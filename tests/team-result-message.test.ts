@@ -49,7 +49,7 @@ test("empate 6–6 y fecha vacía sin línea de fecha", () => {
   assert.ok(!text.includes("📅"));
 });
 test("enlace de WhatsApp codificado", () => {
-  assert.equal(whatsappShareUrl("¡Hola *equipo*!\n6-3"), "https://wa.me/?text=%C2%A1Hola%20*equipo*!%0A6-3");
+  assert.equal(whatsappShareUrl("¡Hola *equipo*!\n6-3 🎾✅"), "https://api.whatsapp.com/send?text=%C2%A1Hola%20*equipo*!%0A6-3%20%F0%9F%8E%BE%E2%9C%85");
 });
 test("los nombres se escriben con mayúscula inicial", () => {
   assert.equal(displayName("DANIEL H CAMPOS SÁNCHEZ"), "Daniel H Campos Sánchez");
