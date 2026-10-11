@@ -2,7 +2,7 @@ import { accountBody, accountFailure, accountReply, AccountError } from "@/lib/a
 import { isCoachSession } from "@/lib/coach-session";
 import { registeredPositions } from "@/lib/account-profile";
 import { clubRepository } from "@/data/repository";
-import { listCaptains, MissingCaptainsTable, setCaptain } from "@/lib/team-captains";
+import { addCaptain, listCaptains, MAX_CAPTAINS, MissingCaptainsTable, removeCaptain } from "@/lib/team-captains";
 import type { TeamId } from "@/domain/types";
 export const runtime = "nodejs";
 const TEAMS: TeamId[] = ["a", "b"];
@@ -24,10 +24,14 @@ export async function POST(request: Request) {
   try {
     const body = await accountBody(request);
     if (!await isCoachSession()) throw new AccountError("Inicia sesión como entrenador.", 401);
-    const teamId = body.teamId; const playerId = body.playerId;
-    if ((teamId !== "a" && teamId !== "b") || typeof playerId !== "string") throw new AccountError("Petición no válida.");
-    if (playerId && !(await candidates()).find(t => t.teamId === teamId)?.candidates.some(c => c.id === playerId)) throw new AccountError("Ese jugador no tiene cuenta en este equipo.");
-    try { await setCaptain(teamId, playerId || null); }
+    const { teamId, playerId, action } = body;
+    if ((teamId !== "a" && teamId !== "b") || typeof playerId !== "string" || !/^\d{1,10}$/.test(playerId) || (action !== "add" && action !== "remove")) throw new AccountError("Petición no válida.");
+    if (action === "add") {
+      if (!(await candidates()).find(t => t.teamId === teamId)?.candidates.some(c => c.id === playerId)) throw new AccountError("Ese jugador no tiene cuenta en este equipo.");
+      const current = (await listCaptains().catch(() => [])).filter(c => c.team_id === teamId);
+      if (!current.some(c => c.player_id === playerId) && current.length >= MAX_CAPTAINS) throw new AccountError(`Como mucho ${MAX_CAPTAINS} capitanes por equipo. Quita uno antes de añadir otro.`);
+    }
+    try { if (action === "add") await addCaptain(teamId, playerId); else await removeCaptain(teamId, playerId); }
     catch (error) { if (error instanceof MissingCaptainsTable) throw new AccountError(error.message, 503); throw error; }
     return accountReply(await state());
   } catch (error) { return accountFailure(error); }

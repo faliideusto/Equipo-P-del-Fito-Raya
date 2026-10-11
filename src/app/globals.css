@@ -3840,7 +3840,15 @@ input[type="radio"] {
 .whatsapp-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .team-share-body { display: grid; gap: 10px; justify-items: start; }
 .team-share-text { white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; line-height: 1.5; margin: 0; padding: 14px; width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
-.captain-select { display: grid; gap: 6px; margin-top: 12px; font-weight: 600; }
+.captain-team { display: grid; gap: 10px; margin-top: 18px; }
+.captain-team h3 { font-size: 15px; font-weight: 600; }
+.captain-list { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.captain-list li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 14px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--panel-2); font-size: 14px; font-weight: 500; }
+.captain-list button { display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; }
+.captain-list button:hover:not(:disabled) { background: var(--line-strong); color: var(--ink); }
+.captain-list button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.captain-empty { margin: 0; color: var(--muted); font-size: 14px; }
+.captain-select { display: grid; gap: 6px; font-weight: 600; }
 .captain-select select { width: 100%; max-width: 420px; min-height: 48px; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; font: inherit; font-weight: 500; cursor: pointer; }
 .captain-select select:hover:not(:disabled), .captain-select select:focus-visible { border-color: var(--accent) !important; }
 .captain-select select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
