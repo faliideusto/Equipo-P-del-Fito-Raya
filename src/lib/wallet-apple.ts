@@ -6,12 +6,13 @@ import type { AppleConfig } from "./wallet-config";
 import { renderStrip } from "./wallet-strip";
 export type ApplePassMeta = { serial: string; authToken: string; baseUrl: string; passTypeId: string; teamIdentifier: string };
 type Field = { key: string; label: string; value: string; changeMessage?: string };
-// Event ticket: player and points on top, the match drawn in the strip image (wallet-strip.tsx), then the lineup.
-// The strip carries the match, so there are no primary or secondary fields to cover it; the back keeps it as text.
-// Apple notifies on a field whose value changed only when it has a changeMessage.
+// Store card, for its tall strip (375x144 pt): player and points on top, the match and the lineup drawn in the strip image (wallet-strip.tsx).
+// No front fields under the strip repeat them; the back keeps both as text.
+// Apple notifies on a field whose value changed only when it has a changeMessage, back fields included.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
   const next = card.next; const round = next ? ` ${next.round}` : "";
   const back: Field[] = [
+    { key: "lineup", label: `Tu convocatoria${round}`, value: card.lineupShort, changeMessage: `Convocatoria${round}: %@` },
     { key: "player", label: "Jugador", value: card.playerLine }, { key: "team", label: "Equipo", value: `Fito Raya ${card.teamId.toUpperCase()}` },
     { key: "result", label: "Último resultado", value: card.lastResult, changeMessage: "%@" }, { key: "next", label: "Próximo partido", value: card.nextMatch },
     { key: "web", label: "Web del equipo", value: `${meta.baseUrl}${card.teamPath}` },
@@ -22,9 +23,8 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
     authenticationToken: meta.authToken, webServiceURL: `${meta.baseUrl}/api/wallet/apple`,
     organizationName: "Escuela Fito Raya", description: `Tarjeta Fito Raya · ${card.teamLabel}`, logoText: card.playerName,
     backgroundColor: "rgb(76, 29, 149)", foregroundColor: "rgb(255, 255, 255)", labelColor: "rgb(255, 227, 241)",
-    eventTicket: {
+    storeCard: {
       headerFields: [{ key: "points", label: "PUNTOS SNP", value: card.snpPoints }],
-      auxiliaryFields: [{ key: "lineup", label: `TU CONVOCATORIA${round}`, value: card.lineupShort, changeMessage: `Convocatoria${round}: %@` }],
       backFields: back,
     },
     barcodes: [{ format: "PKBarcodeFormatQR", message: `${meta.baseUrl}/mi-perfil`, messageEncoding: "iso-8859-1" }],
