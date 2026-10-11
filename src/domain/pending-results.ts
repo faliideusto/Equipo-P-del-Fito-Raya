@@ -14,11 +14,11 @@ export function fixtureStart(date: string): number | null {
   const time = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T23:59:59Z` : date);
   return Number.isNaN(time) ? null : time;
 }
-export function lastPlayedFixture(fixtures: Fixture[], now: number): Fixture | null {
+export function lastPlayedFixture(fixtures: Fixture[], now: number, delay = RESULT_DELAY_MS): Fixture | null {
   let best: { fixture: Fixture; start: number } | null = null;
   for (const fixture of fixtures) {
     const start = fixtureStart(fixture.date);
-    if (start === null || start + RESULT_DELAY_MS > now) continue;
+    if (start === null || start + delay > now) continue;
     if (!best || start > best.start || (start === best.start && fixture.round > best.fixture.round)) best = { fixture, start };
   }
   return best?.fixture ?? null;
