@@ -9,5 +9,7 @@ export async function POST(request: Request) {
   const force=process.env.NODE_ENV!=="production"&&new URL(request.url).searchParams.get("refresh")==="1";
   const results = await Promise.allSettled([getSnpTeam("7778",force),getSnpTeam("803902",force),getSnpCompetition({division:"2318"},force),getSnpCompetition({division:"2326"},force)]);
   const warnings = results.flatMap(result=>result.status==="rejected"?["No se completó una consulta SNP."]:result.value.stale?[result.value.error||"Se conserva la última consulta."]:[]);
-  return Response.json({ok:warnings.length===0,warnings});
+  // The client only re-renders the page when SNP returned something new.
+  const changed = results.some(result=>result.status==="fulfilled"&&result.value.changed===true);
+  return Response.json({ok:warnings.length===0,changed,warnings});
 }

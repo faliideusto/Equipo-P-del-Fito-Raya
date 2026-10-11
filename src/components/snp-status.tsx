@@ -12,10 +12,10 @@ export function SnpStatus() {
       const response=await fetch("/api/snp/sync",{method:"POST"}); const result=await response.json();
       if(cancelled)return;
       setLabel(result.ok?"SNP conectado · Auto":"SNP · Datos guardados");
-      if(result.ok)router.refresh();
+      if(result.changed)router.refresh();
     }catch{if(!cancelled)setLabel("SNP · Sin conexión");}finally{busy=false;}}
     void update();const timer=setInterval(()=>void update(),60000);return()=>{cancelled=true;clearInterval(timer);};
-    // Re-run on every section change so each page is refreshed with SNP on entry.
+    // Check SNP on every section change; the page is only re-rendered when the data changed.
   },[router,pathname]);
   return <span className="snp-status"><span className="status-dot"/>{label}</span>;
 }
