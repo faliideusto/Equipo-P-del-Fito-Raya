@@ -14,6 +14,9 @@ import { fixtureProvisional } from "@/lib/pending-results-service";
 import { shareableTeams } from "@/lib/team-captains";
 import { teamResultMessage } from "@/lib/team-result-service";
 import { TeamResultCard } from "@/components/team-result-share";
+import { WalletNotify } from "@/components/wallet-notify";
+import { walletAvailability } from "@/lib/wallet-config";
+import { notifyKindFor } from "@/domain/wallet-ui";
 export default async function FixturePage({params}:{params:Promise<{teamId:TeamId;fixtureId:string}>}){
   const {teamId,fixtureId}=await params;
   const fixtures=await clubRepository.getFixtures(teamId);
@@ -27,11 +30,15 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   // The captain and the coach see the WhatsApp message (once all five pairs have a result) and can correct any pair.
   const share=teams.includes(teamId)?await teamResultMessage(teamId,fixture,result?.data??null).catch(()=>null):null;
   const card=share&&<TeamResultCard message={share}/>;
+  // Lineup on the next fixture, result on the last played one; only for the coach and the captain.
+  const available=walletAvailability();
+  const walletKind=teams.includes(teamId)&&(available.apple||available.google)?notifyKindFor(fixtures,fixtureId):null;
+  const wallet=walletKind&&<WalletNotify teamId={teamId} fixtureId={fixtureId} kind={walletKind}/>;
   if(result){
     const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data,teams.includes(teamId));
-    return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}</MatchdaySlide>;
+    return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}{wallet}</MatchdaySlide>;
   }
-  return <MatchdaySlide fixtureId={fixtureId}>{nav}<PageHeading eyebrow={`JORNADA ${fixture.round}`} title={fixture.opponent} text="El acta no está disponible en esta consulta."/><section className="panel connection-panel"><p>SNP no ha permitido consultar las parejas y los sets. Vuelve a intentarlo más tarde.</p><Link href={`/equipos/${teamId}/parejas`} className="button secondary">Preparar parejas</Link></section>{card}</MatchdaySlide>;
+  return <MatchdaySlide fixtureId={fixtureId}>{nav}<PageHeading eyebrow={`JORNADA ${fixture.round}`} title={fixture.opponent} text="El acta no está disponible en esta consulta."/><section className="panel connection-panel"><p>SNP no ha permitido consultar las parejas y los sets. Vuelve a intentarlo más tarde.</p><Link href={`/equipos/${teamId}/parejas`} className="button secondary">Preparar parejas</Link></section>{card}{wallet}</MatchdaySlide>;
 }
 // Previous/next arrows tag the navigation; the matchday content slides in that direction.
 function MatchdaySlide({fixtureId,children}:{fixtureId:string;children:React.ReactNode}){

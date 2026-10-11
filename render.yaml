@@ -21,5 +21,23 @@ services:
         sync: false
       - key: SUPABASE_SECRET_KEY
         sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: APPLE_PASS_TYPE_ID
+        sync: false
+      - key: APPLE_TEAM_ID
+        sync: false
+      - key: APPLE_PASS_CERT
+        sync: false
+      - key: APPLE_PASS_KEY
+        sync: false
+      - key: APPLE_PASS_KEY_PASSPHRASE
+        sync: false
+      - key: APPLE_WWDR_CERT
+        sync: false
+      - key: GOOGLE_WALLET_ISSUER_ID
+        sync: false
+      - key: GOOGLE_WALLET_SA_JSON
+        sync: false
       - key: SNP_CACHE_SECONDS
         value: "300"

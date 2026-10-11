@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildTeamResultMessage, displayName, teamResultPairs, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
+import { buildTeamResultMessage, displayName, teamResultPairs, teamScore, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
 import type { SnpMatch } from "../src/domain/snp";
 import type { SetScore } from "../src/domain/match-result";
 
@@ -58,4 +58,8 @@ test("los nombres se escriben con mayúscula inicial", () => {
   assert.equal(displayName("  DEL  RIO "), "Del Rio");
   const pairs = teamResultPairs({ appResults: { 1: win, 2: win, 3: win, 4: win, 5: win }, acta: null, ownSide: 0, submitterNames: { 1: "ÁNGEL AFAN" } })!;
   assert.deepEqual(pairs[0].names, ["Ángel Afan"]);
+});
+test("teamScore suma el valor de cada pareja ganada desde nuestro lado", () => {
+  assert.deepEqual(teamScore([pair(1, win), pair(2, loss), pair(3, [[6, 4], [3, 6], [10, 8]]), pair(4, loss), pair(5, win)]), [7, 5]);
+  assert.deepEqual(teamScore([pair(1, loss), pair(2, loss), pair(3, loss), pair(4, loss), pair(5, loss)]), [0, 12]);
 });

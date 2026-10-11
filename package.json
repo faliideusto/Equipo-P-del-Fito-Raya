@@ -23,6 +23,7 @@
     "fetch-cookie": "^3.2.0",
     "lucide-react": "latest",
     "next": "latest",
+    "passkit-generator": "^3.6.1",
     "react": "latest",
     "react-dom": "latest",
     "tough-cookie": "^6.0.2"

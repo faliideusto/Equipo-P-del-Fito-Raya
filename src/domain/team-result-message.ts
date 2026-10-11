@@ -22,6 +22,11 @@ export function teamResultPairs({ appResults, acta, ownSide, submitterNames }: {
   return pairs;
 }
 const won = (sets: SetScore[]) => sets.filter(([a, b]) => a > b).length > sets.length / 2;
+export function teamScore(pairs: TeamResultPair[]): [number, number] {
+  let ours = 0, theirs = 0;
+  for (const pair of pairs) { const value = MATCH_VALUES[pair.index - 1]; if (won(pair.sets)) ours += value; else theirs += value; }
+  return [ours, theirs];
+}
 function dateLine(date: string) {
   const time = Date.parse(date); if (!date || Number.isNaN(time)) return null;
   const parts = Object.fromEntries(new Intl.DateTimeFormat("es-ES", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "Europe/Madrid" }).formatToParts(new Date(time)).map(p => [p.type, p.value]));
@@ -30,8 +35,7 @@ function dateLine(date: string) {
   return `📅 ${day}${hour ? ` · ${hour}` : ""}`;
 }
 export function buildTeamResultMessage({ round, teamId, opponent, home, date, pairs }: { round: number; teamId: TeamId; opponent: string; home: boolean; date: string; pairs: TeamResultPair[] }) {
-  let ours = 0, theirs = 0;
-  for (const pair of pairs) { const value = MATCH_VALUES[pair.index - 1]; if (won(pair.sets)) ours += value; else theirs += value; }
+  const [ours, theirs] = teamScore(pairs);
   const score = `${ours}–${theirs}`;
   const result = ours > theirs ? `🏆 *¡VICTORIA ${score}!*` : ours < theirs ? `😔 *DERROTA ${score}*` : `🤝 *EMPATE ${score}*`;
   const header = [`🎾 *Jornada ${round} · Fito Raya ${teamId.toUpperCase()}*`, `🆚 ${opponent} · ${home ? "🏠 Local" : "✈️ Visitante"}`, dateLine(date)].filter((line): line is string => line !== null);

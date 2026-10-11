@@ -4,6 +4,8 @@ Web de Escuela Fito Raya para sus equipos A (Segunda División Future) y B (Déc
 
 Configura `SNP_EMAIL` y `SNP_PASSWORD` en `.env.local`, reinicia el servidor y abre `/conexion` para comprobar el acceso. Usa las credenciales propias de SNP; no hace falta Google ni mantener Chrome abierto. [Detalles de integración, límites y despliegue](docs/integracion-snp.md).
 
+Tarjetas de Apple Wallet y Google Wallet con avisos al equipo: [puesta en marcha](docs/wallet.md).
+
 ## Arranque
 
 Requiere Node.js 24 y pnpm 11.19.0. `.node-version` fija Node 24.19.0 y `pnpm-lock.yaml` permite reproducir las versiones instaladas.

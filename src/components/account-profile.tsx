@@ -11,6 +11,7 @@ import { PositionOptions } from "./account-access";
 import { CoachDashboard } from "./coach-dashboard";
 import type { PlayerLink } from "@/lib/account-profile";
 import { FifaCard } from "./fifa-card";
+import { WalletButtons } from "./wallet-buttons";
 import { compactPoints, pointsTier, sideShort } from "@/domain/squad";
 import type { Position } from "@/domain/types";
 type Account = { user: { id: string; email: string; role?: string; position?: string } | null; link: PlayerLink | null };
@@ -63,6 +64,7 @@ export function AccountProfile() {
       {teams?.length === 0 && <p className="data-note">Tu ficha no aparece en las plantillas actuales del A o del B. Debajo puedes consultar tu historial SNP.</p>}<p className="data-note">Los puntos para el equipo se calculan con las actas de la fase actual. Cada jugador recibe los puntos que ganó su pareja; son distintos de los puntos de ranking SNP.</p>
       <ExplorerPlayer id={account.link.player_id} hideBack card={teams?.[0] && <div className="card-shadow profile-card-aside"><FifaCard name={teams[0].name} photoUrl={teams[0].photoUrl} rating={compactPoints(teams[0].snpPoints)} ratingLabel={sideShort(teams[0].position)} tier={pointsTier(teams[0].snpPoints)}
         stats={[{ label: "RANK", value: teams[0].snpRank ?? "—" }, { label: "PTS SNP", value: teams[0].snpPoints === null ? "—" : Math.round(teams[0].snpPoints).toLocaleString("es-ES") }]}/></div>}/>
+      <WalletButtons/>
       <div className="section-title"><h2>Cuenta y posición</h2></div>
       <section className="panel account-settings">
         <form method="post" className="account-form" onSubmit={e => { e.preventDefault(); void action("position", { position }); }}><label>Mi posición en pista<PositionOptions value={position} onChange={setPosition}/></label><p className="data-note">Al guardar sustituirás la posición actual en tus equipos. El entrenador podrá cambiarla después.</p><button className="button" disabled={busy}>Guardar mi posición</button></form>
