@@ -67,6 +67,7 @@ try {
   console.error("No se pudo abrir la ventana de conexión SNP.");process.exitCode=1;
 } finally {
   await browser?.close().catch(()=>{});
-  chrome?.kill();
-  if (profile) { await sleep(500); await rm(profile, { recursive: true, force: true }).catch(()=>{}); }
+  // Chrome keeps writing to its profile until it exits: wait before deleting it.
+  if (chrome && chrome.exitCode === null) { const exited = new Promise(resolve => chrome.once("exit", resolve)); chrome.kill(); await Promise.race([exited, sleep(5000)]); }
+  if (profile) await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }).catch(()=>{});
 }

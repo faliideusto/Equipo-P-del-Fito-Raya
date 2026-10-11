@@ -4,6 +4,7 @@ import { normalizeFixtures,normalizeStandings,normalizePlayerStats,photoUrl,snpN
 import { normalizeTeamPlayer } from "../src/lib/snp-team";
 import { createSnpHttp } from "../src/lib/snp-auth";
 import { snpDate } from "../src/lib/snp-date";
+import { sessionCookie } from "../src/lib/snp-client";
 import { CookieJar } from "tough-cookie";
 
 test("normaliza fechas españolas independientemente de la zona del servidor",()=>{
@@ -50,4 +51,11 @@ test("lee un acta convocada sin sets con jugadores y orden de parejas",()=>{
   assert.deepEqual(match.games.map(g=>g.index+1),[1,2,3,4,5]);
   assert.deepEqual(match.games[2].home?.map(p=>p.id),["31","32"]);
   assert.ok(match.games.every(g=>g.sets.length===0));
+});
+test("una cookie de sesión de un solo host no se extiende a los subdominios de SNP",()=>{
+  const hostOnly=sessionCookie({name:"PHPSESSID",value:"a",domain:"snpgalaxy.com",path:"/",expires:-1,secure:false});
+  assert.equal(hostOnly?.url,"https://snpgalaxy.com");assert.doesNotMatch(hostOnly!.cookie,/Domain=/);
+  const shared=sessionCookie({name:"_ga",value:"b",domain:".snpgalaxy.com",path:"/",expires:2000000000,secure:true});
+  assert.match(shared!.cookie,/; Domain=snpgalaxy\.com/);assert.match(shared!.cookie,/; Secure/);assert.match(shared!.cookie,/Expires=/);
+  assert.equal(sessionCookie({name:"x",value:"c",domain:".google.com",path:"/",expires:-1,secure:true}),null);
 });
