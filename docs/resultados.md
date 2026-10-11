@@ -14,7 +14,7 @@ Dos horas después del inicio de la última jornada de A o B, la app consulta el
 
 El pop-up se abre una vez por jornada y dispositivo. Después queda un aviso en la esquina inferior derecha. Si un compañero ya registró la misma pareja, el pendiente desaparece. Sin pareja fijada, el jugador puede confirmar «Es mi partido».
 
-El entrenador ve en `/entrenador` lo enviado en la última jornada y puede borrar un resultado para que se vuelva a pedir.
+El entrenador ve en `/entrenador` lo enviado en la última jornada y puede borrar un resultado para que se vuelva a pedir, también a quien lo confirmó con «Es mi partido».
 
 ## Límites
 

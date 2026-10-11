@@ -16,8 +16,8 @@ test("guarda resultados y ausencias en archivo privado sin Supabase", async () =
     await assert.rejects(saveResult({ ...row, submitted_by: "u2" }), DuplicateResultError);
     assert.deepEqual(await listResults(["55"]), [row]);
     assert.deepEqual(await listResults(["99"]), []);
-    await saveAbsence({ user_id: "u1", fixture_id: "55", reason: "absent", created_at: row.created_at });
-    await saveAbsence({ user_id: "u1", fixture_id: "55", reason: "absent", created_at: row.created_at });
+    await saveAbsence({ user_id: "u1", fixture_id: "55", reason: "absent", pair_index: null, created_at: row.created_at });
+    await saveAbsence({ user_id: "u1", fixture_id: "55", reason: "absent", pair_index: null, created_at: row.created_at });
     assert.equal((await listAbsences("u1")).length, 1);
     assert.equal((await listAbsences("u2")).length, 0);
     await deleteResult("55", "a", 2);
@@ -25,5 +25,26 @@ test("guarda resultados y ausencias en archivo privado sin Supabase", async () =
   } finally {
     process.chdir(saved.cwd); await rm(dir, { recursive: true, force: true });
     for (const [k, v] of [["SUPABASE_URL", saved.url], ["SUPABASE_SECRET_KEY", saved.key], ["RENDER", saved.render], ["VERCEL", saved.vercel]] as const) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  }
+});
+test("borrar un resultado vuelve a pedirlo a quien confirmó esa pareja, sin tocar otras", async () => {
+  const saved = { cwd: process.cwd(), url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SECRET_KEY };
+  delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY;
+  const dir = await mkdtemp(path.join(tmpdir(), "fito-results-"));
+  process.chdir(dir);
+  try {
+    const at = "2026-10-10T14:00:00.000Z";
+    await saveResult({ fixture_id: "55", team_id: "a", pair_index: 2, sets: [[6, 4], [6, 3]], player_id: "10", submitted_by: "u1", created_at: at });
+    await saveAbsence({ user_id: "u2", fixture_id: "55", reason: "already_reported", pair_index: 2, created_at: at });
+    await saveAbsence({ user_id: "u3", fixture_id: "55", reason: "already_reported", pair_index: 4, created_at: at });
+    await saveAbsence({ user_id: "u4", fixture_id: "55", reason: "absent", pair_index: null, created_at: at });
+    await deleteResult("55", "a", 2);
+    assert.equal((await listAbsences("u2")).length, 0);
+    assert.equal((await listAbsences("u3")).length, 1);
+    assert.equal((await listAbsences("u4")).length, 1);
+  } finally {
+    process.chdir(saved.cwd); await rm(dir, { recursive: true, force: true });
+    if (saved.url === undefined) delete process.env.SUPABASE_URL; else process.env.SUPABASE_URL = saved.url;
+    if (saved.key === undefined) delete process.env.SUPABASE_SECRET_KEY; else process.env.SUPABASE_SECRET_KEY = saved.key;
   }
 });

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const pending = (await pendingResults(user.id, link.player_id)).find(p => p.fixtureId === body.fixtureId && p.teamId === body.teamId);
     if (!pending) throw new AccountError("Esta jornada ya no tiene resultado pendiente.", 409);
     const now = new Date().toISOString();
-    if (body.action === "absent") await saveAbsence({ user_id: user.id, fixture_id: pending.fixtureId, reason: "absent", created_at: now });
+    if (body.action === "absent") await saveAbsence({ user_id: user.id, fixture_id: pending.fixtureId, reason: "absent", pair_index: null, created_at: now });
     else {
       const pair = resolvePair(pending.pairLocked, body.pairIndex);
       if (!pair) throw new AccountError("Elige tu número de pareja (1 a 5).");
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         if (pending.pairLocked) throw new AccountError("Petición no válida.");
         const existing = (await listResults([pending.fixtureId])).find(r => r.team_id === pending.teamId && r.pair_index === pair);
         if (!existing) throw new AccountError("No hay ningún resultado registrado para esa pareja.");
-        await saveAbsence({ user_id: user.id, fixture_id: pending.fixtureId, reason: "already_reported", created_at: now });
+        await saveAbsence({ user_id: user.id, fixture_id: pending.fixtureId, reason: "already_reported", pair_index: pair, created_at: now });
       } else {
         const check = checkSets(body.sets);
         if (!check.ok) throw new AccountError(check.error);

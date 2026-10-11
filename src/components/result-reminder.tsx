@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AlertTriangle, Lock, X } from "lucide-react";
 import { cellsToSets, checkSets, type SetScore } from "@/domain/match-result";
-import type { PendingResult } from "@/domain/pending-results";
+import { dueForCheck, type PendingResult } from "@/domain/pending-results";
 import { formatDate } from "@/lib/format";
 const SEEN_KEY = "fito-result-seen";
 type Form = { fixtureId: string; pair: number | null; cells: string[][]; message: string; existing: SetScore[] | null };
@@ -21,11 +21,14 @@ export function ResultReminder() {
   const form = current && stored.fixtureId === current.fixtureId ? stored : blank(current?.fixtureId);
   const update = (patch: Partial<Form>) => setForm({ ...form, ...patch });
   const open = useCallback(() => { if (!current) return; markSeen(current.fixtureId); if (!dialog.current?.open) dialog.current?.showModal(); }, [current]);
+  const lastCheck = useRef<number | null>(null);
+  const refresh = useCallback((signal?: AbortSignal) => fetch("/api/results/pending", { signal, cache: "no-store" }).then(r => r.ok ? r.json() : { pending: [] }).then(data => { lastCheck.current = Date.now(); const list: PendingResult[] = Array.isArray(data.pending) ? data.pending : []; setPending(list); return list; }), []);
   useEffect(() => {
+    if (!dueForCheck(lastCheck.current, Date.now())) return;
     const controller = new AbortController();
-    void fetch("/api/results/pending", { signal: controller.signal, cache: "no-store" }).then(r => r.ok ? r.json() : { pending: [] }).then(data => setPending(Array.isArray(data.pending) ? data.pending : [])).catch(() => {});
+    void refresh(controller.signal).catch(() => {});
     return () => controller.abort();
-  }, [pathname]);
+  }, [pathname, refresh]);
   useEffect(() => { if (current && !seen().includes(current.fixtureId)) open(); }, [current, open]);
   // A third set is not allowed once the first two have a winner.
   const firstTwoDecided = checkSets(cellsToSets([form.cells[0], form.cells[1], ["", ""]])).ok;
@@ -40,6 +43,8 @@ export function ResultReminder() {
       const response = await fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, fixtureId: current.fixtureId, teamId: current.teamId, pairIndex: pair, sets }) });
       const data = await response.json();
       if (response.status === 409 && data.existing) { update({ existing: data.existing, message: data.error }); return; }
+      // Another player resolved it first: refresh instead of leaving a stale dialog open.
+      if (response.status === 409) { const list = await refresh(); if (!list.some(p => p.fixtureId === current.fixtureId && p.teamId === current.teamId)) dialog.current?.close(); else update({ message: data.error }); return; }
       if (!response.ok) { update({ message: data.error || "No se pudo guardar. Inténtalo de nuevo." }); return; }
       dialog.current?.close(); setPending(Array.isArray(data.pending) ? data.pending : []);
     } catch { update({ message: "No se pudo guardar. Comprueba la conexión." }); } finally { setBusy(false); }

@@ -1,6 +1,9 @@
 import type { Fixture, TeamId } from "./types";
 import type { SnpMatch, SnpMatchPlayer } from "./snp";
 export const RESULT_DELAY_MS = 2 * 3600 * 1000;
+// The reminder changes about once a week: avoid a full server check on every navigation.
+export const PENDING_REFRESH_MS = 5 * 60 * 1000;
+export const dueForCheck = (lastCheck: number | null, now: number) => lastCheck === null || now - lastCheck >= PENDING_REFRESH_MS;
 export type PendingResult = { fixtureId: string; teamId: TeamId; round: number; date: string; opponent: string; home: boolean; pairLocked: number | null };
 export type ActaReading = { kind: "published" } | { kind: "absent" } | { kind: "convoked"; pair: number } | { kind: "no-lineup" } | { kind: "unknown" };
 export type ReportState = { dismissedFixtureIds: Set<string>; results: { fixtureId: string; teamId: TeamId; pairIndex: number; submittedBy: string }[] };

@@ -59,3 +59,10 @@ test("jugador compartido: un resultado del equipo B no resuelve el A", () => {
   const otherTeam: ReportState = { dismissedFixtureIds: new Set(), results: [{ fixtureId: "55", teamId: "b", pairIndex: 1, submittedBy: "u1" }] };
   assert.ok(pendingFor({ teamId: "a", fixture: f, acta: { kind: "no-lineup" }, userId: "u1", reports: otherTeam }));
 });
+test("el aviso se consulta al entrar y como mucho cada cinco minutos al navegar", async () => {
+  const { dueForCheck, PENDING_REFRESH_MS } = await import("../src/domain/pending-results");
+  assert.equal(PENDING_REFRESH_MS, 5 * 60 * 1000);
+  assert.equal(dueForCheck(null, 1000), true);
+  assert.equal(dueForCheck(1000, 1000 + PENDING_REFRESH_MS - 1), false);
+  assert.equal(dueForCheck(1000, 1000 + PENDING_REFRESH_MS), true);
+});

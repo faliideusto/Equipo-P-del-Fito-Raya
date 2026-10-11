@@ -52,7 +52,7 @@ type PendingResult = {
 
 ## 2. Envío — `POST /api/results`
 
-Cuerpo: `{ action: "result", fixtureId, teamId, pairIndex, sets }` o `{ action: "absent", fixtureId, teamId }`.
+Cuerpo: `{ action: "result", fixtureId, teamId, pairIndex, sets }`, `{ action: "absent", fixtureId, teamId }` o `{ action: "confirm", fixtureId, teamId, pairIndex }`. Con `confirm`, solo si la pareja no está fijada, el jugador reconoce como suyo un resultado ya registrado por un compañero: se guarda en `match_absences` con `reason = already_reported` y `pair_index`. Si el entrenador borra ese resultado, se borran también esas confirmaciones, así que se vuelve a pedir.
 
 El servidor:
 - Valida sesión, origen y tamaño, y limita intentos (como `account`).
@@ -86,6 +86,8 @@ create table if not exists public.match_results (
 create table if not exists public.match_absences (
   user_id uuid not null references auth.users(id) on delete cascade,
   fixture_id text not null check (fixture_id ~ '^[0-9]{1,10}$'),
+  reason text not null default 'absent' check (reason in ('absent', 'already_reported')),
+  pair_index smallint check (pair_index between 1 and 5),
   created_at timestamptz not null default now(),
   primary key (user_id, fixture_id)
 );
@@ -96,7 +98,7 @@ create table if not exists public.match_absences (
 
 ## 4. Pantalla
 
-**`src/components/result-reminder.tsx`** (cliente), montado en `AppShell` fuera de `/acceso`. Consulta `/api/results/pending` al montar y al cambiar de ruta. Si falla, no muestra nada.
+**`src/components/result-reminder.tsx`** (cliente), montado en `AppShell` fuera de `/acceso`. Consulta `/api/results/pending` al montar y, al cambiar de ruta, como mucho cada 5 minutos. Si falla, no muestra nada.
 
 - **Pop-up (modal):** cabecera «Jornada N · Fito A vs Rival · fecha».
   - Selector de pareja 1–5. Si `pairLocked`, aparece bloqueado con un candado y «según acta SNP».

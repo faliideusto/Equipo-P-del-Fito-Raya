@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import type { TeamId } from "@/domain/types";
 import type { SetScore } from "@/domain/match-result";
 export type MatchResultRow = { fixture_id: string; team_id: TeamId; pair_index: number; sets: SetScore[]; player_id: string; submitted_by: string; created_at: string };
-export type MatchAbsenceRow = { user_id: string; fixture_id: string; reason: "absent" | "already_reported"; created_at: string };
+// pair_index is set for "already_reported" so a coach delete can re-prompt exactly that pair.
+export type MatchAbsenceRow = { user_id: string; fixture_id: string; reason: "absent" | "already_reported"; pair_index: number | null; created_at: string };
 export class DuplicateResultError extends Error {}
 const RESULT_FIELDS = "fixture_id,team_id,pair_index,sets,player_id,submitted_by,created_at";
 let pending: Promise<void> = Promise.resolve();
@@ -36,7 +37,7 @@ export async function listResults(fixtureIds: string[]): Promise<MatchResultRow[
   return (await readFileRows<MatchResultRow>(RESULTS_FILE)).filter(row => ids.includes(row.fixture_id));
 }
 export async function listAbsences(userId: string): Promise<MatchAbsenceRow[]> {
-  if (supabase()) return rest("match_absences", "GET", { select: "user_id,fixture_id,reason,created_at", user_id: `eq.${userId}` });
+  if (supabase()) return rest("match_absences", "GET", { select: "user_id,fixture_id,reason,pair_index,created_at", user_id: `eq.${userId}` });
   return (await readFileRows<MatchAbsenceRow>(ABSENCES_FILE)).filter(row => row.user_id === userId);
 }
 export async function saveResult(row: MatchResultRow) {
@@ -50,6 +51,11 @@ export async function saveAbsence(row: MatchAbsenceRow) {
   await updateFile<MatchAbsenceRow>(ABSENCES_FILE, rows => rows.some(r => r.user_id === row.user_id && r.fixture_id === row.fixture_id) ? rows : [...rows, row]);
 }
 export async function deleteResult(fixtureId: string, teamId: TeamId, pairIndex: number) {
-  if (supabase()) { await rest("match_results", "DELETE", { fixture_id: `eq.${fixtureId}`, team_id: `eq.${teamId}`, pair_index: `eq.${pairIndex}` }); return; }
+  if (supabase()) {
+    await rest("match_results", "DELETE", { fixture_id: `eq.${fixtureId}`, team_id: `eq.${teamId}`, pair_index: `eq.${pairIndex}` });
+    await rest("match_absences", "DELETE", { fixture_id: `eq.${fixtureId}`, reason: "eq.already_reported", pair_index: `eq.${pairIndex}` });
+    return;
+  }
   await updateFile<MatchResultRow>(RESULTS_FILE, rows => rows.filter(r => !sameKey(r, { fixture_id: fixtureId, team_id: teamId, pair_index: pairIndex })));
+  await updateFile<MatchAbsenceRow>(ABSENCES_FILE, rows => rows.filter(r => !(r.fixture_id === fixtureId && r.reason === "already_reported" && r.pair_index === pairIndex)));
 }

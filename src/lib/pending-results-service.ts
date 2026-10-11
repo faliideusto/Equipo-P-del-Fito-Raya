@@ -14,16 +14,16 @@ async function lastFixture(team: TeamId, now: number): Promise<Fixture | null> {
 }
 // SNP failures never create a reminder: the next check will retry.
 export async function pendingResults(userId: string, playerId: string, now = Date.now()): Promise<PendingResult[]> {
-  const candidates: { team: TeamId; fixture: Fixture; acta: ActaReading }[] = [];
-  for (const team of TEAMS) {
+  const checks = await Promise.all(TEAMS.map(async (team): Promise<{ team: TeamId; fixture: Fixture; acta: ActaReading } | null> => {
     try {
-      if (!(await clubRepository.getPlayers(team)).some(p => p.sourceId === playerId)) continue;
-      const fixture = await lastFixture(team, now); if (!fixture) continue;
+      const [players, fixture] = await Promise.all([clubRepository.getPlayers(team), lastFixture(team, now)]);
+      if (!fixture || !players.some(p => p.sourceId === playerId)) return null;
       let acta: ActaReading = { kind: "unknown" };
       try { const result = await getSnpMatch(fixture.id); acta = readActa(result.data, result.stale, sourceTeams[team], fixture.home, playerId); } catch { /* unknown */ }
-      candidates.push({ team, fixture, acta });
-    } catch { continue; }
-  }
+      return { team, fixture, acta };
+    } catch { return null; }
+  }));
+  const candidates = checks.filter(c => c !== null);
   if (!candidates.length) return [];
   const [absences, results] = await Promise.all([listAbsences(userId), listResults(candidates.map(c => c.fixture.id))]);
   const reports = { dismissedFixtureIds: new Set(absences.map(a => a.fixture_id)), results: results.map(r => ({ fixtureId: r.fixture_id, teamId: r.team_id, pairIndex: r.pair_index, submittedBy: r.submitted_by })) };
