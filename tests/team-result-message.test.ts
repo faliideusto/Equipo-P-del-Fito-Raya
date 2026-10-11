@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildTeamResultMessage, teamResultPairs, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
+import { buildTeamResultMessage, displayName, teamResultPairs, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
 import type { SnpMatch } from "../src/domain/snp";
 import type { SetScore } from "../src/domain/match-result";
 
@@ -50,4 +50,12 @@ test("empate 6–6 y fecha vacía sin línea de fecha", () => {
 });
 test("enlace de WhatsApp codificado", () => {
   assert.equal(whatsappShareUrl("¡Hola *equipo*!\n6-3"), "https://wa.me/?text=%C2%A1Hola%20*equipo*!%0A6-3");
+});
+test("los nombres se escriben con mayúscula inicial", () => {
+  assert.equal(displayName("DANIEL H CAMPOS SÁNCHEZ"), "Daniel H Campos Sánchez");
+  assert.equal(displayName("hugo monroux"), "Hugo Monroux");
+  assert.equal(displayName("JOSÉ MARÍA DE LA TORRE-GARCÍA"), "José María de la Torre-García");
+  assert.equal(displayName("  DEL  RIO "), "Del Rio");
+  const pairs = teamResultPairs({ appResults: { 1: win, 2: win, 3: win, 4: win, 5: win }, acta: null, ownSide: 0, submitterNames: { 1: "ÁNGEL AFAN" } })!;
+  assert.deepEqual(pairs[0].names, ["Ángel Afan"]);
 });

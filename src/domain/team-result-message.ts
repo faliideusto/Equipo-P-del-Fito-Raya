@@ -4,6 +4,11 @@ import type { SetScore } from "./match-result";
 import { MATCH_VALUES } from "./rules";
 import { toActaSets } from "./result-edit";
 export type TeamResultPair = { index: number; sets: SetScore[]; names: string[] };
+const PARTICLES = new Set(["de", "del", "la", "las", "los", "y"]);
+// SNP mixes "JOSE LUIS NARBONA" and "hugo monroux": write every name as "Jose Luis Narbona".
+export function displayName(name: string) {
+  return name.trim().split(/\s+/).map((word, i) => word.toLocaleLowerCase("es").split("-").map(part => i > 0 && PARTICLES.has(part) ? part : part.charAt(0).toLocaleUpperCase("es") + part.slice(1)).join("-")).join(" ");
+}
 // The five pairs from our side: app results first, otherwise sets published by SNP.
 export function teamResultPairs({ appResults, acta, ownSide, submitterNames }: { appResults: Record<number, SetScore[]>; acta: SnpMatch | null; ownSide: 0 | 1; submitterNames: Record<number, string> }): TeamResultPair[] | null {
   const pairs: TeamResultPair[] = [];
@@ -12,7 +17,7 @@ export function teamResultPairs({ appResults, acta, ownSide, submitterNames }: {
     const sets = appResults[index] ?? (game?.sets.length ? toActaSets(game.sets, ownSide) : null);
     if (!sets) return null;
     const lineup = game ? (ownSide === 0 ? game.home?.map(p => p.name) ?? game.homePlayers : game.away?.map(p => p.name) ?? game.awayPlayers).filter(Boolean) : [];
-    pairs.push({ index, sets, names: lineup.length ? lineup : submitterNames[index] ? [submitterNames[index]] : [] });
+    pairs.push({ index, sets, names: (lineup.length ? lineup : submitterNames[index] ? [submitterNames[index]] : []).map(displayName) });
   }
   return pairs;
 }
