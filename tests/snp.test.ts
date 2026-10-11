@@ -35,7 +35,7 @@ test("historial ordenado y contadores booleanos de SNP",()=>{
 });
 test("lee acta L/V con set parcial y conserva IDs de jugadores",()=>{
   const html=`<h4>Enfrentamiento (#55252)</h4><h2>6 - 6</h2><div class="partido_equipo_nombre_new" equipo="1" idequipo1="7778">Fito A</div><div class="partido_equipo_nombre_new" equipo="2" idequipo2="2598">Vibra</div><div class="enf_partido_container"><div class="partido_jug_div" idjugador="368641" idpartido="270263">Daniel - 57229.17</div><div class="partido_jug_div" idjugador="376502">José Luis - 67924.11</div><div class="partido_jug_div" idjugador="317854">Ignacio - 58645.83</div><div class="partido_jug_div" idjugador="317859">Manuel - 52232.14</div><div class="table_partidos"><table><tbody><tr><td>L</td><td class="td_part_res" set="1" eq="1">6</td><td class="td_part_res" set="2" eq="1"></td></tr><tr><td>V</td><td class="td_part_res" set="1" eq="2">2</td><td class="td_part_res" set="2" eq="2"></td></tr></tbody></table></div></div>`;
-  const match=parseMatch(html,"55252");assert.deepEqual(match.teamIds,["7778","2598"]);assert.equal(match.games[0].home?.[0].id,"368641");assert.equal(match.games[0].id,"270263");assert.deepEqual(match.games[0].sets,[[6,2]]);assert.deepEqual(match.games[0].homePlayers,["Daniel","José Luis"]);
+  const match=parseMatch(html,"55252");assert.deepEqual(match.teamIds,["7778","2598"]);assert.equal(match.games[0].home?.[0].id,"368641");assert.equal(match.games[0].id,"270263");assert.deepEqual(match.games[0].sets,[[6,2]]);assert.deepEqual(match.games[0].homePlayers,["Daniel","José Luis"]);assert.equal(match.games[0].home?.[0].points,57229.17);
 });
 test("no reenvía credenciales a un redirect de Google ni a otro dominio",async()=>{
   const original=globalThis.fetch;let calls=0;

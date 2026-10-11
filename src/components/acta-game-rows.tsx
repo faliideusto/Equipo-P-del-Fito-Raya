@@ -8,6 +8,7 @@ import { matchValue } from "@/domain/rules";
 import { cellsToSets, checkSets, setsToCells, visibleCells, type SetScore } from "@/domain/match-result";
 import { toActaSets } from "@/domain/result-edit";
 import { updateCell } from "./result-sets-grid";
+import { formatPoints } from "@/lib/format";
 export type ActaProvisional = { fixtureId: string; teamId: string; ownSide: 0 | 1; sets: SetScore[] | null; editable: boolean };
 type Game = SnpMatch["games"][number];
 // One match of the acta: SNP sets when published; otherwise the provisional
@@ -40,7 +41,7 @@ export function ActaGameRows({ game, teams, teamIds, provisional }: { game: Game
     const inputSide = pending ? (side === pending.ownSide ? 0 : 1) : 0;
     return <tr key={side} className={own ? "club-result" : "rival-result"}>
       {side === 0 && <th className="result-number" scope="rowgroup" rowSpan={pending?.sets ? 3 : 2}><span>{String(game.index + 1).padStart(2, "0")}</span><small>{value ?? "—"} pts en juego</small>{pending?.sets && <small className="provisional-tag"><Hourglass size={12} aria-hidden/><span>Provisional</span></small>}</th>}
-      <th className="result-team" scope="row"><small>{teams[side]} · {side === 0 ? "Local" : "Visitante"}</small>{names.length ? names.map((name, i) => { const person = people?.[i]; return <span key={person?.id || i}>{person?.id ? <Link href={`/competicion/jugadores/${person.id}${teamIds?.[side] ? `?equipo=${teamIds[side]}` : ""}`}>{name}</Link> : name}</span>; }) : <span>Sin alineación publicada</span>}</th>
+      <th className="result-team" scope="row"><small>{teams[side]} · {side === 0 ? "Local" : "Visitante"}</small>{names.length ? names.map((name, i) => { const person = people?.[i]; return <span key={person?.id || i}>{person?.id ? <Link href={`/competicion/jugadores/${person.id}${teamIds?.[side] ? `?equipo=${teamIds[side]}` : ""}`}>{name}</Link> : name}{typeof person?.points === "number" && <b className="acta-points" title="Puntos SNP del jugador en este encuentro">{formatPoints(person.points)}</b>}</span>; }) : <span>Sin alineación publicada</span>}</th>
       {[0, 1, 2].map(i => <td className="result-set" key={i}>{view
         ? <input className="acta-set-input" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`${side === pending!.ownSide ? "Nosotros" : "Rivales"}, set ${i + 1}`} disabled={i === 2 && view.thirdLocked} value={view.cells[i][inputSide]} onChange={e => setEditing(updateCell(editing!, i, inputSide, e.target.value.replace(/\D/g, "")))}/>
         : <span className={shown[i] && shown[i][side] > shown[i][1 - side] ? "set-won" : ""}>{shown[i]?.[side] ?? "—"}</span>}</td>)}
