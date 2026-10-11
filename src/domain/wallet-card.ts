@@ -16,6 +16,8 @@ function dateParts(date: string): { day: string; time: string | null } | null {
   const day = `${parts.weekday.charAt(0).toUpperCase()}${parts.weekday.slice(1).replace(".", "")} ${parts.day}/${parts.month}`;
   return { day, time: date.includes("T") ? new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }).format(new Date(time)) : null };
 }
+// SNP writes some club names with underscores ("CD_PADEL_ARCOS"); the web shows them with spaces.
+const teamName = (name: string) => name.replaceAll("_", " ");
 export function shortDate(date: string): string | null {
   const parts = dateParts(date);
   return parts && (parts.time ? `${parts.day} ${parts.time}` : parts.day);
@@ -23,10 +25,10 @@ export function shortDate(date: string): string | null {
 function cardNext(next: CardFixture | null): CardNext | null {
   if (!next) return null;
   const parts = dateParts(next.date);
-  return { round: `J${next.round}`, opponent: next.opponent, day: parts?.day ?? "Por confirmar", time: parts?.time ?? null, venue: next.home ? "Local" : "Visitante" };
+  return { round: `J${next.round}`, opponent: teamName(next.opponent), day: parts?.day ?? "Por confirmar", time: parts?.time ?? null, venue: next.home ? "Local" : "Visitante" };
 }
 function nextMatch(next: CardFixture | null) {
-  return next ? [`J${next.round}`, next.opponent, shortDate(next.date) ?? "Fecha por confirmar", next.home ? "Local" : "Visitante"].join(" · ") : "Sin partidos programados";
+  return next ? [`J${next.round}`, teamName(next.opponent), shortDate(next.date) ?? "Fecha por confirmar", next.home ? "Local" : "Visitante"].join(" · ") : "Sin partidos programados";
 }
 // The published pairs are frozen in pair order: array position + 1 is the pair number.
 // Returns the full sentence (notices, Google) and the short one shown on the front of the Apple pass.
@@ -49,7 +51,7 @@ export function buildWalletCard(ctx: TeamCardContext, sourceId: string): WalletC
     teamId: ctx.teamId, playerSourceId: sourceId, teamLabel: `Equipo ${team}`, playerName: name,
     playerLine: player.position ? `${name} · ${POSITION_LABELS[player.position]}` : name,
     next: cardNext(ctx.next), nextMatch: nextMatch(ctx.next), lineup: lineupText, lineupShort,
-    lastResult: ctx.last ? `J${ctx.last.round} · Fito Raya ${team} ${ctx.last.ours}–${ctx.last.theirs} ${ctx.last.opponent}` : "Sin resultados todavía",
+    lastResult: ctx.last ? `J${ctx.last.round} · Fito Raya ${team} ${ctx.last.ours}–${ctx.last.theirs} ${teamName(ctx.last.opponent)}` : "Sin resultados todavía",
     snpPoints: player.points === null ? "—" : Math.round(player.points).toLocaleString("es-ES"),
     teamPath: `/equipos/${ctx.teamId}/jornadas`, actaPath: ctx.last ? `/equipos/${ctx.teamId}/jornadas/${ctx.last.fixtureId}` : null,
   };
