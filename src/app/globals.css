@@ -3874,6 +3874,7 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .acta-set-input:disabled { opacity: 0.35; }
 
 .page-skeleton { display: grid; gap: 18px; }
+.skeleton { border-radius: 12px; background: linear-gradient(90deg, var(--panel) 25%, var(--line) 50%, var(--panel) 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.2s ease-in-out infinite; }
 .skeleton-heading { display: grid; gap: 10px; margin-bottom: 6px; }
 .skeleton-line { height: 18px; border-radius: 8px; }
 .skeleton-eyebrow { width: 28%; max-width: 220px; height: 12px; }
@@ -3908,6 +3909,8 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 ::view-transition-group(app-topbar), ::view-transition-group(app-sidebar), ::view-transition-group(app-bottom-nav), ::view-transition-group(app-mobile-header) { animation: none; z-index: 100; }
 ::view-transition-old(app-topbar), ::view-transition-old(app-sidebar), ::view-transition-old(app-bottom-nav), ::view-transition-old(app-mobile-header) { display: none; }
 ::view-transition-new(app-topbar), ::view-transition-new(app-sidebar), ::view-transition-new(app-bottom-nav), ::view-transition-new(app-mobile-header) { animation: none; }
+/* Crossfade only: skeleton and content differ in height, so never morph the box size. */
+::view-transition-group(.page-fade) { animation: none; }
 ::view-transition-old(.page-fade) { animation: 120ms ease-out both vt-fade reverse; }
 ::view-transition-new(.page-fade) { animation: 200ms ease-out 60ms both vt-fade; }
 ::view-transition-old(.nav-forward) { --slide-offset: -60px; animation: 150ms ease-in both vt-fade reverse, 400ms ease-in-out both vt-slide reverse; }
@@ -3927,3 +3930,4 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .skeleton-avatar-large { width: 110px; height: 110px; }
 .skeleton-button { width: 160px; height: 44px; border-radius: 10px; }
 .skeleton-profile .profile-metrics, .page-skeleton .profile-metrics { padding: 0; }
+.skeleton-stat { display: inline-block; width: 48px; height: 26px; border-radius: 6px; vertical-align: middle; }

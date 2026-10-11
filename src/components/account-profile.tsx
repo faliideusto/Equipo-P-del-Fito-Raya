@@ -1,7 +1,7 @@
 "use client";
 import { MyProfileSkeleton, TeamStatsSkeleton } from "./skeletons";
 import { SNP_CHECKED_EVENT } from "@/lib/snp-updates";
-import { startTransition, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeading } from "./sports";
@@ -19,8 +19,7 @@ export function AccountProfile() {
   async function refreshAccount() {
     const response = await fetch("/api/account", { cache: "no-store" }); const data = await response.json();
     if (!response.ok) throw new Error(data.error);
-    // Inside a transition so the content replaces the skeleton with the page crossfade.
-    startTransition(() => { setAccount(data); setPosition(data.link?.position ?? data.user?.position ?? ""); });
+    setAccount(data); setPosition(data.link?.position ?? data.user?.position ?? "");
   }
   useEffect(() => { void refreshAccount().catch(e => setError(e.message)); }, []);
   const playerId = account?.link?.player_id;
@@ -29,7 +28,7 @@ export function AccountProfile() {
     if (!playerId) return;
     const controller = new AbortController();
     async function update() {
-      try { const response = await fetch("/api/account/stats", { signal: controller.signal, cache: "no-store" }); const data = await response.json(); if (!response.ok) throw new Error(data.error); startTransition(() => { setTeams(data.teams); setStatsError(""); }); }
+      try { const response = await fetch("/api/account/stats", { signal: controller.signal, cache: "no-store" }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setTeams(data.teams); setStatsError(""); }
       catch (e) { if (!controller.signal.aborted) setStatsError(e instanceof Error ? e.message : "No se pudieron consultar tus estadísticas."); }
     }
     setTeams(null); void update(); const onCheck = () => void update(); window.addEventListener(SNP_CHECKED_EVENT, onCheck);

@@ -37,11 +37,11 @@ const home: Item = { href: "/", label: "Inicio", icon: House, match: (path) => p
 const profile: Item = { href: "/mi-perfil", label: "Mi perfil", icon: UserRound, match: (path) => path === "/mi-perfil" || path === "/acceso" };
 const coach: Item = { href: "/entrenador", label: "Panel del entrenador", icon: ClipboardList, match: (path) => path === "/entrenador" };
 
-function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string; onNavigate: () => void }) {
+function NavLink({ item, pathname, onNavigate, href = item.href }: { item: Item; pathname: string; onNavigate: () => void; href?: string }) {
   const active = item.match(pathname);
   const Icon = item.icon;
   return (
-    <Link className={`nav-link ${active ? "active" : ""}`} aria-current={active ? "page" : undefined} href={item.href} onClick={onNavigate}>
+    <Link className={`nav-link ${active ? "active" : ""}`} aria-current={active ? "page" : undefined} href={href} onClick={onNavigate}>
       <Icon size={18} />
       <span>{item.label}</span>
       {item.detail && <small>{item.detail}</small>}
@@ -52,7 +52,13 @@ function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string;
 export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [latestHref, setLatestHref] = useState<string | null>(null);
   const close = () => setOpen(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/fixtures/latest", { signal: controller.signal, cache: "no-store" }).then(r => r.ok ? r.json() : null).then(data => { if (typeof data?.href === "string") setLatestHref(data.href); }).catch(() => {});
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
@@ -85,7 +91,7 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
           <div className="nav-group">
             <div className="nav-caption">Nuestros equipos</div>
             {teamItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} onNavigate={close} />)}
-            <NavLink item={latest} pathname={pathname} onNavigate={close} />
+            <NavLink item={latest} pathname={pathname} onNavigate={close} href={latestHref ?? latest.href} />
           </div>
           <div className="nav-group">
             <div className="nav-caption">Club</div>
