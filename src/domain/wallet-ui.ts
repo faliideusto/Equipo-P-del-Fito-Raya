@@ -1,0 +1,1 @@
+export type NotifySummary = { total: number; withoutPass: number; apple: { enabled: boolean; ok: number; failed: number }; google: { enabled: boolean; ok: number; failed: number; rateLimited: number } };
