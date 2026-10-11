@@ -51,3 +51,35 @@ export function actaForecast(title: string, gameSets: (SetScore[] | null)[]): ([
     return { points: Math.round(coefficient! * (result + (bonus ?? 0)) * 1000) / 1000, withBonus: bonus !== null };
   }) as [PointsForecast | null, PointsForecast | null]);
 }
+// Historial de SNP de un jugador en un grupo (ranking/ajaxGetByJugadorAndGrupo):
+// `datos` es la temporada actual y `datos_ant` la anterior, por fase y jornada.
+type RawRound = { ptos_c?: unknown; pd?: unknown; puntos?: unknown };
+type RawPhase = { nombre?: unknown; j_a?: unknown; J?: unknown };
+export type RankingHistory = { current: Record<string, RawPhase>; previous: Record<string, RawPhase> };
+const num = (value: unknown) => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
+const roundOrder = (key: string) => key === "retos" ? 5.5 : Number(key);
+const rounds = (phase: RawPhase | undefined) => phase?.J && typeof phase.J === "object" && !Array.isArray(phase.J) ? Object.entries(phase.J as Record<string, RawRound>).filter(([key, row]) => row && Number.isFinite(roundOrder(key))) : [];
+const sameName = (phase: RawPhase, title: string) => typeof phase.nombre === "string" && phase.nombre.trim() !== "" && title.toUpperCase().includes(phase.nombre.trim().toUpperCase());
+export type RankingForecast = { before: number; after: number; published: boolean };
+export type PlayerRanking = RankingForecast & { withBonus: boolean };
+// Ranking = 100.000 × puntos de la ventana / (8 × máx(4, partidos de la ventana)).
+// La ventana es un año: al jugar la jornada N cae la jornada N (y antes, los retos) de la temporada pasada.
+export function rankingForecast(history: RankingHistory, title: string, round: number, gained: number, lineupPoints: number | null = null): RankingForecast | null {
+  const phase = Object.values(history.current).find(p => sameName(p, title));
+  if (!phase) return null;
+  const done = rounds(phase).filter(([key]) => roundOrder(key) < round);
+  const previousRow = done.sort(([a], [b]) => roundOrder(a) - roundOrder(b)).at(-1)?.[1];
+  // Sin jornadas previas esta temporada, el ranking de partida es el de la convocatoria del acta.
+  const before = previousRow ? num(previousRow.puntos) : lineupPoints;
+  const published = num(phase.j_a) >= round ? rounds(phase).find(([key]) => roundOrder(key) === round)?.[1] : undefined;
+  if (published && before !== null) return { before, after: num(published.puntos), published: true };
+  let points = gained; let played = 1;
+  for (const [, row] of done) { points += num(row.ptos_c); played += num(row.pd); }
+  for (const old of Object.values(history.previous)) {
+    // La fase regular de la temporada pasada puede ser de otra zona (otro nombre).
+    const regular = typeof old.nombre === "string" && /REGULAR/i.test(old.nombre);
+    for (const [key, row] of rounds(old)) if (!regular || roundOrder(key) > round) { points += num(row.ptos_c); played += num(row.pd); }
+  }
+  const after = Math.round(12500 * points / Math.max(4, played) * 100) / 100;
+  return before === null ? null : { before, after, published: false };
+}

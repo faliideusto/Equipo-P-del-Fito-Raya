@@ -9,12 +9,12 @@ import { cellsToSets, checkSets, setsToCells, visibleCells, type SetScore } from
 import { toActaSets } from "@/domain/result-edit";
 import { updateCell } from "./result-sets-grid";
 import { formatPoints } from "@/lib/format";
-import type { PointsForecast } from "@/domain/snp-points";
+import type { PlayerRanking } from "@/domain/snp-points";
 export type ActaProvisional = { fixtureId: string; teamId: string; ownSide: 0 | 1; sets: SetScore[] | null; editable: boolean };
 type Game = SnpMatch["games"][number];
 // One match of the acta: SNP sets when published; otherwise the provisional
 // result saved in the app, editable in place by the players of that pair.
-export function ActaGameRows({ game, teams, teamIds, provisional, forecast }: { game: Game; teams: [string, string]; teamIds?: [string, string]; provisional?: ActaProvisional; forecast?: [PointsForecast | null, PointsForecast | null] }) {
+export function ActaGameRows({ game, teams, teamIds, provisional, rankings }: { game: Game; teams: [string, string]; teamIds?: [string, string]; provisional?: ActaProvisional; rankings?: Record<string, PlayerRanking> }) {
   const router = useRouter();
   const [editing, setEditing] = useState<string[][] | null>(null);
   const [message, setMessage] = useState("");
@@ -42,7 +42,7 @@ export function ActaGameRows({ game, teams, teamIds, provisional, forecast }: { 
     const inputSide = pending ? (side === pending.ownSide ? 0 : 1) : 0;
     return <tr key={side} className={own ? "club-result" : "rival-result"}>
       {side === 0 && <th className="result-number" scope="rowgroup" rowSpan={pending?.sets ? 3 : 2}><span>{String(game.index + 1).padStart(2, "0")}</span><small>{value ?? "—"} pts en juego</small>{pending?.sets && <small className="provisional-tag"><Hourglass size={12} aria-hidden/><span>Provisional</span></small>}</th>}
-      <th className="result-team" scope="row"><small>{teams[side]} · {side === 0 ? "Local" : "Visitante"}</small>{names.length ? names.map((name, i) => { const person = people?.[i]; return <span key={person?.id || i}>{person?.id ? <Link href={`/competicion/jugadores/${person.id}${teamIds?.[side] ? `?equipo=${teamIds[side]}` : ""}`}>{name}</Link> : name}{typeof person?.points === "number" && <b className="acta-points" title="Puntos SNP del jugador en este encuentro">{formatPoints(person.points)}</b>}</span>; }) : <span>Sin alineación publicada</span>}{forecast?.[side] && names.length > 0 && <small className="acta-forecast" title="Previsión de puntos SNP de cada jugador de esta pareja por este partido">+{formatPoints(forecast[side]!.points)} pts SNP{forecast[side]!.withBonus ? "" : " + bonus del equipo"} · previsión</small>}</th>
+      <th className="result-team" scope="row"><small>{teams[side]} · {side === 0 ? "Local" : "Visitante"}</small>{names.length ? names.map((name, i) => { const person = people?.[i]; return <span key={person?.id || i}>{person?.id ? <Link href={`/competicion/jugadores/${person.id}${teamIds?.[side] ? `?equipo=${teamIds[side]}` : ""}`}>{name}</Link> : name}{typeof person?.points === "number" && <b className="acta-points" title="Puntos SNP del jugador en este encuentro">{formatPoints(person.points)}</b>}{person?.id && rankings?.[person.id] && <RankingChange value={rankings[person.id]}/>}</span>; }) : <span>Sin alineación publicada</span>}</th>
       {[0, 1, 2].map(i => <td className="result-set" key={i}>{view
         ? <input className="acta-set-input" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`${side === pending!.ownSide ? "Nosotros" : "Rivales"}, set ${i + 1}`} disabled={i === 2 && view.thirdLocked} value={view.cells[i][inputSide]} onChange={e => setEditing(updateCell(editing!, i, inputSide, e.target.value.replace(/\D/g, "")))}/>
         : <span className={shown[i] && shown[i][side] > shown[i][1 - side] ? "set-won" : ""}>{shown[i]?.[side] ?? "—"}</span>}</td>)}
@@ -59,4 +59,11 @@ export function ActaGameRows({ game, teams, teamIds, provisional, forecast }: { 
       {message && <p role="alert" className="snp-warning">{message}</p>}
     </td></tr>}
   </tbody>;
+}
+const whole = (n: number) => new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0, useGrouping: "always" }).format(n);
+// How much the player's SNP ranking moves with this game: forecast until SNP publishes the round.
+function RankingChange({ value }: { value: PlayerRanking }) {
+  const change = value.after - value.before;
+  const label = value.published ? "SNP" : value.withBonus ? "previsión" : "previsión sin bonus";
+  return <small className={`acta-ranking ${change < 0 ? "down" : "up"}`} title={`Ranking SNP: ${formatPoints(value.before)} → ${formatPoints(value.after)} (${value.published ? "publicado por SNP" : "previsión con la fórmula de SNP"})`}>{change >= 0 ? "+" : "−"}{whole(Math.abs(change))} → {whole(value.after)} · {label}</small>;
 }

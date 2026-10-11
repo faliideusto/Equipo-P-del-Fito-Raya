@@ -25,4 +25,4 @@ La ventana es el último año: al jugar la jornada N se cae la jornada N de la t
 
 ## En la web
 
-`src/domain/snp-points.ts` calcula la previsión. El acta la muestra bajo cada pareja con los sets de SNP o, si aún no están, con el resultado provisional de la app. El bonus del equipo solo se suma cuando están los 5 partidos; antes se indica «+ bonus del equipo». Si un jugador juega ese fin de semana en dos divisiones, SNP suma los dos partidos.
+`src/domain/snp-points.ts` calcula los puntos del partido y el nuevo ranking; `src/lib/snp-ranking.ts` lee el historial de cada jugador del acta. Junto a cada jugador sale cuánto sube o baja su ranking y cómo queda («+6.094 → 64.102 · previsión»), con los sets de SNP o, si aún no están, con el resultado provisional de la app. Cuando SNP publica la jornada se muestra el dato real («· SNP»). El bonus del equipo solo se suma con los 5 resultados («previsión sin bonus»). Comprobado con la J1 y J2 reales: 178 de 178 exactos. Si un jugador juega ese fin de semana en dos divisiones, SNP suma los dos partidos y la previsión no lo recoge.

@@ -25,3 +25,13 @@ test("casos reales del acta 55262 (2ª, Fito gana 10-2) y 55252 (6-6)", () => {
   assert.equal(teamBonus([w, l, w3, l, w], 0), 1);
   assert.equal(actaForecast(title, [[[6, 1], [3, 6], [1, 6]], w, w3, null, null])[0][0]?.withBonus, false);
 });
+test("previsión del ranking con un historial real de SNP (J2 en 2ª, +7,6)", async () => {
+  const { rankingForecast } = await import("../src/domain/snp-points");
+  const history = JSON.parse((await import("node:fs")).readFileSync(new URL("./snp-ranking-history.fixture.json", import.meta.url), "utf8"));
+  const title = "Enfrentamiento (#55262): SNP ESPAÑA - FASE REGULAR CÁDIZ - MASCULINO - Future - 2ª División [Jornada 2]";
+  // Ya publicada por SNP: se muestra el dato real.
+  assert.deepEqual(rankingForecast(history, title, 2, 7.6), { before: 58007.81, after: 64101.56, published: true });
+  // Antes de publicarla: se quita la J2 y se calcula con la fórmula.
+  const pending = structuredClone(history); delete pending.current["269"].J["2"]; pending.current["269"].j_a = "1";
+  assert.deepEqual(rankingForecast(pending, title, 2, 7.6), { before: 58007.81, after: 64101.56, published: false });
+});
