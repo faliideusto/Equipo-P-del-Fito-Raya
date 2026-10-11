@@ -3,9 +3,11 @@ import { join } from "node:path";
 import { PKPass } from "passkit-generator";
 import type { WalletCardData } from "@/domain/wallet-card";
 import type { AppleConfig } from "./wallet-config";
+import { renderStrip } from "./wallet-strip";
 export type ApplePassMeta = { serial: string; authToken: string; baseUrl: string; passTypeId: string; teamIdentifier: string };
 type Field = { key: string; label: string; value: string; changeMessage?: string };
-// Event ticket on the pink-to-purple kit gradient: player and points on top, "Fito Raya vs rival", then short fields so nothing is cut.
+// Event ticket: player and points on top, the match drawn in the strip image (wallet-strip.tsx), then the lineup.
+// The strip carries the match, so there are no primary or secondary fields to cover it; the back keeps it as text.
 // Apple notifies on a field whose value changed only when it has a changeMessage.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
   const next = card.next; const round = next ? ` ${next.round}` : "";
@@ -19,31 +21,31 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
     formatVersion: 1, passTypeIdentifier: meta.passTypeId, teamIdentifier: meta.teamIdentifier, serialNumber: meta.serial,
     authenticationToken: meta.authToken, webServiceURL: `${meta.baseUrl}/api/wallet/apple`,
     organizationName: "Escuela Fito Raya", description: `Tarjeta Fito Raya · ${card.teamLabel}`, logoText: card.playerName,
-    backgroundColor: "rgb(167, 51, 159)", foregroundColor: "rgb(255, 255, 255)", labelColor: "rgb(255, 214, 236)",
+    backgroundColor: "rgb(76, 29, 149)", foregroundColor: "rgb(255, 255, 255)", labelColor: "rgb(255, 227, 241)",
     eventTicket: {
       headerFields: [{ key: "points", label: "PUNTOS SNP", value: card.snpPoints }],
-      primaryFields: [{ key: "rival", label: next ? `${next.round} · PRÓXIMO PARTIDO` : "PRÓXIMO PARTIDO", value: next ? `Fito Raya vs ${next.opponent}` : "Sin partidos programados" }],
-      secondaryFields: next ? [{ key: "day", label: "FECHA", value: next.day }, ...(next.time ? [{ key: "time", label: "HORA", value: next.time }] : []), { key: "venue", label: "CAMPO", value: next.venue }] : [],
       auxiliaryFields: [{ key: "lineup", label: `TU CONVOCATORIA${round}`, value: card.lineupShort, changeMessage: `Convocatoria${round}: %@` }],
       backFields: back,
     },
     barcodes: [{ format: "PKBarcodeFormatQR", message: `${meta.baseUrl}/mi-perfil`, messageEncoding: "iso-8859-1" }],
   };
 }
-// Round logo and the gradient background (Wallet blurs it); an event ticket with a background has no strip.
+// Icon and round logo are fixed; the strip is drawn for each card.
 let images: Promise<Record<string, Buffer>> | null = null;
 function passImages() {
   const file = (...path: string[]) => readFile(join(process.cwd(), "public", ...path));
-  images ??= Promise.all([file("apple-touch-icon.png"), ...["", "@2x", "@3x"].flatMap(suffix => [file("wallet", `logo${suffix}.png`), file("wallet", `background${suffix}.png`)])])
-    .then(([icon, logo, background, logo2, background2, logo3, background3]) => ({
-      "icon.png": icon, "icon@2x.png": icon, "logo.png": logo, "logo@2x.png": logo2, "logo@3x.png": logo3,
-      "background.png": background, "background@2x.png": background2, "background@3x.png": background3,
-    }))
+  images ??= Promise.all([file("apple-touch-icon.png"), file("wallet", "logo.png"), file("wallet", "logo@2x.png"), file("wallet", "logo@3x.png")])
+    .then(([icon, logo, logo2, logo3]) => ({ "icon.png": icon, "icon@2x.png": icon, "logo.png": logo, "logo@2x.png": logo2, "logo@3x.png": logo3 }))
     .catch(error => { images = null; throw error; });
   return images;
 }
+// Every iPhone is 2x or 3x, so the 1x strip reuses the 2x drawing.
+async function stripImages(card: WalletCardData): Promise<Record<string, Buffer>> {
+  const [strip2, strip3] = await Promise.all([renderStrip(card, 2), renderStrip(card, 3)]);
+  return { "strip.png": strip2, "strip@2x.png": strip2, "strip@3x.png": strip3 };
+}
 export async function signApplePass(card: WalletCardData, meta: { serial: string; authToken: string; baseUrl: string }, config: AppleConfig): Promise<Buffer> {
   const json = applePassJson(card, { ...meta, passTypeId: config.passTypeId, teamIdentifier: config.teamId });
-  const pass = new PKPass({ ...(await passImages()), "pass.json": Buffer.from(JSON.stringify(json)) }, { wwdr: config.wwdr, signerCert: config.cert, signerKey: config.key, ...(config.passphrase ? { signerKeyPassphrase: config.passphrase } : {}) });
+  const pass = new PKPass({ ...(await passImages()), ...(await stripImages(card)), "pass.json": Buffer.from(JSON.stringify(json)) }, { wwdr: config.wwdr, signerCert: config.cert, signerKey: config.key, ...(config.passphrase ? { signerKeyPassphrase: config.passphrase } : {}) });
   return pass.getAsBuffer();
 }
