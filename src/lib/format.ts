@@ -25,3 +25,6 @@ export const formatPoints = (points: number | null) =>
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       }).format(points);
+
+export const formatWinRate = (percentage: number | null) =>
+  percentage === null ? "—" : `${new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 }).format(percentage)} %`;

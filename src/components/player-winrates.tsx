@@ -1,6 +1,5 @@
 import type { SnpPlayerProfile } from "@/domain/snp";
-
-const percent = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
+import { formatWinRate } from "@/lib/format";
 
 export function PlayerWinRates({ player }: { player: SnpPlayerProfile }) {
   const metrics = [
@@ -11,7 +10,7 @@ export function PlayerWinRates({ player }: { player: SnpPlayerProfile }) {
     <div className="panel-heading"><h2>Porcentaje de victorias</h2><span className="badge blue">Todos los grupos</span></div>
     <div className="profile-metrics player-winrates">{metrics.map(({ label, rate }) => <div key={label}>
       <span>{label}</span>
-      <strong>{rate?.percentage != null ? `${percent.format(rate.percentage)} %` : "—"}</strong>
+      <strong>{formatWinRate(rate?.percentage ?? null)}</strong>
       <span>{rate ? rate.decided ? `${rate.won} ganados · ${rate.lost} perdidos · ${rate.decided} con resultado` : "Sin partidos con resultado" : "Datos no disponibles"}</span>
     </div>)}</div>
     <p className="data-note account-stat-note">Victorias / partidos con resultado. El total suma el historial disponible en SNP: temporada actual y anterior. SNP no proporciona temporadas más antiguas en esta ficha.</p>
