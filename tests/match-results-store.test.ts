@@ -1,0 +1,29 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { DuplicateResultError, deleteResult, listAbsences, listResults, saveAbsence, saveResult } from "../src/lib/match-results";
+
+test("guarda resultados y ausencias en archivo privado sin Supabase", async () => {
+  const saved = { cwd: process.cwd(), url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SECRET_KEY, render: process.env.RENDER, vercel: process.env.VERCEL };
+  delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY; delete process.env.RENDER; delete process.env.VERCEL;
+  const dir = await mkdtemp(path.join(tmpdir(), "fito-results-"));
+  process.chdir(dir);
+  try {
+    const row = { fixture_id: "55", team_id: "a" as const, pair_index: 2, sets: [[6, 4], [6, 3]] as [number, number][], player_id: "10", submitted_by: "u1", created_at: "2026-10-10T14:00:00.000Z" };
+    await saveResult(row);
+    await assert.rejects(saveResult({ ...row, submitted_by: "u2" }), DuplicateResultError);
+    assert.deepEqual(await listResults(["55"]), [row]);
+    assert.deepEqual(await listResults(["99"]), []);
+    await saveAbsence({ user_id: "u1", fixture_id: "55", reason: "absent", created_at: row.created_at });
+    await saveAbsence({ user_id: "u1", fixture_id: "55", reason: "absent", created_at: row.created_at });
+    assert.equal((await listAbsences("u1")).length, 1);
+    assert.equal((await listAbsences("u2")).length, 0);
+    await deleteResult("55", "a", 2);
+    assert.deepEqual(await listResults(["55"]), []);
+  } finally {
+    process.chdir(saved.cwd); await rm(dir, { recursive: true, force: true });
+    for (const [k, v] of [["SUPABASE_URL", saved.url], ["SUPABASE_SECRET_KEY", saved.key], ["RENDER", saved.render], ["VERCEL", saved.vercel]] as const) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  }
+});
