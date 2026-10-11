@@ -1,6 +1,7 @@
 import type { Fixture, TeamId } from "./types";
 import type { SnpMatch, SnpMatchPlayer } from "./snp";
-export const RESULT_DELAY_MS = 2 * 3600 * 1000;
+// One hour after the start: a quick match can be over in under an hour.
+export const RESULT_DELAY_MS = 3600 * 1000;
 // The reminder changes about once a week: avoid a full server check on every navigation.
 export const PENDING_REFRESH_MS = 5 * 60 * 1000;
 export const dueForCheck = (lastCheck: number | null, now: number) => lastCheck === null || now - lastCheck >= PENDING_REFRESH_MS;

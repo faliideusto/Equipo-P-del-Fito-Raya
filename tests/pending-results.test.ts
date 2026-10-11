@@ -9,7 +9,8 @@ const player = (id: string) => ({ id, name: id, photoUrl: null });
 const acta = (games: { home: string[]; away: string[]; sets?: [number, number][] }[], teamIds: [string, string] = ["7778", "3349"]): SnpMatch => ({ id: "1", title: "", dateLabel: "", teams: ["Fito A", "Arcos"], teamIds, score: null, games: games.map((g, index) => ({ index, homePlayers: g.home, awayPlayers: g.away, home: g.home.map(player), away: g.away.map(player), sets: g.sets ?? [] })) });
 const none: ReportState = { dismissedFixtureIds: new Set(), results: [] };
 
-test("la última jornada exige dos horas desde el inicio", () => {
+test("la última jornada exige una hora desde el inicio", () => {
+  assert.equal(RESULT_DELAY_MS, 3600 * 1000);
   const list = [fixture("1", 1, "2026-10-03T11:00:00.000Z"), fixture("2", 2, "2026-10-10T11:00:00.000Z"), fixture("3", 3, "2026-10-17T11:00:00.000Z")];
   const start = Date.parse("2026-10-10T11:00:00.000Z");
   assert.equal(lastPlayedFixture(list, start + RESULT_DELAY_MS - 1)?.id, "1");

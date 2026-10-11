@@ -6,7 +6,7 @@ Ejecutar `supabase/match-results.sql` en el SQL Editor de Supabase. Es repetible
 
 ## Flujo
 
-Dos horas después del inicio de la última jornada de A o B, la app consulta el acta SNP de ese enfrentamiento para cada jugador con cuenta:
+Una hora después del inicio de la última jornada de A o B, la app consulta el acta SNP de ese enfrentamiento para cada jugador con cuenta:
 
 - Si el jugador aparece con sets publicados, o la convocatoria no le incluye, no se le pide nada.
 - Si está convocado sin sets, se le pide el resultado con su número de pareja fijado.
