@@ -13,7 +13,7 @@ export function PageHeading({
 }: {
   eyebrow: string;
   title: string;
-  text: string;
+  text: React.ReactNode;
   action?: React.ReactNode;
   logoName?: string;
 }) {

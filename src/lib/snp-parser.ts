@@ -102,3 +102,10 @@ export function parseMatch(html: string, id: string): SnpMatch {
   const teamIds: [string,string] = [$(".partido_equipo_nombre_new[equipo='1']").attr("idequipo1")||"",$(".partido_equipo_nombre_new[equipo='2']").attr("idequipo2")||""];
   return {id,title,dateLabel,teamIds,teams: [teamLinks[0] ?? "Local", teamLinks[1] ?? "Visitante"], score: scoreNumbers ? [Number(scoreNumbers[1]),Number(scoreNumbers[2])] : null, games};
 }
+// SNP's acta heading joins the score and the date ("10 - 2 03 Octubre 13:00"). The score
+// already has its own banner, so the subtitle keeps only the date and the time.
+export function matchDateParts(label: string): { date: string; time: string | null } {
+  const text = label.replace(/\s+/g, " ").trim().replace(/^\d+\s*-\s*\d+\s*/, "");
+  const time = text.match(/\s(\d{1,2}:\d{2})$/)?.[1] ?? null;
+  return { date: time ? text.slice(0, -time.length).trim() : text, time };
+}

@@ -59,3 +59,11 @@ test("una cookie de sesión de un solo host no se extiende a los subdominios de 
   assert.match(shared!.cookie,/; Domain=snpgalaxy\.com/);assert.match(shared!.cookie,/; Secure/);assert.match(shared!.cookie,/Expires=/);
   assert.equal(sessionCookie({name:"x",value:"c",domain:".google.com",path:"/",expires:-1,secure:true}),null);
 });
+test("la fecha del acta no arrastra el marcador y separa la hora",async()=>{
+  const { matchDateParts } = await import("../src/lib/snp-parser");
+  assert.deepEqual(matchDateParts("10 - 2 03 Octubre 13:00"),{date:"03 Octubre",time:"13:00"});
+  assert.deepEqual(matchDateParts("0 - 0 17 Octubre 10:30"),{date:"17 Octubre",time:"10:30"});
+  assert.deepEqual(matchDateParts("Sábado 17/10/2026"),{date:"Sábado 17/10/2026",time:null});
+  assert.deepEqual(matchDateParts("  5-7   04 Octubre   09:00 "),{date:"04 Octubre",time:"09:00"});
+  assert.deepEqual(matchDateParts(""),{date:"",time:null});
+});
