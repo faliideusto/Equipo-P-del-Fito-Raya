@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { notFound } from "next/navigation";
 import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
@@ -22,7 +23,12 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   if(result){
     const link=identity?.link;
     const provisional=await fixtureProvisional(link?identity.user.id:null,link?.player_id??null,teamId,fixture,result.data);
-    return <SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>;
+    return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/></MatchdaySlide>;
   }
-  return <>{nav}<PageHeading eyebrow={`JORNADA ${fixture.round}`} title={fixture.opponent} text="El acta no está disponible en esta consulta."/><section className="panel connection-panel"><p>SNP no ha permitido consultar las parejas y los sets. Vuelve a intentarlo más tarde.</p><Link href={`/equipos/${teamId}/parejas`} className="button secondary">Preparar parejas</Link></section></>;
+  return <MatchdaySlide fixtureId={fixtureId}>{nav}<PageHeading eyebrow={`JORNADA ${fixture.round}`} title={fixture.opponent} text="El acta no está disponible en esta consulta."/><section className="panel connection-panel"><p>SNP no ha permitido consultar las parejas y los sets. Vuelve a intentarlo más tarde.</p><Link href={`/equipos/${teamId}/parejas`} className="button secondary">Preparar parejas</Link></section></MatchdaySlide>;
+}
+// Previous/next arrows tag the navigation; the matchday content slides in that direction.
+function MatchdaySlide({fixtureId,children}:{fixtureId:string;children:React.ReactNode}){
+  const slide={"nav-forward":"nav-forward","nav-back":"nav-back",default:"none"};
+  return <ViewTransition key={fixtureId} enter={slide} exit={slide} default="none"><div>{children}</div></ViewTransition>;
 }

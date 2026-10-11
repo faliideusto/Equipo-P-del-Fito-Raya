@@ -5,8 +5,8 @@ export function FixtureNav({ backHref, teamId, previous, next }: { backHref: str
   return <nav className="fixture-nav" aria-label="Navegación entre jornadas">
     <Link href={backHref} className="text-link">← Volver al calendario</Link>
     <div className="fixture-nav-steps">
-      {previous && <Link href={`/equipos/${teamId}/jornadas/${previous.id}`} className="text-link" rel="prev">‹ {label(previous)}</Link>}
-      {next && <Link href={`/equipos/${teamId}/jornadas/${next.id}`} className="text-link" rel="next">{label(next)} ›</Link>}
+      {previous && <Link href={`/equipos/${teamId}/jornadas/${previous.id}`} className="text-link" rel="prev" transitionTypes={["nav-back"]}>‹ {label(previous)}</Link>}
+      {next && <Link href={`/equipos/${teamId}/jornadas/${next.id}`} className="text-link" rel="next" transitionTypes={["nav-forward"]}>{label(next)} ›</Link>}
     </div>
   </nav>;
 }

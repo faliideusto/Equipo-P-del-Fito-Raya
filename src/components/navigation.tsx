@@ -17,6 +17,7 @@ import {
 import { useEffect, useState } from "react";
 import { SnpStatus } from "./snp-status";
 import { LogoutButton } from "./logout-button";
+import { RefreshDataButton } from "./refresh-data-button";
 
 type Item = { href: string; label: string; icon: typeof House; detail?: string; match: (path: string) => boolean };
 const teamItems: Item[] = (["a", "b"] as const).map((id) => ({
@@ -61,17 +62,18 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
   const bottomItems = [home, ...teamItems, clubItems[0]];
   return (
     <>
-      <div className="mobile-header">
+      <div className="mobile-header" style={{ viewTransitionName: "app-mobile-header" }}>
         <Link href="/" className="mobile-brand" onClick={close}>
           <Image src="/logo-fito.png" alt="" width={36} height={36} />
           <span>Fito Raya</span>
         </Link>
+        <div className="mobile-header-actions"><RefreshDataButton />
         <button className="mobile-menu" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="main-sidebar" aria-label={open ? "Cerrar menú" : "Abrir menú"}>
           {open ? <X size={20} /> : <Menu size={20} />}
           <span>Menú</span>
-        </button>
+        </button></div>
       </div>
-      <aside id="main-sidebar" className={`sidebar ${open ? "open" : ""}`}>
+      <aside id="main-sidebar" className={`sidebar ${open ? "open" : ""}`} style={{ viewTransitionName: "app-sidebar" }}>
         <Link href="/" className="brand" onClick={close}>
           <Image src="/logo-fito.png" alt="Fito Raya Escuela de Pádel" width={48} height={48} priority />
           <span>
@@ -102,7 +104,7 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
         </div>
       </aside>
       {open && <button className="nav-backdrop" aria-label="Cerrar menú" onClick={close} />}
-      <nav className="bottom-nav" aria-label="Accesos rápidos">
+      <nav className="bottom-nav" aria-label="Accesos rápidos" style={{ viewTransitionName: "app-bottom-nav" }}>
         {bottomItems.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;

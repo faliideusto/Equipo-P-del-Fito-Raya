@@ -1,6 +1,7 @@
 "use client";
 import { useEffect,useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { announceSnpCheck } from "@/lib/snp-updates";
 export function SnpStatus() {
   const [label,setLabel]=useState("SNP · No disponible"); const router=useRouter(); const pathname=usePathname();
   useEffect(()=>{
@@ -13,6 +14,7 @@ export function SnpStatus() {
       if(cancelled)return;
       setLabel(result.ok?"SNP conectado · Auto":"SNP · Datos guardados");
       if(result.changed)router.refresh();
+      announceSnpCheck();
     }catch{if(!cancelled)setLabel("SNP · Sin conexión");}finally{busy=false;}}
     void update();const timer=setInterval(()=>void update(),60000);return()=>{cancelled=true;clearInterval(timer);};
     // Check SNP on every section change; the page is only re-rendered when the data changed.

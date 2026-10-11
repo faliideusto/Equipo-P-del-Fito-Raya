@@ -3880,3 +3880,32 @@ dialog.result-dialog::backdrop { background: rgba(2, 8, 14, 0.55); backdrop-filt
 .skeleton-table { height: 320px; }
 @keyframes skeleton-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+.refresh-data { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+.refresh-data:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-line); }
+.refresh-data:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.refresh-data.is-busy svg { animation: refresh-spin 0.9s linear infinite; }
+@keyframes refresh-spin { to { transform: rotate(360deg); } }
+.mobile-header-actions { display: flex; align-items: center; gap: 8px; }
+.mobile-header-actions .refresh-data { width: 36px; height: 36px; }
+@media (prefers-reduced-motion: reduce) { .refresh-data.is-busy svg { animation: none; opacity: 0.5; } }
+
+/* Page transitions (React ViewTransition). Only named groups animate; the app chrome stays put. */
+::view-transition { pointer-events: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+::view-transition-group(app-topbar), ::view-transition-group(app-sidebar), ::view-transition-group(app-bottom-nav), ::view-transition-group(app-mobile-header) { animation: none; z-index: 100; }
+::view-transition-old(app-topbar), ::view-transition-old(app-sidebar), ::view-transition-old(app-bottom-nav), ::view-transition-old(app-mobile-header) { display: none; }
+::view-transition-new(app-topbar), ::view-transition-new(app-sidebar), ::view-transition-new(app-bottom-nav), ::view-transition-new(app-mobile-header) { animation: none; }
+::view-transition-old(.page-fade) { animation: 120ms ease-out both vt-fade reverse; }
+::view-transition-new(.page-fade) { animation: 200ms ease-out 60ms both vt-fade; }
+::view-transition-old(.nav-forward) { --slide-offset: -60px; animation: 150ms ease-in both vt-fade reverse, 400ms ease-in-out both vt-slide reverse; }
+::view-transition-new(.nav-forward) { --slide-offset: 60px; animation: 210ms ease-out 150ms both vt-fade, 400ms ease-in-out both vt-slide; }
+::view-transition-old(.nav-back) { --slide-offset: 60px; animation: 150ms ease-in both vt-fade reverse, 400ms ease-in-out both vt-slide reverse; }
+::view-transition-new(.nav-back) { --slide-offset: -60px; animation: 210ms ease-out 150ms both vt-fade, 400ms ease-in-out both vt-slide; }
+@keyframes vt-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vt-slide { from { translate: var(--slide-offset); } to { translate: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the fades, drop the movement. */
+  ::view-transition-old(.nav-forward), ::view-transition-old(.nav-back) { animation: 150ms ease-in both vt-fade reverse; }
+  ::view-transition-new(.nav-forward), ::view-transition-new(.nav-back) { animation: 210ms ease-out 150ms both vt-fade; }
+}
