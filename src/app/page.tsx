@@ -1,132 +1,118 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Layers3,
-  Trophy,
-  Users,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, CalendarDays, ListOrdered, Sparkles, Users } from "lucide-react";
 import { clubRepository } from "@/data/repository";
-import { FixtureCard, PageHeading } from "@/components/sports";
+import { NextMatchBoard, ResultRow } from "@/components/sports";
 import { TeamLogo } from "@/components/team-logo";
+import { formatDate, formatTime } from "@/lib/format";
 export default async function Home() {
   const teams = await clubRepository.getTeams();
   const cards = await Promise.all(
-    teams.map(async (team) => ({
-      team,
-      players: await clubRepository.getPlayers(team.id),
-      rows: await clubRepository.getStandings(team.id),
-      fixtures: await clubRepository.getFixtures(team.id),
-    })),
+    teams.map(async (team) => {
+      const [players, rows, fixtures] = await Promise.all([
+        clubRepository.getPlayers(team.id),
+        clubRepository.getStandings(team.id),
+        clubRepository.getFixtures(team.id),
+      ]);
+      const ownIndex = rows.findIndex((r) => r.own);
+      const next = fixtures.find((f) => f.status === "pending");
+      const opponentIndex = next ? rows.findIndex((r) => r.name.trim().toUpperCase() === next.opponent.trim().toUpperCase()) : -1;
+      return {
+        team,
+        players,
+        rows,
+        own: rows[ownIndex],
+        position: ownIndex + 1,
+        next,
+        opponent: opponentIndex >= 0 ? { position: opponentIndex + 1, points: rows[opponentIndex].points } : undefined,
+        last: fixtures.filter((f) => f.status === "played").at(-1),
+      };
+    }),
   );
+  const featured = [...cards].filter((c) => c.next).sort((a, b) => (Date.parse(a.next!.date) || Infinity) - (Date.parse(b.next!.date) || Infinity))[0];
+  const others = cards.filter((c) => c !== featured && c.next);
+  const results = cards.flatMap((c) => (c.last ? [{ team: c.team, fixture: c.last }] : []));
   return (
     <>
-      <PageHeading
-        eyebrow="TU CLUB, EN UN MISMO LUGAR"
-        title="Nos vemos en la pista."
-        text="Dos equipos. Una escuela. Todo listo para la próxima jornada."
-      />
-      <section className="hero">
-        <div className="hero-copy">
-          <span className="hero-tag">
-            <span className="status-dot" /> EL PARTIDO EMPIEZA AQUÍ
-          </span>
-          <h2>
-            Un buen equipo.
-            <br />
-            Muchas posibilidades.
-          </h2>
-          <p>
-            Encuentra tu pareja, prueba combinaciones
-            <br className="desktop-only" /> y prepara la próxima alineación.
-          </p>
-          <Link href="/equipos/a/parejas" className="button light">
-            Entrar al laboratorio <ArrowUpRight size={18} />
-          </Link>
+      <div className="home-heading">
+        <div>
+          <p className="eyebrow">Escuela Fito Raya · Series Nacionales de Pádel</p>
+          <h1>Nos vemos en la pista.</h1>
         </div>
-        <div className="court-art" aria-hidden="true">
-          <div className="court-line baseline" />
-          <div className="court-line service-line one" />
-          <div className="court-line service-line two" />
-          <div className="court-net" />
-          <div className="court-line center-line" />
-          <div className="court-ball" />
-          <span className="court-label">
-            EL TALENTO SUMA.
-            <br />
-            EL EQUIPO MULTIPLICA.
+        <p className="subtext">El próximo partido, cómo va la liga y las parejas de la jornada, todo a mano.</p>
+      </div>
+
+      {featured ? (
+        <NextMatchBoard
+          fixture={featured.next!}
+          team={featured.team}
+          standing={featured.own ? { position: featured.position, points: featured.own.points } : undefined}
+          opponentStanding={featured.opponent}
+        />
+      ) : (
+        <section className="panel empty-state">
+          <h2>No hay encuentros pendientes publicados.</h2>
+          <p>Cuando SNP publique la próxima jornada aparecerá aquí.</p>
+        </section>
+      )}
+
+      {others.map(({ team, next }) => (
+        <Link key={team.id} className="next-strip" href={`/equipos/${team.id}/jornadas/${next!.id}`}>
+          <span className="next-strip-team">Equipo {team.id.toUpperCase()} · J{String(next!.round).padStart(2, "0")}</span>
+          <span className="next-strip-match">
+            <TeamLogo name={next!.opponent} />
+            {next!.home ? "Fito Raya " + team.id.toUpperCase() + " vs " + next!.opponent.replaceAll("_", " ") : next!.opponent.replaceAll("_", " ") + " vs Fito Raya " + team.id.toUpperCase()}
           </span>
-          <span className="court-coordinate">36.6866° N / 6.1370° W</span>
-        </div>
-      </section>
+          <span className="next-strip-date">{formatDate(next!.date)} · {formatTime(next!.date)}</span>
+          <ArrowRight size={18} />
+        </Link>
+      ))}
+
       <div className="section-title">
-        <h2>
-          Nuestros equipos <span>02</span>
-        </h2>
-        <span>Series Nacionales de Pádel · Future</span>
+        <h2>Nuestros equipos</h2>
+        <span>Temporada 2026 / 27</span>
       </div>
       <div className="team-grid">
-        {cards.map(({ team, players, rows }) => {
-          const own = rows.find((r) => r.own)!;
-          return (
-            <article className="team-card" key={team.id}>
-              <div className="team-card-top">
-                <div className="team-card-identity">
-                  <TeamLogo name={team.name} large />
-                  <span className="team-letter">{team.id.toUpperCase()}</span>
-                </div>
-                <span className="badge">FUTURE</span>
+        {cards.map(({ team, players, own, position, rows }) => (
+          <article className="team-card" key={team.id}>
+            <Link className="team-card-top" href={`/equipos/${team.id}`}>
+              <TeamLogo name={team.name} large />
+              <div>
+                <h3>Equipo {team.id.toUpperCase()}</h3>
+                <p>{team.division}</p>
               </div>
-              <h3>{team.name}</h3>
-              <p>{team.division}</p>
-              <div className="team-stats">
-                <div>
-                  <Trophy size={17} />
-                  <strong>
-                    {rows.indexOf(own) + 1}
-                    <small>º</small>
-                  </strong>
-                  <span>Clasificación</span>
-                </div>
-                <div>
-                  <Users size={17} />
-                  <strong>{players.length}</strong>
-                  <span>Jugadores</span>
-                </div>
-                <div>
-                  <Layers3 size={17} />
-                  <strong>{own.points}</strong>
-                  <span>Puntos de liga</span>
-                </div>
+              <ArrowRight size={18} />
+            </Link>
+            <dl className="team-stats">
+              <div><dt>Puesto</dt><dd>{own ? `${position}º` : "—"}<small>/{rows.length}</small></dd></div>
+              <div><dt>Puntos</dt><dd>{own?.points ?? "—"}</dd></div>
+              <div><dt>Jugadores</dt><dd>{players.length}</dd></div>
+            </dl>
+            <nav className="team-card-links" aria-label={`Accesos del equipo ${team.id.toUpperCase()}`}>
+              <Link href={`/equipos/${team.id}/jornadas`}><CalendarDays size={16} /> Jornadas</Link>
+              <Link href={`/equipos/${team.id}/clasificacion`}><ListOrdered size={16} /> Clasificación</Link>
+              <Link href={`/equipos/${team.id}/plantilla`}><Users size={16} /> Plantilla</Link>
+              <Link href={`/equipos/${team.id}/parejas`} className="is-action"><Sparkles size={16} /> Crear parejas</Link>
+            </nav>
+          </article>
+        ))}
+      </div>
+
+      {results.length > 0 && (
+        <>
+          <div className="section-title">
+            <h2>Últimos resultados</h2>
+            <span>Puntos por partido: 3 / 3 / 2 / 2 / 2</span>
+          </div>
+          <section className="panel result-list">
+            {results.map(({ team, fixture }) => (
+              <div key={team.id + fixture.id}>
+                <span className="result-team">Equipo {team.id.toUpperCase()}</span>
+                <ResultRow fixture={fixture} team={team} />
               </div>
-              <div className="team-card-actions">
-                <Link href={`/equipos/${team.id}`} className="text-link">
-                  Ver equipo <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href={`/equipos/${team.id}/parejas`}
-                  className="button small"
-                >
-                  <Sparkles size={15} /> Crear parejas
-                </Link>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-      <div className="section-title">
-        <h2>El próximo encuentro</h2>
-        <span>Una nueva oportunidad de sumar</span>
-      </div>
-      <div className="team-grid">
-        {cards.map(({ team, fixtures }) => {
-          const next = fixtures.find((f) => f.status === "pending");
-          return (
-            next && <FixtureCard key={team.id} fixture={next} team={team} />
-          );
-        })}
-      </div>
+            ))}
+          </section>
+        </>
+      )}
     </>
   );
 }

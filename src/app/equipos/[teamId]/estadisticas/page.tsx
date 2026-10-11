@@ -24,7 +24,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ teamId:
     });
   }
   const { rows, unassigned } = seasonRanking(players, matches);
-  return <><PageHeading eyebrow={`${team.shortName} · TEMPORADA ACTUAL`} title="Los jugadores que más suman." text="Clasificación por puntos aportados al equipo en los partidos de la temporada."/>
+  return <><PageHeading eyebrow={`${team.shortName} · Temporada actual`} title="Ranking de la temporada" text="Jugadores ordenados por los puntos que han aportado al equipo en los partidos jugados."/>
     <p className="data-note">{matches.length} de {completed.length} actas de encuentros con resultado consultadas. {saved > 0 && `${saved} proceden de la última consulta guardada.`}</p>
     {(unavailable > 0 || unassigned > 0) && <p className="snp-warning" role="status">Clasificación parcial: {unavailable} actas no disponibles y {unassigned} participaciones sin identificar en la plantilla actual.</p>}
     <section className="panel"><div className="panel-heading"><h2>Aportación al equipo</h2><span className="badge blue">{team.shortName}</span></div><SeasonRankingTable key={teamId} rows={rows} teamId={teamId}/></section>
