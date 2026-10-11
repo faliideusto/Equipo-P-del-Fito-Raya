@@ -13,7 +13,7 @@ import { MiniLineup } from "./lineup/mini-lineup";
 import { TeamSchedule } from "./team-schedule";
 import { RivalTabs, type RivalView } from "./team-tabs";
 import { PageSkeleton } from "./skeletons";
-import { SNP_CHECKED_EVENT } from "@/lib/snp-updates";
+import { isForcedCheck, SNP_CHECKED_EVENT } from "@/lib/snp-updates";
 
 export function ExplorerTeam({ id, filters, view }: { id: string; filters: Partial<SnpCompetition["filters"]>; view: RivalView }) {
   const [result, setResult] = useState<SnpResult<SnpTeam> | null>(null);
@@ -25,9 +25,10 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
   useEffect(() => {
     if (!JSON.parse(filterKey).division) return;
     const controller = new AbortController();
-    async function update() {
+    async function update(force = false) {
       try {
-        const response = await fetch("/api/snp/competition?" + new URLSearchParams(JSON.parse(filterKey)), { signal: controller.signal });
+        const params = new URLSearchParams(JSON.parse(filterKey)); if (force) params.set("refresh", "1");
+        const response = await fetch("/api/snp/competition?" + params, { signal: controller.signal });
         const value = await response.json();
         if (controller.signal.aborted) return;
         if (response.ok) {
@@ -41,16 +42,16 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
       }
     }
     void update();
-    const onCheck = () => void update();
+    const onCheck = (event: Event) => void update(isForcedCheck(event));
     window.addEventListener(SNP_CHECKED_EVENT, onCheck);
     return () => { controller.abort(); window.removeEventListener(SNP_CHECKED_EVENT, onCheck); };
   }, [filterKey]);
 
   useEffect(() => {
     let cancelled = false;
-    async function update() {
+    async function update(force = false) {
       try {
-        const response = await fetch(`/api/snp/teams/${id}`);
+        const response = await fetch(`/api/snp/teams/${id}${force ? "?refresh=1" : ""}`);
         const value = await response.json();
         if (cancelled) return;
         if (response.ok) { setResult(value); setError(""); }
@@ -60,7 +61,7 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
       }
     }
     void update();
-    const onCheck = () => void update();
+    const onCheck = (event: Event) => void update(isForcedCheck(event));
     window.addEventListener(SNP_CHECKED_EVENT, onCheck);
     return () => { cancelled = true; window.removeEventListener(SNP_CHECKED_EVENT, onCheck); };
   }, [id]);

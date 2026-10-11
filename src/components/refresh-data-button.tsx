@@ -11,7 +11,7 @@ export function RefreshDataButton() {
   async function refresh() {
     setBusy(true);
     try { await fetch("/api/snp/sync?refresh=1", { method: "POST" }); } catch { /* Keep the cached data. */ }
-    router.refresh(); announceSnpCheck(); setBusy(false);
+    router.refresh(); announceSnpCheck(true); setBusy(false);
   }
   return <button type="button" className={`refresh-data ${busy ? "is-busy" : ""}`} onClick={() => void refresh()} disabled={busy} aria-label="Actualizar datos de SNP" title="Actualizar datos de SNP"><RefreshCw size={15} aria-hidden/></button>;
 }
