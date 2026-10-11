@@ -16,16 +16,16 @@ test("pass.json de entrada con web service, colores y QR", () => {
   assert.equal(json.serialNumber, meta.serial);
   assert.equal(json.authenticationToken, meta.authToken);
   assert.equal(json.webServiceURL, "https://fito.example.com/api/wallet/apple");
-  assert.equal(json.backgroundColor, "rgb(10, 24, 37)");
-  assert.equal(json.foregroundColor, "rgb(242, 197, 0)");
+  assert.equal(json.backgroundColor, "rgb(167, 51, 159)");
+  assert.equal(json.foregroundColor, "rgb(255, 255, 255)");
   assert.equal(json.generic, undefined);
   assert.deepEqual(json.barcodes, [{ format: "PKBarcodeFormatQR", message: "https://fito.example.com/mi-perfil", messageEncoding: "iso-8859-1" }]);
 });
-test("nombre y puntos arriba, rival sobre la pista y datos cortos debajo", () => {
+test("nombre y puntos arriba, Fito Raya vs rival y datos cortos debajo", () => {
   const fields = ticket(card);
   assert.equal(applePassJson(card, meta).logoText, "Carlos Martin");
   assert.deepEqual(fields.headerFields, [{ key: "points", label: "PUNTOS SNP", value: "20.313" }]);
-  assert.deepEqual(fields.primaryFields, [{ key: "rival", label: "J5 · PRÓXIMO RIVAL", value: "Rival" }]);
+  assert.deepEqual(fields.primaryFields, [{ key: "rival", label: "J5 · PRÓXIMO PARTIDO", value: "Fito Raya vs Rival" }]);
   assert.deepEqual(fields.secondaryFields.map(f => [f.label, f.value]), [["FECHA", "Dom 18/10"], ["HORA", "10:00"], ["CAMPO", "Local"]]);
   assert.deepEqual(fields.auxiliaryFields, [{ key: "lineup", label: "TU CONVOCATORIA J5", value: "Pareja 2 con Juan Perez", changeMessage: "Convocatoria J5: %@" }]);
 });
