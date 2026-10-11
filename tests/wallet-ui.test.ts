@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { notifyKindFor, notifySummaryText, walletPlatforms } from "../src/domain/wallet-ui";
+import { notifyKindFor, notifySummaryText, usablePairs, walletPlatforms } from "../src/domain/wallet-ui";
 
 const both = { apple: true, google: true };
 test("plataformas según el dispositivo y la configuración", () => {
@@ -26,4 +26,9 @@ test("qué se puede avisar en cada jornada", () => {
   assert.equal(notifyKindFor(fixtures, "40", now), "result");
   assert.equal(notifyKindFor(fixtures, "30", now), null);
   assert.equal(notifyKindFor(fixtures, "70", now), null);
+});
+test("la convocatoria publicada se puede volver a editar aunque alguien haya salido de la plantilla", () => {
+  const pairs = [{ id: "p0", players: ["a-1", "a-9"] as [string, string] }, ...[1, 2, 3, 4].map(i => ({ id: `p${i}`, players: [null, null] as [null, null] }))];
+  assert.deepEqual(usablePairs(pairs, ["a-1", "a-2"])![0], { id: "p0", players: ["a-1", null] });
+  assert.equal(usablePairs(pairs.slice(0, 3), ["a-1"]), null);
 });

@@ -123,3 +123,18 @@ export function assignPlayer(
   target.players[slot] = playerId;
   return next;
 }
+// A lineup sent by the browser: five pairs, known players only, nobody twice and at least one player.
+export function validLineupPairs(pairs: unknown, playerIds: string[]): pairs is Pair[] {
+  if (!Array.isArray(pairs) || pairs.length !== 5) return false;
+  const used = new Set<string>(); const pairIds = new Set<string>();
+  const valid = pairs.every((pair) => {
+    if (typeof pair?.id !== "string" || pair.id.length > 40 || pairIds.has(pair.id) || !Array.isArray(pair.players) || pair.players.length !== 2) return false;
+    pairIds.add(pair.id);
+    return pair.players.every((id: unknown) => {
+      if (id === null) return true;
+      if (typeof id !== "string" || used.has(id) || !playerIds.includes(id)) return false;
+      used.add(id); return true;
+    });
+  });
+  return valid && used.size > 0;
+}

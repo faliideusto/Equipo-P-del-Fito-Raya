@@ -1,5 +1,5 @@
 import { lastPlayedFixture } from "./pending-results";
-import type { Fixture } from "./types";
+import type { Fixture, Pair } from "./types";
 import type { NotifyKind } from "./wallet-card";
 export type NotifySummary = { total: number; withoutPass: number; apple: { enabled: boolean; ok: number; failed: number }; google: { enabled: boolean; ok: number; failed: number; rateLimited: number } };
 export type WalletPlatform = "apple" | "google";
@@ -20,4 +20,9 @@ export function notifySummaryText(s: NotifySummary): string {
 export function notifyKindFor(fixtures: Fixture[], fixtureId: string, now = Date.now()): NotifyKind | null {
   if (fixtures.find(f => f.status === "pending")?.id === fixtureId) return "lineup";
   return lastPlayedFixture(fixtures, now)?.id === fixtureId ? "result" : null;
+}
+// Published pairs ready to edit again: players who left the roster become free slots.
+export function usablePairs(pairs: Pair[], playerIds: string[]): Pair[] | null {
+  if (!Array.isArray(pairs) || pairs.length !== 5) return null;
+  return pairs.map(pair => ({ id: pair.id, players: [0, 1].map(slot => { const id = pair.players?.[slot] ?? null; return id !== null && playerIds.includes(id) ? id : null; }) as Pair["players"] }));
 }

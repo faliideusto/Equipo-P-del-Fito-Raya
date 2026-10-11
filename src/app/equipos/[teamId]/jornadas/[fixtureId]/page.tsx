@@ -16,7 +16,8 @@ import { teamResultMessage } from "@/lib/team-result-service";
 import { TeamResultCard } from "@/components/team-result-share";
 import { WalletNotify } from "@/components/wallet-notify";
 import { walletAvailability } from "@/lib/wallet-config";
-import { notifyKindFor } from "@/domain/wallet-ui";
+import { notifyKindFor, usablePairs } from "@/domain/wallet-ui";
+import { publishedPairs } from "@/lib/wallet-notify-service";
 export default async function FixturePage({params}:{params:Promise<{teamId:TeamId;fixtureId:string}>}){
   const {teamId,fixtureId}=await params;
   const fixtures=await clubRepository.getFixtures(teamId);
@@ -33,7 +34,9 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   // Lineup on the next fixture, result on the last played one; only for the coach and the captain.
   const available=walletAvailability();
   const walletKind=teams.includes(teamId)&&(available.apple||available.google)?notifyKindFor(fixtures,fixtureId):null;
-  const wallet=walletKind&&<WalletNotify teamId={teamId} fixtureId={fixtureId} kind={walletKind}/>;
+  // The coach builds the lineup right here, starting from the one already published for this fixture.
+  const [roster,published]=walletKind==="lineup"?await Promise.all([clubRepository.getPlayers(teamId).catch(()=>[]),publishedPairs(teamId,fixtureId)]):[[],null];
+  const wallet=walletKind&&<WalletNotify teamId={teamId} fixtureId={fixtureId} kind={walletKind} round={fixture.round} players={roster} publishedPairs={published?usablePairs(published,roster.map(p=>p.id)):null}/>;
   if(result){
     const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data,teams.includes(teamId));
     return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}{wallet}</MatchdaySlide>;
