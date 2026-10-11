@@ -49,7 +49,7 @@ Carlos Martín / Javi López
 
 - `teamResultPairs(input)`: recibe los resultados de la app (`pair_index → sets` desde nuestro lado), el acta SNP (o `null`) y el lado propio (0 o 1). Devuelve 5 parejas `{ index, sets, names }` o `null` si falta alguna. Los sets SNP vienen como local–visitante y se giran cuando el lado propio es el visitante.
 - `buildTeamResultMessage({ round, teamId, opponent, home, date, pairs })` devuelve el texto.
-- `whatsappShareUrl(text)` devuelve `https://wa.me/?text=${encodeURIComponent(text)}`.
+- `whatsappShareUrl(text)` devuelve `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`.
 
 ## 2. Capitanes — `supabase/team-captains.sql` y `src/lib/team-captains.ts`
 
@@ -78,7 +78,7 @@ create table if not exists public.team_captains (
 
 ## 4. Interfaz
 
-- **Vista de la jornada** (`/equipos/[teamId]/jornadas/[fixtureId]`): si `canShareTeamResult` y la jornada está completa, se muestra la tarjeta «Mensaje para WhatsApp» bajo el acta, con la vista previa del texto (`<pre>`), el botón «Enviar al grupo» (enlace `wa.me`, nueva pestaña) y el botón «Copiar» (Clipboard API, con el mensaje «Copiado»).
+- **Vista de la jornada** (`/equipos/[teamId]/jornadas/[fixtureId]`): si `canShareTeamResult` y la jornada está completa, se muestra la tarjeta «Mensaje para WhatsApp» bajo el acta, con la vista previa del texto (`<pre>`), el botón «Enviar al grupo» (enlace `api.whatsapp.com/send`, nueva pestaña) y el botón «Copiar» (Clipboard API, con el mensaje «Copiado»).
 - **Aviso** `TeamResultShare`: componente cliente junto a `ResultReminder`. Consulta `/api/results/share` con la misma cadencia (`dueForCheck`). Muestra el chip «Resultado del equipo · J4» que enlaza a la jornada. Tiene un botón para descartarlo, guardado por `fixtureId:teamId` en `localStorage`.
 - **`/entrenador`**: sección «Capitanes» con un `<select>` por equipo (vacío = sin capitán). Si la tabla no existe, muestra la indicación de ejecutar `supabase/team-captains.sql`.
 
