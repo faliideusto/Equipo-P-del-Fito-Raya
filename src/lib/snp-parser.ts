@@ -95,7 +95,8 @@ export function parseMatch(html: string, id: string): SnpMatch {
     if (!$(table).find(".td_part_res").length) for(let col = Math.max(1, local.length - 3); col < local.length; col++) if (/^\d+$/.test(local[col]) && /^\d+$/.test(away[col])) sets.push([Number(local[col]),Number(away[col])]);
     const container = $(table).closest(".enf_partido_container");
     const card = container.length ? container : $(table).closest(".table_partidos");
-    const people = card.find(".partido_jug_div[idjugador]").toArray().map(a => ({id:$(a).attr("idjugador")||"",name:$(a).text().replace(/\s+/g," ").trim().replace(/\s*-\s*\d+(?:[.,]\d+)?$/, ""),photoUrl:photoUrl($(a).find("img").attr("src"))})).filter(p=>p.name);
+    // The label ends with the player's SNP points when the lineup was made ("Daniel - 57229.17").
+    const people = card.find(".partido_jug_div[idjugador]").toArray().map(a => { const label=$(a).text().replace(/\s+/g," ").trim(); const points=label.match(/\s-\s*(\d+(?:[.,]\d+)?)$/)?.[1]; return {id:$(a).attr("idjugador")||"",name:label.replace(/\s*-\s*\d+(?:[.,]\d+)?$/, ""),photoUrl:photoUrl($(a).find("img").attr("src")),points:points===undefined?null:Number(points.replace(",","."))}; }).filter(p=>p.name);
     return [{index:0,id:card.find("[idpartido]").first().attr("idpartido"),homePlayers:people.slice(0,2).map(p=>p.name),awayPlayers:people.slice(2,4).map(p=>p.name),home:people.slice(0,2),away:people.slice(2,4),sets}];
   });
   games.forEach((game,index)=>{game.index=index;});

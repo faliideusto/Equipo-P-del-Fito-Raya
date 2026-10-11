@@ -11,7 +11,7 @@ export interface SnpCompetition {
   zones: SnpOption[]; phases: SnpOption[]; categories: SnpOption[]; groups: SnpOption[]; divisions: SnpOption[]; rounds: SnpOption[];
   standings: SnpStanding[]; fixtures: SnpFixture[]; calendar: SnpFixture[];
 }
-export interface SnpMatchPlayer { id: string; name: string; photoUrl: string | null }
+export interface SnpMatchPlayer { id: string; name: string; photoUrl: string | null; points?: number | null }
 export interface SnpMatch { id: string; title: string; dateLabel: string; teams: [string,string]; teamIds?: [string,string]; score: [number,number] | null; games: { index: number; id?: string; homePlayers: string[]; awayPlayers: string[]; home?: SnpMatchPlayer[]; away?: SnpMatchPlayer[]; sets: [number,number][] }[] }
 // changed: a live SNP read returned data different from the previous cached copy.
 export interface SnpResult<T> { data: T; updatedAt: string; source: "live" | "cache" | "snapshot"; stale: boolean; error?: string; changed?: boolean }

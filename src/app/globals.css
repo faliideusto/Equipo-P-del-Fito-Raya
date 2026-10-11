@@ -4044,3 +4044,6 @@ a.fifa-card:focus-visible {outline:none}
 @media (prefers-reduced-motion:reduce){.fifa-card {transition:none}}
 .profile-card-aside {flex-shrink:0}
 .profile-card-aside .fifa-card {--cw:92px}
+/* Puntos SNP de cada jugador en el momento del encuentro, tal como los guarda el acta. */
+.acta-points {margin-left:10px;font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:.02em;color:var(--accent);white-space:nowrap}
+.acta-points::after {content:" pts";color:var(--faint);font-size:11px}
