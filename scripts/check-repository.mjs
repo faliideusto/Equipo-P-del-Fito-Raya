@@ -6,7 +6,7 @@ import path from "node:path";
 try { process.loadEnvFile(".env.local"); } catch (error) {
   if (error.code !== "ENOENT") throw error;
 }
-const secrets = [process.env.SNP_EMAIL, process.env.SNP_PASSWORD, process.env.POSITIONS_ADMIN_PASSWORD, process.env.SUPABASE_SECRET_KEY].filter(Boolean);
+const secrets = [process.env.SNP_EMAIL, process.env.SNP_PASSWORD, process.env.POSITIONS_ADMIN_PASSWORD, process.env.SUPABASE_SECRET_KEY, process.env.APPLE_PASS_KEY, process.env.APPLE_PASS_KEY_PASSPHRASE, process.env.GOOGLE_WALLET_SA_JSON].filter(Boolean);
 const root = process.cwd().replaceAll("\\", "/");
 const files = [...new Set(execFileSync("git", ["-c", `safe.directory=${root}`, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], {encoding:"utf8"}).split("\0").filter(Boolean))];
 const findings = [];
