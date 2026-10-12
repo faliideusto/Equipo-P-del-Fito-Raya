@@ -3,6 +3,7 @@ import { useIsCoach } from "../app-shell";
 import { useState } from "react";
 import type { Player, Position, TeamId } from "@/domain/types";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { cardPhoto } from "@/data/player-photos";
 export function PositionEditor({ players, teamId, onSaved }: { players: Player[]; teamId: TeamId; onSaved: (players: Player[]) => void }) {
   const isCoach = useIsCoach();
   const [draft, setDraft] = useState(players);
@@ -23,7 +24,7 @@ export function PositionEditor({ players, teamId, onSaved }: { players: Player[]
     <h2>Posiciones de los jugadores</h2>
     <p>Define derecha, revés o ambos para encontrar parejas compatibles.</p>
       <div className="position-editor-list">{draft.map(player => <label key={player.id}>
-        <PlayerAvatar name={player.name} photoUrl={player.photoUrl} small /><span>{player.name}</span>
+        <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)} small /><span>{player.name}</span>
         <select aria-label={`Posición de ${player.name}`} value={player.position || ""} disabled={busy} onChange={event => setDraft(current => current.map(p => p.id === player.id ? { ...p, position: (event.target.value || null) as Position | null } : p))}>
           <option value="">Por confirmar</option><option value="RIGHT">Derecha</option><option value="LEFT">Revés</option><option value="BOTH">Ambos</option>
         </select>

@@ -2,7 +2,7 @@ import { accountFailure, accountReply, AccountError, currentAccount } from "@/li
 import { playerLink } from "@/lib/account-profile";
 import { clubRepository } from "@/data/repository";
 import { loadSeasonRanking } from "@/lib/season-ranking-service";
-import { cardPhoto } from "@/data/player-photos";
+import { playerCardData } from "@/lib/player-card";
 export const runtime = "nodejs";
 export async function GET() {
   try {
@@ -15,7 +15,7 @@ export async function GET() {
       const player = players.find(p => p.sourceId === link.player_id); if (!player) continue;
       const ranking = await loadSeasonRanking(teamId, players);
       const row = ranking.rows.find(r => r.player.id === player.id)!;
-      teams.push({ id: teamId, name: player.name, photoUrl: cardPhoto(player), snpPoints: player.points, snpRank: player.points === null ? null : players.indexOf(player) + 1, position: player.position, rank: ranking.rows.indexOf(row) + 1, played: row.played, won: row.won, lost: row.lost, setsWon: row.setsWon, setsLost: row.setsLost, points: row.points, partial: ranking.unavailable > 0 || ranking.unassigned > 0, stale: ranking.saved > 0, acts: ranking.consulted });
+      teams.push({ id: teamId, ...playerCardData(players, player), rank: ranking.rows.indexOf(row) + 1, played: row.played, won: row.won, lost: row.lost, setsWon: row.setsWon, setsLost: row.setsLost, points: row.points, partial: ranking.unavailable > 0 || ranking.unassigned > 0, stale: ranking.saved > 0, acts: ranking.consulted });
     }
     return accountReply({ teams });
   } catch (error) { return accountFailure(error); }

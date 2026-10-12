@@ -5,6 +5,7 @@ import type { Player } from "@/domain/types";
 import { positionLabel } from "@/domain/rules";
 import { formatPoints } from "@/lib/format";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { cardPhoto } from "@/data/player-photos";
 export function PlayerPicker({
   players,
   used,
@@ -45,7 +46,7 @@ export function PlayerPicker({
       <div className="picker-list">
         {players.map((p) => (
           <button key={p.id} onClick={() => onChoose(p.id)} className={p.id === partner?.id || !partner ? "" : p.position === "BOTH" ? "suggest-both" : (partner.position === "LEFT" && p.position === "RIGHT") || (partner.position === "RIGHT" && p.position === "LEFT") ? "suggest-opposite" : ""}>
-            <PlayerAvatar name={p.name} photoUrl={p.photoUrl} small />
+            <PlayerAvatar name={p.name} photoUrl={cardPhoto(p)} small />
             <span>
               {p.name}
               <small>
