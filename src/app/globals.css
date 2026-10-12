@@ -4110,3 +4110,10 @@ a.fifa-card:focus-visible {outline:none}
   .standings.ranking .standing-team > span:last-child { max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
   .standings.ranking td:nth-child(3) strong { font-size: 14px; color: var(--accent); }
 }
+/* Profile photo: the round avatar opens the full photo. */
+.avatar-zoom {padding:0;cursor:zoom-in}
+.avatar-zoom:hover {box-shadow:0 0 0 3px var(--accent)}
+dialog.photo-dialog {position:fixed;inset:0;margin:auto;border:0;padding:0;background:none;overflow:visible;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px)}
+dialog.photo-dialog::backdrop {background:rgba(2,8,14,.8);backdrop-filter:blur(4px)}
+dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480px,calc(100vw - 32px));max-height:calc(100dvh - 32px);border-radius:14px;object-fit:contain}
+.photo-dialog-close {position:absolute;top:8px;right:8px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:rgba(2,8,14,.6);color:#fff}
