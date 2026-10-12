@@ -34,4 +34,7 @@ test("previsión del ranking con un historial real de SNP (J2 en 2ª, +7,6)", as
   // Antes de publicarla: se quita la J2 y se calcula con la fórmula.
   const pending = structuredClone(history); delete pending.current["269"].J["2"]; pending.current["269"].j_a = "1";
   assert.deepEqual(rankingForecast(pending, title, 2, 7.6), { before: 58007.81, after: 64101.56, published: false });
+  // Jornada abierta por SNP con el acta sin confirmar: la fila existe sin partido. Se prevé desde el ranking actual.
+  const open = { current: { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "2", J: { "1": { ptos_c: 6.65, pd: 1, puntos: 51062.5 }, "2": { ptos_c: 0, puntos: 46015.63 } } } }, previous: { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "10", J: { "2": { ptos_c: 5.7, pd: 1 }, "4": { ptos_c: 3.325, pd: 1 }, "6": { ptos_c: 3.8, pd: 1 }, "7": { ptos_c: 0.95, pd: 1 } } } } };
+  assert.deepEqual(rankingForecast(open, title, 2, 2.85, 46015.63), { before: 46015.63, after: 43937.5, published: false });
 });
