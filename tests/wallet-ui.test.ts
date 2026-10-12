@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { lineupHref, notifyKindFor, notifySummaryText, usablePairs, walletPlatforms } from "../src/domain/wallet-ui";
+import { initialAvailability, lineupHref, notifyKindFor, notifySummaryText, usablePairs, walletPlatforms } from "../src/domain/wallet-ui";
 
 const both = { apple: true, google: true };
 test("plataformas según el dispositivo y la configuración", () => {
@@ -39,4 +39,11 @@ test("la convocatoria publicada se puede volver a editar aunque alguien haya sal
 test("preparar la alineación lleva a la jornada a quien puede publicarla", () => {
   assert.equal(lineupHref("a", "55262", true), "/equipos/a/jornadas/55262#convocatoria");
   assert.equal(lineupHref("a", "55262", false), "/equipos/a/parejas");
+});
+test("disponibles de la jornada: lo guardado, más quien ya está en una pareja; sin nada guardado, toda la plantilla", () => {
+  const roster = ["a-1", "a-2", "a-3", "a-4"];
+  assert.deepEqual(initialAvailability(null, roster, null), roster);
+  assert.deepEqual(initialAvailability([], roster, null), []);
+  assert.deepEqual(initialAvailability(["a-3", "a-1", "a-99"], roster, null), ["a-1", "a-3"]);
+  assert.deepEqual(initialAvailability(["a-1"], roster, [{ id: "p0", players: ["a-4", null] }]), ["a-1", "a-4"]);
 });

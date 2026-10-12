@@ -16,7 +16,8 @@ import { teamResultMessage } from "@/lib/team-result-service";
 import { TeamResultCard } from "@/components/team-result-share";
 import { WalletNotify } from "@/components/wallet-notify";
 import { walletAvailability } from "@/lib/wallet-config";
-import { notifyKindFor, usablePairs } from "@/domain/wallet-ui";
+import { initialAvailability, notifyKindFor, usablePairs } from "@/domain/wallet-ui";
+import { savedAvailability } from "@/lib/fixture-availability";
 import { publishedPairs } from "@/lib/wallet-notify-service";
 export default async function FixturePage({params}:{params:Promise<{teamId:TeamId;fixtureId:string}>}){
   const {teamId,fixtureId}=await params;
@@ -35,8 +36,9 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   const available=walletAvailability();
   const walletKind=teams.includes(teamId)&&(available.apple||available.google)?notifyKindFor(fixtures,fixtureId):null;
   // The coach builds the lineup right here, starting from the one already published for this fixture.
-  const [roster,published]=walletKind==="lineup"?await Promise.all([clubRepository.getPlayers(teamId).catch(()=>[]),publishedPairs(teamId,fixtureId)]):[[],null];
-  const wallet=walletKind==="lineup"&&<WalletNotify teamId={teamId} fixtureId={fixtureId} match={{round:fixture.round,opponent:fixture.opponent,date:fixture.date,home:fixture.home}} players={roster} publishedPairs={published?usablePairs(published,roster.map(p=>p.id)):null}/>;
+  const [roster,published,available_]=walletKind==="lineup"?await Promise.all([clubRepository.getPlayers(teamId).catch(()=>[]),publishedPairs(teamId,fixtureId),savedAvailability(teamId,fixtureId)]):[[],null,null];
+  const rosterIds=roster.map(p=>p.id);const editable=published?usablePairs(published,rosterIds):null;
+  const wallet=walletKind==="lineup"&&<WalletNotify teamId={teamId} fixtureId={fixtureId} match={{round:fixture.round,opponent:fixture.opponent,date:fixture.date,home:fixture.home}} players={roster} publishedPairs={editable} availability={initialAvailability(available_,rosterIds,editable)}/>;
   if(result){
     const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data,teams.includes(teamId));
     return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}{wallet}</MatchdaySlide>;
