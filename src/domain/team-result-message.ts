@@ -1,5 +1,5 @@
 import type { SnpMatch } from "./snp";
-import type { TeamId } from "./types";
+import type { Pair, TeamId } from "./types";
 import type { SetScore } from "./match-result";
 import { MATCH_VALUES } from "./rules";
 import { toActaSets } from "./result-edit";
@@ -41,6 +41,15 @@ export function buildTeamResultMessage({ round, teamId, opponent, home, date, pa
   const header = [`🎾 *Jornada ${round} · Fito Raya ${teamId.toUpperCase()}*`, `🆚 ${opponent} · ${home ? "🏠 Local" : "✈️ Visitante"}`, dateLine(date)].filter((line): line is string => line !== null);
   const blocks = pairs.map(pair => [`*Pareja ${pair.index}* (${MATCH_VALUES[pair.index - 1]} pts) ${won(pair.sets) ? "✅" : "❌"}`, ...(pair.names.length ? [pair.names.join(" / ")] : []), pair.sets.map(s => s.join("-")).join(" · ")].join("\n"));
   return [header.join("\n"), result, ...blocks, "💪 ¡Vamos Fito Raya!"].join("\n\n");
+}
+// The lineup for the group: only pairs with someone in them, numbered in the order given (already sorted by SNP points).
+export function buildLineupMessage({ round, teamId, opponent, home, date, pairs, players }: { round: number; teamId: TeamId; opponent: string; home: boolean; date: string; pairs: Pair[]; players: { id: string; name: string }[] }) {
+  const header = [`🎾 *Convocatoria · Jornada ${round} · Fito Raya ${teamId.toUpperCase()}*`, `🆚 ${opponent.replaceAll("_", " ")} · ${home ? "🏠 Local" : "✈️ Visitante"}`, dateLine(date)].filter((line): line is string => line !== null);
+  const blocks = pairs.flatMap((pair, index) => {
+    const names = pair.players.flatMap(id => { const player = id === null ? undefined : players.find(p => p.id === id); return player ? [displayName(player.name)] : []; });
+    return names.length ? [`*Pareja ${index + 1}* (${MATCH_VALUES[index] ?? 2} pts)\n${names.join(" / ")}`] : [];
+  });
+  return [header.join("\n"), ...blocks, "💪 ¡Vamos Fito Raya!"].join("\n\n");
 }
 // Not wa.me: its redirect replaces emojis with "�" before WhatsApp opens.
 export const whatsappShareUrl = (text: string) => `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildTeamResultMessage, displayName, teamResultPairs, teamScore, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
+import { buildLineupMessage, buildTeamResultMessage, displayName, teamResultPairs, teamScore, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
 import type { SnpMatch } from "../src/domain/snp";
 import type { SetScore } from "../src/domain/match-result";
 
@@ -62,4 +62,9 @@ test("los nombres se escriben con mayúscula inicial", () => {
 test("teamScore suma el valor de cada pareja ganada desde nuestro lado", () => {
   assert.deepEqual(teamScore([pair(1, win), pair(2, loss), pair(3, [[6, 4], [3, 6], [10, 8]]), pair(4, loss), pair(5, win)]), [7, 5]);
   assert.deepEqual(teamScore([pair(1, loss), pair(2, loss), pair(3, loss), pair(4, loss), pair(5, loss)]), [0, 12]);
+});
+test("la convocatoria para WhatsApp numera las parejas y omite los huecos", () => {
+  const roster = [{ id: "a-1", name: "CARLOS MARTIN" }, { id: "a-2", name: "juan perez" }, { id: "a-3", name: "Ana Ruiz" }];
+  const text = buildLineupMessage({ round: 5, teamId: "a", opponent: "TOP_BAL PÁDEL", home: false, date: "2026-10-18T08:00:00.000Z", players: roster, pairs: [{ id: "s0", players: ["a-1", "a-2"] }, { id: "s1", players: ["a-3", null] }, { id: "s2", players: [null, null] }, { id: "s3", players: ["a-9", null] }, { id: "s4", players: [null, null] }] });
+  assert.equal(text, ["🎾 *Convocatoria · Jornada 5 · Fito Raya A*\n🆚 TOP BAL PÁDEL · ✈️ Visitante\n📅 Dom 18/10 · 10:00", "*Pareja 1* (3 pts)\nCarlos Martin / Juan Perez", "*Pareja 2* (3 pts)\nAna Ruiz", "💪 ¡Vamos Fito Raya!"].join("\n\n"));
 });

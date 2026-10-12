@@ -18,6 +18,13 @@ export async function requireNotifier(teamId: TeamId) {
   if (!(await shareableTeams(user)).includes(teamId)) throw new AccountError("Solo el entrenador o el capitán pueden avisar al equipo.", 403);
 }
 export const selectableLineup = (saved: { id: string }[], id: string | null) => saved.some(l => l.id === id) ? id : null;
+// True when the signed-in user would see the lineup builder on the next fixture of that team.
+export async function canPublishLineup(teamId: TeamId): Promise<boolean> {
+  try {
+    if (!appleConfig() && !googleConfig()) return false;
+    return (await shareableTeams(await currentAccount())).includes(teamId);
+  } catch { return false; }
+}
 // The pairs already published for a fixture, or null when there are none or Wallet storage is unavailable.
 export async function publishedPairs(teamId: TeamId, fixtureId: string): Promise<Pair[] | null> {
   try { return (await walletStore().publishedLineup(teamId, fixtureId))?.pairs ?? null; } catch { return null; }

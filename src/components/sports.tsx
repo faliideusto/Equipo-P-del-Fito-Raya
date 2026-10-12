@@ -171,9 +171,10 @@ export function MatchBoard({ label, meta, date, home, away, actions }: {
     </section>
   );
 }
-export function NextMatchBoard({ fixture, team, standing, opponentStanding }: {
+export function NextMatchBoard({ fixture, team, standing, opponentStanding, lineupHref = `/equipos/${team.id}/parejas` }: {
   fixture: Fixture;
   team: Team;
+  lineupHref?: string;
   standing?: { position: number; points: number };
   opponentStanding?: { position: number; points: number };
 }) {
@@ -189,7 +190,7 @@ export function NextMatchBoard({ fixture, team, standing, opponentStanding }: {
       away={away}
       actions={<>
         <Link className="text-link" href={`/equipos/${team.id}/jornadas/${fixture.id}`}>Ver jornada <ArrowRight size={16} /></Link>
-        <Link className="button" href={`/equipos/${team.id}/parejas`}>Preparar la alineación</Link>
+        <Link className="button" href={lineupHref}>Preparar la alineación</Link>
       </>}
     />
   );
