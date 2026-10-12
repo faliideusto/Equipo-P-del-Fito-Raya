@@ -37,3 +37,22 @@ test("an expired copy of the shared cache is read again from SNP", async () => {
   const recent = copy({ sets: [] }, 5_000);
   assert.equal(await unexpired(recent, 60_000, async () => after), recent);
 });
+
+test("a manual refresh makes every saved copy be read again from SNP once", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "fito-cache-test-"));
+  const previous = process.env.SNP_CACHE_DIR;
+  process.env.SNP_CACHE_DIR = directory;
+  try {
+    // A fresh copy of the module, so it uses this test's folder.
+    const fresh = "../src/lib/snp-cache?manual-refresh";
+    const { cachedSnp, expireSnpCache } = await import(fresh) as typeof import("../src/lib/snp-cache");
+    let reads = 0; const acta = () => cachedSnp("match-refresh-test", async () => ({ reads: ++reads }));
+    await acta(); assert.equal((await acta()).data.reads, 1, "within the cache time the saved copy is used");
+    await new Promise(resolve => setTimeout(resolve, 5));
+    await expireSnpCache();
+    assert.equal((await acta()).data.reads, 2); assert.equal((await acta()).data.reads, 2, "the new copy is cached again");
+  } finally {
+    if (previous === undefined) delete process.env.SNP_CACHE_DIR; else process.env.SNP_CACHE_DIR = previous;
+    await rm(directory, { recursive: true });
+  }
+});
