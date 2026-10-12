@@ -32,3 +32,15 @@ test("contexto: sin resultado conocido no hay último resultado", async () => {
   assert.equal(ctx.next?.id, "40");
   assert.equal(ctx.published, null);
 });
+test("contexto: el lugar del acta solo se busca para el próximo partido fuera de casa", async () => {
+  const away = { ...fixture("60", 6, "2026-10-25T08:00:00.000Z", "pending"), home: false };
+  const asked: string[] = [];
+  const placeOf = async (f: Fixture) => { asked.push(f.id); return "PADEL CUBIERTO ARCOS SL"; };
+  const ctx = await teamContext("a", [player("a-1", "1")], [away], memoryWalletStore(), Date.parse("2026-10-11T00:00:00Z"), async () => null, placeOf);
+  assert.equal(ctx.next?.place, "PADEL CUBIERTO ARCOS SL");
+  const home = await teamContext("a", [player("a-1", "1")], [fixture("61", 6, "2026-10-25T08:00:00.000Z", "pending")], memoryWalletStore(), Date.parse("2026-10-11T00:00:00Z"), async () => null, placeOf);
+  assert.equal(home.next?.place, null);
+  assert.deepEqual(asked, ["60"]);
+  const failing = await teamContext("a", [player("a-1", "1")], [away], memoryWalletStore(), Date.parse("2026-10-11T00:00:00Z"), async () => null, async () => { throw new Error("SNP"); });
+  assert.equal(failing.next?.place, null);
+});

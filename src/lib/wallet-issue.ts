@@ -6,22 +6,26 @@ import type { Fixture, Player, TeamId } from "@/domain/types";
 import { AccountError, currentAccount } from "./account-auth";
 import { playerLink } from "./account-profile";
 import { teamResultScore } from "./team-result-service";
+import { getSnpMatch } from "./snp-service";
 import { appleConfig, googleConfig, publicBaseUrl } from "./wallet-config";
 import { signApplePass } from "./wallet-apple";
 import { googleObjectId, googleSaveUrl } from "./wallet-google";
 import { HERO, renderStrip } from "./wallet-strip";
 import type { WalletPass, WalletStore } from "./wallet-store";
 type ScoreOf = (teamId: TeamId, fixture: Fixture) => Promise<[number, number] | null>;
+type PlaceOf = (fixture: Fixture) => Promise<string | null>;
+// Where the match is played, from the "Lugar" of the SNP acta.
+const actaPlace: PlaceOf = fixture => getSnpMatch(fixture.id).then(r => r.data.venue ?? null);
 // Our side's score for a fixture: app/acta pairs first, then SNP's published score.
 const fallbackScore = (fixture: Fixture): [number, number] | null => fixture.score ? (fixture.home ? fixture.score : [fixture.score[1], fixture.score[0]]) : null;
-export async function teamContext(teamId: TeamId, players: Player[], fixtures: Fixture[], store: WalletStore, now: number, scoreOf: ScoreOf = teamResultScore): Promise<TeamCardContext> {
+export async function teamContext(teamId: TeamId, players: Player[], fixtures: Fixture[], store: WalletStore, now: number, scoreOf: ScoreOf = teamResultScore, placeOf: PlaceOf = actaPlace): Promise<TeamCardContext> {
   const next = fixtures.find(f => f.status === "pending") ?? null;
   const last = lastPlayedFixture(fixtures, now);
-  const [published, score] = await Promise.all([next ? store.publishedLineup(teamId, next.id) : null, last ? scoreOf(teamId, last).catch(() => null).then(s => s ?? fallbackScore(last)) : null]);
+  const [published, score, place] = await Promise.all([next ? store.publishedLineup(teamId, next.id) : null, last ? scoreOf(teamId, last).catch(() => null).then(s => s ?? fallbackScore(last)) : null, next && !next.home ? placeOf(next).catch(() => null) : null]);
   return {
     teamId,
     players: players.filter(p => p.sourceId).map(p => ({ id: p.id, sourceId: p.sourceId!, name: p.name, position: p.position, points: p.points })),
-    next: next && { id: next.id, round: next.round, opponent: next.opponent, date: next.date, home: next.home },
+    next: next && { id: next.id, round: next.round, opponent: next.opponent, date: next.date, home: next.home, place },
     published: published && { fixtureId: published.fixture_id, pairs: published.pairs },
     last: last && score ? { fixtureId: last.id, round: last.round, opponent: last.opponent, ours: score[0], theirs: score[1] } : null,
   };

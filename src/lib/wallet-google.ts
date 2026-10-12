@@ -2,6 +2,7 @@ import { createHash, createSign } from "node:crypto";
 import type { TeamId } from "@/domain/types";
 import type { WalletCardData } from "@/domain/wallet-card";
 import type { GoogleConfig } from "./wallet-config";
+import { mapsSearchUrl } from "@/domain/team-result-message";
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
 const MESSAGE_DAYS = 3;
 export type GoogleOutcome = "ok" | "rateLimited" | "missing" | "failed";
@@ -19,11 +20,12 @@ export function googleObject(card: WalletCardData, { issuerId, serial, baseUrl }
     cardTitle: text(`Fito Raya · ${card.teamLabel}`), subheader: text(`Puntos SNP · ${card.snpPoints}`), header: text(card.playerName),
     textModulesData: [
       { id: "next", header: "Próximo partido", body: card.nextMatch },
+      ...(card.next?.place ? [{ id: "place", header: "Lugar", body: card.next.place }] : []),
       { id: "lineup", header: "Convocatoria", body: card.lineup },
       { id: "result", header: "Último resultado", body: card.lastResult },
       { id: "points", header: "Puntos SNP", body: card.snpPoints },
     ],
-    linksModuleData: { uris: [{ id: "web", uri: `${baseUrl}${card.teamPath}`, description: "Web del equipo" }, ...(card.actaPath ? [{ id: "acta", uri: `${baseUrl}${card.actaPath}`, description: "Acta de la última jornada" }] : [])] },
+    linksModuleData: { uris: [...(card.next?.place ? [{ id: "maps", uri: mapsSearchUrl(card.next.place), description: `Cómo llegar · ${card.next.place}` }] : []), { id: "web", uri: `${baseUrl}${card.teamPath}`, description: "Web del equipo" }, ...(card.actaPath ? [{ id: "acta", uri: `${baseUrl}${card.actaPath}`, description: "Acta de la última jornada" }] : [])] },
     barcode: { type: "QR_CODE", value: `${baseUrl}/mi-perfil` },
   };
 }

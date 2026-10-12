@@ -6,7 +6,7 @@ import type { WalletCardData } from "../src/domain/wallet-card";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
 const config = { issuerId: "3388", clientEmail: "wallet@fito.iam.gserviceaccount.com", privateKey };
-const card: WalletCardData = { teamId: "b", playerSourceId: "1", teamLabel: "Equipo B", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local" }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "No convocado en J5", lineupShort: "No convocado", lastResult: "Sin resultados todavía", snpPoints: "900", teamPath: "/equipos/b/jornadas", actaPath: null };
+const card: WalletCardData = { teamId: "b", playerSourceId: "1", teamLabel: "Equipo B", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local", place: null }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "No convocado en J5", lineupShort: "No convocado", lastResult: "Sin resultados todavía", snpPoints: "900", teamPath: "/equipos/b/jornadas", actaPath: null };
 const meta = { serial: "11111111-1111-4111-8111-111111111111", baseUrl: "https://fito.example.com" };
 const decode = (part: string) => JSON.parse(Buffer.from(part, "base64url").toString());
 
@@ -70,4 +70,11 @@ test("la URL de la imagen cambia solo cuando cambia lo que dibuja", () => {
   assert.equal(heroVersion({ ...card, snpPoints: "1.000", lastResult: "J4 · Fito Raya B 7–5 X" }), heroVersion(card));
   assert.notEqual(heroVersion({ ...card, lineupShort: "Pareja 1 con Ana" }), heroVersion(card));
   assert.notEqual(heroVersion({ ...card, next: { ...card.next!, opponent: "Otro" } }), heroVersion(card));
+});
+test("fuera de casa con lugar: módulo Lugar y enlace Cómo llegar", () => {
+  const away = { ...card, next: { ...card.next!, venue: "Visitante", place: "PADEL CUBIERTO ARCOS SL" } };
+  const object = googleObject(away, { issuerId: "3388", ...meta }) as { textModulesData: { id: string; body: string }[]; linksModuleData: { uris: { id: string; uri: string; description: string }[] } };
+  assert.equal(object.textModulesData.find(m => m.id === "place")?.body, "PADEL CUBIERTO ARCOS SL");
+  assert.deepEqual(object.linksModuleData.uris[0], { id: "maps", uri: "https://www.google.com/maps/search/?api=1&query=PADEL%20CUBIERTO%20ARCOS%20SL", description: "Cómo llegar · PADEL CUBIERTO ARCOS SL" });
+  assert.notEqual(heroVersion(away), heroVersion(card));
 });
