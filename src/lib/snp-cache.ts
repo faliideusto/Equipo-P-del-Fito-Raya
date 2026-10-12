@@ -25,7 +25,12 @@ export async function expireSnpCache(now = Date.now()) {
   refreshedAt = now;
   if (process.env.VERCEL === "1") try { (await import("next/cache")).revalidateTag(SHARED_TAG, { expire: 0 }); } catch { /* Outside a request there is no shared cache to expire. */ }
 }
-export async function cachedSnp<T>(key: string, loader: () => Promise<T>, fallback?: T, force = false): Promise<SnpResult<T>> {
+// A copy SNP is not expected to change (a confirmed acta) is kept for `seconds` instead of the usual
+// cache time. `signature` is what lighter SNP data says about it now (the result in the calendar):
+// when it changes, the copy is read again. A read that does not agree with it (`valid`) is not kept.
+export type Keep<T> = { signature: string; seconds: number; valid: (data: T) => boolean };
+class NotKept<T> extends Error { constructor(readonly result: SnpResult<T>) { super("not kept"); } }
+export async function cachedSnp<T>(key: string, loader: () => Promise<T>, fallback?: T, force = false, keep?: Keep<T>): Promise<SnpResult<T>> {
   if (!/^[a-z0-9-]+$/.test(key)) throw new Error("Consulta no válida.");
   const running = pending.get(key); if (running) return running as Promise<SnpResult<T>>;
   const operation = (async (): Promise<SnpResult<T>> => {
@@ -33,14 +38,21 @@ export async function cachedSnp<T>(key: string, loader: () => Promise<T>, fallba
     let cached: SnpResult<T> | undefined;
     try { cached = JSON.parse(await readFile(file,"utf8")); } catch { /* No usable cache yet. */ }
     const ttl = Math.max(30, Math.min(3600, Number(process.env.SNP_CACHE_SECONDS) || 60)) * 1000;
-    if (!force && cached && !outdated(cached) && Date.now() - Date.parse(cached.updatedAt) < ttl) return {...cached,source: "cache" as const,stale:false,changed:false};
+    const life = (copy: SnpResult<T>) => keep && copy.kept === keep.signature ? keep.seconds * 1000 : ttl;
+    if (!force && cached && !outdated(cached) && Date.now() - Date.parse(cached.updatedAt) < life(cached)) return {...cached,source: "cache" as const,stale:false,changed:false};
     try {
-      const loadResult = async (): Promise<SnpResult<T>> => ({ data: await loader(), updatedAt: new Date().toISOString(), source: "live", stale: false });
+      const loadResult = async (): Promise<SnpResult<T>> => { const data = await loader(); return { data, updatedAt: new Date().toISOString(), source: "live", stale: false, ...(keep?.valid(data) ? { kept: keep.signature } : {}) }; };
       // Keep the existing rendering model; Next's Data Cache is shared on Vercel.
       // Only successful SNP responses enter this cache, never session cookies.
-      const result = process.env.VERCEL === "1" && !force && !(cached && outdated(cached))
-        ? await unexpired(await (await import("next/cache")).unstable_cache(loadResult, ["fito-snp-v1", key], { revalidate: ttl / 1000, tags: [SHARED_TAG] })(), ttl, loadResult)
-        : await loadResult();
+      const shared = process.env.VERCEL === "1" && !force && !(cached && outdated(cached)) ? (await import("next/cache")).unstable_cache : null;
+      let result: SnpResult<T>;
+      if (!shared) result = await loadResult();
+      else if (!keep) result = await unexpired(await shared(loadResult, ["fito-snp-v1", key], { revalidate: ttl / 1000, tags: [SHARED_TAG] })(), ttl, loadResult);
+      else try {
+        // Its own entry per signature; a read that cannot be kept is used once and never stored for long.
+        const loadKept = async () => { const read = await loadResult(); if (!read.kept) throw new NotKept(read); return read; };
+        result = await unexpired(await shared(loadKept, ["fito-snp-kept-v1", key, keep.signature], { revalidate: keep.seconds, tags: [SHARED_TAG] })(), keep.seconds * 1000, loadResult);
+      } catch (error) { if (!(error instanceof NotKept)) throw error; result = error.result; }
       const temporary = file + "." + randomUUID() + ".tmp";
       try {
         await mkdir(folder,{recursive:true});

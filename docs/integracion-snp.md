@@ -79,3 +79,15 @@ Antes de uso sostenido, confirmar las condiciones y límites de consulta con SNP
 Las pruebas de integración contra SNP han obtenido las dos plantillas de 16 jugadores, seis equipos de Segunda Future, cinco de Décima Future, diez jornadas en ambas, 30 encuentros de la división A y 20 de la B, acta `55252` con cinco partidos y sus sets, perfiles propios y de un jugador de Arcos. Se ha obtenido la plantilla de Arcos con 21 jugadores, validando una segunda página. Se ha consultado una división femenina; los filtros sin divisiones disponibles devuelven una selección vacía y permiten cambiar de fase/grupo.
 
 Las 14 pruebas unitarias pasan: reglas del laboratorio, respaldo de A/B, orden de clasificación y empate, fechas de verano/invierno, cero puntos, descarte de campos privados, estado de partido, sets incompletos e impedir reenviar credenciales a un host externo. Se verificaron 29 rutas de la web y cuatro rutas inválidas con su página 404. Lint, TypeScript y compilación de producción pasan. La compilación se arrancó temporalmente en localhost:3001 y obtuvo de SNP una plantilla externa de 21 jugadores con `source=live`, sin datos de respaldo. Se escanearon 69 archivos de cliente/caché: no contenían el correo ni la contraseña configurados. La instancia temporal de producción se detuvo; la web de desarrollo continúa en el puerto 3000.
+
+## Actas confirmadas
+
+Un acta cuyo resultado ya figura en el calendario de las divisiones del club (2318 y 2326) se da por confirmada y se guarda 24 horas en lugar de `SNP_CACHE_SECONDS`. El calendario es la señal ligera: si el resultado que trae deja de coincidir con el guardado, el acta se vuelve a leer en la siguiente visita. Salvaguardas:
+
+- SNP muestra 0-0 hasta que confirma; sin resultado en el calendario (jornada abierta, otras divisiones, SNP caído o formato cambiado) el acta sigue con la caché corta de siempre. Ante la duda va más lenta, no más vieja.
+- Una lectura cuyo marcador no coincide con el del calendario no se guarda como confirmada.
+- Las correcciones de SNP que no cambian el marcador se recogen como tarde en 24 horas.
+- El botón de actualizar caduca también estas copias.
+- No hay almacenamiento nuevo: se usa el archivo de caché y, en Vercel, el Data Cache compartido.
+
+El ranking de puntos de cada jugador no viene en el calendario y sigue con la caché corta.

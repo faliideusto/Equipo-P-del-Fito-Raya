@@ -56,3 +56,33 @@ test("a manual refresh makes every saved copy be read again from SNP once", asyn
     await rm(directory, { recursive: true });
   }
 });
+
+test("a confirmed copy is kept beyond the cache time until its signature changes", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "fito-cache-test-"));
+  const previous = process.env.SNP_CACHE_DIR;
+  process.env.SNP_CACHE_DIR = directory;
+  try {
+    const fresh = "../src/lib/snp-cache?kept";
+    const { cachedSnp, expireSnpCache } = await import(fresh) as typeof import("../src/lib/snp-cache");
+    const { readFile } = await import("node:fs/promises");
+    let score = "10-2"; let reads = 0;
+    const acta = (signature?: string) => cachedSnp("match-kept-test", async () => ({ score, reads: ++reads }), undefined, false,
+      signature ? { signature, seconds: 86400, valid: data => data.score === signature } : undefined);
+    // An hour later, well past the cache time.
+    const age = async () => { const file = path.join(directory, "match-kept-test.json"); const copy = JSON.parse(await readFile(file, "utf8")); copy.updatedAt = new Date(Date.now() - 3_600_000).toISOString(); await writeFile(file, JSON.stringify(copy)); };
+    assert.equal((await acta("10-2")).data.reads, 1); await age();
+    assert.equal((await acta("10-2")).data.reads, 1, "confirmed and unchanged: SNP is not asked again");
+    assert.equal((await acta()).data.reads, 2, "without a result in the calendar the usual cache time applies");
+    await age(); score = "9-3";
+    assert.equal((await acta("9-3")).data.reads, 3, "the calendar result changed: read again");
+    await age(); score = "0-0";
+    assert.equal((await acta("12-0")).data.reads, 4); await age();
+    assert.equal((await acta("12-0")).data.reads, 5, "a read that does not match the calendar is never kept");
+    score = "12-0"; await age(); await acta("12-0"); await age();
+    await expireSnpCache();
+    assert.equal((await acta("12-0")).data.reads, 7, "the refresh button reads kept copies again");
+  } finally {
+    if (previous === undefined) delete process.env.SNP_CACHE_DIR; else process.env.SNP_CACHE_DIR = previous;
+    await rm(directory, { recursive: true });
+  }
+});
