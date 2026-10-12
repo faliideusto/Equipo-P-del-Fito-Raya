@@ -31,10 +31,8 @@ export function usablePairs(pairs: Pair[], playerIds: string[]): Pair[] | null {
   if (!Array.isArray(pairs) || pairs.length !== 5) return null;
   return pairs.map(pair => ({ id: pair.id, players: [0, 1].map(slot => { const id = pair.players?.[slot] ?? null; return id !== null && playerIds.includes(id) ? id : null; }) as Pair["players"] }));
 }
-// Who starts ticked in the fixture's builder: the saved list (still on the roster) plus anyone already in a published pair.
-// With nothing saved yet, the whole roster.
-export function initialAvailability(saved: string[] | null, rosterIds: string[], pairs: Pair[] | null): string[] {
-  if (saved === null) return rosterIds;
-  const paired = (pairs ?? []).flatMap(pair => pair.players).filter((id): id is string => id !== null);
-  return rosterIds.filter(id => saved.includes(id) || paired.includes(id));
+// Who starts ticked in the fixture's builder: exactly the saved list (still on the roster), or the whole roster while nothing was saved.
+// The saved list wins over the published pairs: a player unticked later shows as a free slot instead of coming back ticked.
+export function initialAvailability(saved: string[] | null, rosterIds: string[]): string[] {
+  return saved === null ? rosterIds : rosterIds.filter(id => saved.includes(id));
 }
