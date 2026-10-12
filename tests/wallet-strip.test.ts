@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { HERO, renderStrip, titleSize } from "../src/lib/wallet-strip";
 import type { WalletCardData } from "../src/domain/wallet-card";
 
-const card: WalletCardData = { teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local" }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "Convocado J5 · Pareja 2 con Juan Perez", lineupShort: "Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X", snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40" };
+const card: WalletCardData = { teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés", next: { round: "J5", opponent: "Rival", day: "Dom 18/10", time: "10:00", venue: "Local", place: null }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · Rival · Dom 18/10 10:00 · Local", lineup: "Convocado J5 · Pareja 2 con Juan Perez", lineupShort: "Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X", snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40" };
 const size = (png: Buffer) => [png.readUInt32BE(16), png.readUInt32BE(20)];
 
 test("la franja es un PNG de 375x98 pt a 2x y 3x", async () => {
@@ -26,4 +26,7 @@ test("la convocatoria también se dibuja cuando está pendiente o sin pareja", a
 });
 test("la imagen de Google sale a 1032x336", async () => {
   assert.deepEqual(size(await renderStrip(card, 3, HERO)), [1032, 336]);
+});
+test("fuera de casa con lugar, también con un nombre muy largo", async () => {
+  for (const place of ["PADEL CUBIERTO ARCOS SL", "CLUB DE PADEL REAL SOCIEDAD DE CARRERAS DE CABALLO"]) assert.deepEqual(size(await renderStrip({ ...card, next: { ...card.next!, venue: "Visitante", place } }, 2)), [750, 196]);
 });

@@ -2,11 +2,12 @@ import type { Pair, Position, TeamId } from "./types";
 import { POSITION_LABELS } from "./rules";
 import { displayName } from "./team-result-message";
 export type CardPlayer = { id: string; sourceId: string; name: string; position: Position | null; points: number | null };
-export type CardFixture = { id: string; round: number; opponent: string; date: string; home: boolean };
+// place: where an away match is played, from the SNP acta (club name only).
+export type CardFixture = { id: string; round: number; opponent: string; date: string; home: boolean; place?: string | null };
 export type CardResult = { fixtureId: string; round: number; opponent: string; ours: number; theirs: number };
 export type TeamCardContext = { teamId: TeamId; players: CardPlayer[]; next: CardFixture | null; published: { fixtureId: string; pairs: Pair[] } | null; last: CardResult | null };
 // The next fixture split into short pieces: long sentences get cut on the front of a pass.
-export type CardNext = { round: string; opponent: string; day: string; time: string | null; venue: string };
+export type CardNext = { round: string; opponent: string; day: string; time: string | null; venue: string; place: string | null };
 // The whole match day in Madrid (ISO, UTC) and the start time, or the day's start when SNP gives no time.
 export type MatchDay = { start: string; end: string; at: string };
 export type WalletCardData = { teamId: TeamId; playerSourceId: string; teamLabel: string; playerName: string; playerLine: string; next: CardNext | null; matchDay: MatchDay | null; nextMatch: string; lineup: string; lineupShort: string; lastResult: string; snpPoints: string; teamPath: string; actaPath: string | null };
@@ -27,7 +28,7 @@ export function shortDate(date: string): string | null {
 function cardNext(next: CardFixture | null): CardNext | null {
   if (!next) return null;
   const parts = dateParts(next.date);
-  return { round: `J${next.round}`, opponent: teamName(next.opponent), day: parts?.day ?? "Por confirmar", time: parts?.time ?? null, venue: next.home ? "Local" : "Visitante" };
+  return { round: `J${next.round}`, opponent: teamName(next.opponent), day: parts?.day ?? "Por confirmar", time: parts?.time ?? null, venue: next.home ? "Local" : "Visitante", place: next.home ? null : next.place ?? null };
 }
 // Midnight in Madrid of the match's local day: a UTC guess corrected by Madrid's offset that day.
 function madridMidnight(year: number, month: number, day: number): number {

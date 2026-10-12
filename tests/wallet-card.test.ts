@@ -13,7 +13,7 @@ const ctx = (over: Partial<TeamCardContext> = {}): TeamCardContext => ({ teamId:
 test("tarjeta completa de un jugador convocado", () => {
   assert.deepEqual(buildWalletCard(ctx(), "1"), {
     teamId: "a", playerSourceId: "1", teamLabel: "Equipo A", playerName: "Carlos Martin", playerLine: "Carlos Martin · Revés",
-    next: { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: "10:00", venue: "Local" }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · C.D. VibraPadel · Dom 18/10 10:00 · Local",
+    next: { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: "10:00", venue: "Local", place: null }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-18T08:00:00.000Z" }, nextMatch: "J5 · C.D. VibraPadel · Dom 18/10 10:00 · Local",
     lineup: "Convocado J5 · Pareja 2 con Juan Perez", lineupShort: "Pareja 2 con Juan Perez", lastResult: "J4 · Fito Raya A 7–5 Rival X",
     snpPoints: "20.313", teamPath: "/equipos/a/jornadas", actaPath: "/equipos/a/jornadas/40",
   });
@@ -60,7 +60,7 @@ test("textos cortos para el frente de la tarjeta", () => {
   const none = buildWalletCard(ctx({ next: null, published: null }), "1")!;
   assert.equal(none.lineupShort, "Sin convocatoria");
   assert.equal(none.next, null);
-  assert.deepEqual(buildWalletCard(ctx({ next: { ...next, date: "2026-10-18", home: false } }), "1")!.next, { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: null, venue: "Visitante" });
+  assert.deepEqual(buildWalletCard(ctx({ next: { ...next, date: "2026-10-18", home: false } }), "1")!.next, { round: "J5", opponent: "C.D. VibraPadel", day: "Dom 18/10", time: null, venue: "Visitante", place: null });
   assert.equal(buildWalletCard(ctx({ next: { ...next, date: "" } }), "1")!.next!.day, "Por confirmar");
 });
 test("los nombres de club de SNP salen con espacios en lugar de guiones bajos", () => {
@@ -75,4 +75,8 @@ test("día del partido en Madrid, con y sin hora y con cambio de horario", () =>
   assert.deepEqual(matchDay("2026-10-24T22:30:00.000Z"), { start: "2026-10-24T22:00:00.000Z", end: "2026-10-25T23:00:00.000Z", at: "2026-10-24T22:30:00.000Z" });
   assert.equal(matchDay(""), null);
   assert.equal(buildWalletCard(ctx({ next: null }), "1")!.matchDay, null);
+});
+test("el lugar pasa a la tarjeta solo fuera de casa", () => {
+  assert.equal(buildWalletCard(ctx({ next: { ...next, home: false, place: "PADEL CUBIERTO ARCOS SL" } }), "1")!.next!.place, "PADEL CUBIERTO ARCOS SL");
+  assert.equal(buildWalletCard(ctx({ next: { ...next, home: true, place: "PADEL CUBIERTO ARCOS SL" } }), "1")!.next!.place, null);
 });

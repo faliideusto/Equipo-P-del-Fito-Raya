@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { PKPass } from "passkit-generator";
 import type { WalletCardData } from "@/domain/wallet-card";
 import type { AppleConfig } from "./wallet-config";
+import { mapsSearchUrl } from "@/domain/team-result-message";
 import { renderStrip } from "./wallet-strip";
 export type ApplePassMeta = { serial: string; authToken: string; baseUrl: string; passTypeId: string; teamIdentifier: string };
 type Field = { key: string; label: string; value: string; changeMessage?: string };
@@ -18,6 +19,7 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
     { key: "lineup", label: `Tu convocatoria${round}`, value: card.lineupShort, changeMessage: `Convocatoria${round}: %@` },
     { key: "player", label: "Jugador", value: card.playerLine }, { key: "team", label: "Equipo", value: `Fito Raya ${card.teamId.toUpperCase()}` },
     { key: "result", label: "Último resultado", value: card.lastResult, changeMessage: "%@" }, { key: "next", label: "Próximo partido", value: card.nextMatch },
+    ...(next?.place ? [{ key: "place", label: "Lugar", value: next.place }, { key: "maps", label: "Cómo llegar", value: mapsSearchUrl(next.place) }] : []),
     { key: "web", label: "Web del equipo", value: `${meta.baseUrl}${card.teamPath}` },
     ...(card.actaPath ? [{ key: "acta", label: "Acta de la última jornada", value: `${meta.baseUrl}${card.actaPath}` }] : []),
   ];
