@@ -43,8 +43,10 @@ export function buildTeamResultMessage({ round, teamId, opponent, home, date, pa
   return [header.join("\n"), result, ...blocks, "💪 ¡Vamos Fito Raya!"].join("\n\n");
 }
 // The lineup for the group: only pairs with someone in them, numbered in the order given (already sorted by SNP points).
-export function buildLineupMessage({ round, teamId, opponent, home, date, pairs, players }: { round: number; teamId: TeamId; opponent: string; home: boolean; date: string; pairs: Pair[]; players: { id: string; name: string }[] }) {
-  const header = [`🎾 *Convocatoria · Jornada ${round} · Fito Raya ${teamId.toUpperCase()}*`, `🆚 ${opponent.replaceAll("_", " ")} · ${home ? "🏠 Local" : "✈️ Visitante"}`, dateLine(date)].filter((line): line is string => line !== null);
+// Away matches add the venue from the SNP acta and a Google Maps search for it.
+export function buildLineupMessage({ round, teamId, opponent, home, date, pairs, players, venue = null }: { round: number; teamId: TeamId; opponent: string; home: boolean; date: string; pairs: Pair[]; players: { id: string; name: string }[]; venue?: string | null }) {
+  const place = !home && venue ? `📍 ${venue}\n${mapsSearchUrl(venue)}` : null;
+  const header = [`🎾 *Convocatoria · Jornada ${round} · Fito Raya ${teamId.toUpperCase()}*`, `🆚 ${opponent.replaceAll("_", " ")} · ${home ? "🏠 Local" : "✈️ Visitante"}`, dateLine(date), place].filter((line): line is string => line !== null);
   const blocks = pairs.flatMap((pair, index) => {
     const names = pair.players.flatMap(id => { const player = id === null ? undefined : players.find(p => p.id === id); return player ? [displayName(player.name)] : []; });
     return names.length ? [`*Pareja ${index + 1}* (${MATCH_VALUES[index] ?? 2} pts)\n${names.join(" / ")}`] : [];
@@ -52,4 +54,6 @@ export function buildLineupMessage({ round, teamId, opponent, home, date, pairs,
   return [header.join("\n"), ...blocks, "💪 ¡Vamos Fito Raya!"].join("\n\n");
 }
 // Not wa.me: its redirect replaces emojis with "�" before WhatsApp opens.
+// SNP gives only the club name; Google Maps finds the place from it.
+export const mapsSearchUrl = (place: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
 export const whatsappShareUrl = (text: string) => `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;

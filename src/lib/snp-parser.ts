@@ -101,8 +101,11 @@ export function parseMatch(html: string, id: string): SnpMatch {
     return [{index:0,id:card.find("[idpartido]").first().attr("idpartido"),homePlayers:people.slice(0,2).map(p=>p.name),awayPlayers:people.slice(2,4).map(p=>p.name),home:people.slice(0,2),away:people.slice(2,4),sets}];
   });
   games.forEach((game,index)=>{game.index=index;});
+  // "Lugar" of the acta: only the club's name, no address; SNP writes "Sin especificar" when there is none.
+  const place = $(".enfrentamiento_edit_club").first().text().replace(/\s+/g," ").trim();
+  const venue = /^(?:sin especificar|sin seleccionar)?$/i.test(place) ? null : place;
   const teamIds: [string,string] = [$(".partido_equipo_nombre_new[equipo='1']").attr("idequipo1")||"",$(".partido_equipo_nombre_new[equipo='2']").attr("idequipo2")||""];
-  return {id,title,dateLabel,teamIds,teams: [teamLinks[0] ?? "Local", teamLinks[1] ?? "Visitante"], score: scoreNumbers ? [Number(scoreNumbers[1]),Number(scoreNumbers[2])] : null, games};
+  return {id,title,dateLabel,venue,teamIds,teams: [teamLinks[0] ?? "Local", teamLinks[1] ?? "Visitante"], score: scoreNumbers ? [Number(scoreNumbers[1]),Number(scoreNumbers[2])] : null, games};
 }
 // SNP's acta heading joins the score and the date ("10 - 2 03 Octubre 13:00"). The score
 // already has its own banner, so the subtitle keeps only the date and the time.

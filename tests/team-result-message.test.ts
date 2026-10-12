@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildLineupMessage, buildTeamResultMessage, displayName, teamResultPairs, teamScore, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
+import { buildLineupMessage, buildTeamResultMessage, displayName, mapsSearchUrl, teamResultPairs, teamScore, whatsappShareUrl, type TeamResultPair } from "../src/domain/team-result-message";
 import type { SnpMatch } from "../src/domain/snp";
 import type { SetScore } from "../src/domain/match-result";
 
@@ -67,4 +67,11 @@ test("la convocatoria para WhatsApp numera las parejas y omite los huecos", () =
   const roster = [{ id: "a-1", name: "CARLOS MARTIN" }, { id: "a-2", name: "juan perez" }, { id: "a-3", name: "Ana Ruiz" }];
   const text = buildLineupMessage({ round: 5, teamId: "a", opponent: "TOP_BAL PÁDEL", home: false, date: "2026-10-18T08:00:00.000Z", players: roster, pairs: [{ id: "s0", players: ["a-1", "a-2"] }, { id: "s1", players: ["a-3", null] }, { id: "s2", players: [null, null] }, { id: "s3", players: ["a-9", null] }, { id: "s4", players: [null, null] }] });
   assert.equal(text, ["🎾 *Convocatoria · Jornada 5 · Fito Raya A*\n🆚 TOP BAL PÁDEL · ✈️ Visitante\n📅 Dom 18/10 · 10:00", "*Pareja 1* (3 pts)\nCarlos Martin / Juan Perez", "*Pareja 2* (3 pts)\nAna Ruiz", "💪 ¡Vamos Fito Raya!"].join("\n\n"));
+});
+test("la convocatoria fuera de casa lleva el lugar y el enlace a Google Maps; en casa, no", () => {
+  const base = { round: 3, teamId: "a" as const, opponent: "CD_PADEL_ARCOS", date: "2026-10-17T08:00:00.000Z", players: [{ id: "a-1", name: "CARLOS MARTIN" }], pairs: [{ id: "s0", players: ["a-1", null] as [string | null, string | null] }], venue: "PADEL CUBIERTO ARCOS SL" };
+  assert.equal(mapsSearchUrl("PADEL CUBIERTO ARCOS SL"), "https://www.google.com/maps/search/?api=1&query=PADEL%20CUBIERTO%20ARCOS%20SL");
+  assert.equal(buildLineupMessage({ ...base, home: false }).split("\n\n")[0], "🎾 *Convocatoria · Jornada 3 · Fito Raya A*\n🆚 CD PADEL ARCOS · ✈️ Visitante\n📅 Sáb 17/10 · 10:00\n📍 PADEL CUBIERTO ARCOS SL\nhttps://www.google.com/maps/search/?api=1&query=PADEL%20CUBIERTO%20ARCOS%20SL");
+  assert.doesNotMatch(buildLineupMessage({ ...base, home: true }), /📍/);
+  assert.doesNotMatch(buildLineupMessage({ ...base, home: false, venue: null }), /📍/);
 });

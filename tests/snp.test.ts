@@ -39,7 +39,7 @@ test("sets ganados y perdidos salen de cómo acabó cada partido",()=>{
 });
 test("lee acta L/V con set parcial y conserva IDs de jugadores",()=>{
   const html=`<h4>Enfrentamiento (#55252)</h4><h2>6 - 6</h2><div class="partido_equipo_nombre_new" equipo="1" idequipo1="7778">Fito A</div><div class="partido_equipo_nombre_new" equipo="2" idequipo2="2598">Vibra</div><div class="enf_partido_container"><div class="partido_jug_div" idjugador="368641" idpartido="270263">Daniel - 57229.17</div><div class="partido_jug_div" idjugador="376502">José Luis - 67924.11</div><div class="partido_jug_div" idjugador="317854">Ignacio - 58645.83</div><div class="partido_jug_div" idjugador="317859">Manuel - 52232.14</div><div class="table_partidos"><table><tbody><tr><td>L</td><td class="td_part_res" set="1" eq="1">6</td><td class="td_part_res" set="2" eq="1"></td></tr><tr><td>V</td><td class="td_part_res" set="1" eq="2">2</td><td class="td_part_res" set="2" eq="2"></td></tr></tbody></table></div></div>`;
-  const match=parseMatch(html,"55252");assert.deepEqual(match.teamIds,["7778","2598"]);assert.equal(match.games[0].home?.[0].id,"368641");assert.equal(match.games[0].id,"270263");assert.deepEqual(match.games[0].sets,[[6,2]]);assert.deepEqual(match.games[0].homePlayers,["Daniel","José Luis"]);assert.equal(match.games[0].home?.[0].points,57229.17);
+  const match=parseMatch(html,"55252");assert.deepEqual(match.teamIds,["7778","2598"]);assert.equal(match.games[0].home?.[0].id,"368641");assert.equal(match.games[0].id,"270263");assert.deepEqual(match.games[0].sets,[[6,2]]);assert.deepEqual(match.games[0].homePlayers,["Daniel","José Luis"]);assert.equal(match.games[0].home?.[0].points,57229.17);assert.equal(match.venue,null);
 });
 test("no reenvía credenciales a un redirect de Google ni a otro dominio",async()=>{
   const original=globalThis.fetch;let calls=0;
@@ -55,6 +55,12 @@ test("lee un acta convocada sin sets con jugadores y orden de parejas",()=>{
   assert.deepEqual(match.games.map(g=>g.index+1),[1,2,3,4,5]);
   assert.deepEqual(match.games[2].home?.map(p=>p.id),["31","32"]);
   assert.ok(match.games.every(g=>g.sets.length===0));
+});
+test("lee el lugar del acta y lo ignora si está sin especificar",()=>{
+  const html=(club:string)=>`<h4>Enfrentamiento (#55266)</h4><h2>0 - 0 17 Octubre 10:00</h2><div class='enfrentamiento_datos_body'><div><i class='fa fa-globe'></i> <span\n class='enfrentamiento_edit_club'>\n ${club}</span></div></div>`;
+  assert.equal(parseMatch(html("PADEL CUBIERTO ARCOS SL"),"55266").venue,"PADEL CUBIERTO ARCOS SL");
+  assert.equal(parseMatch(html("Sin especificar"),"55266").venue,null);
+  assert.equal(parseMatch(html(""),"55266").venue,null);
 });
 test("una cookie de sesión de un solo host no se extiende a los subdominios de SNP",()=>{
   const hostOnly=sessionCookie({name:"PHPSESSID",value:"a",domain:"snpgalaxy.com",path:"/",expires:-1,secure:false});
