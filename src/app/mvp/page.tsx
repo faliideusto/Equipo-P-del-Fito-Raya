@@ -5,7 +5,7 @@ import { MvpBoard, type MvpCardStats } from "@/components/mvp-board";
 import { loadSeasonRanking } from "@/lib/season-ranking-service";
 import { rankingStats } from "@/components/season-ranking-cards";
 import type { Player, TeamId } from "@/domain/types";
-import { clubMonth } from "@/domain/mvp";
+import { clubMonth, previousMonth } from "@/domain/mvp";
 
 // Season contribution of every player, shown on the black IF card of the MVP.
 async function cardStats(teamId: TeamId, players: Player[]): Promise<MvpCardStats> {
@@ -19,6 +19,7 @@ export default async function MvpPage() {
   const [statsA, statsB] = await Promise.all([cardStats("a", a), cardStats("b", b)]);
   let awards: MvpAward[] = []; let error = "";
   try { awards = await mvpAwards(); } catch { error = "Los MVP aún no están disponibles. Para activar este apartado, ejecuta supabase/mvp.sql en Supabase."; }
-  const month = clubMonth();
+  // The MVP is chosen at the end of the month: the page opens on the last finished month.
+  const month = previousMonth(clubMonth());
   return <><PageHeading eyebrow="ESCUELA FITO RAYA · RECONOCIMIENTOS" title="MVP del mes." text="El entrenador elige al jugador más destacado de cada equipo."/><MvpBoard players={{ a, b }} initialAwards={awards} initialMonth={month} initialError={error} cardStats={{ a: statsA, b: statsB }}/></>;
 }
