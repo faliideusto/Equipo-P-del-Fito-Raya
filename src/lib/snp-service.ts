@@ -1,5 +1,5 @@
 import { snpClient } from "./snp-client";
-import { cachedSnp } from "./snp-cache";
+import { cachedSnp, type Keep } from "./snp-cache";
 import { readWinRates, reusableWinRates, saveWinRates, winRateFingerprint } from "./winrate-cache";
 import { normalizeFixtures, normalizeStandings, parseOptions, parseMatch } from "./snp-parser";
 import { fetchSnpTeam } from "./snp-team";
@@ -73,7 +73,19 @@ export async function getSnpMatch(id: string, force = false) {
     const own=clubTeams.find(t=>t.id===fixture.teamId)!;const score=fixtureScore(fixture.matches);
     fallback={id,title:`Jornada ${fixture.round}`,dateLabel:fixture.date,teams:fixture.home?[own.name,fixture.opponent]:[fixture.opponent,own.name],score:[score.home,score.away],games:fixture.matches.map(m=>{const names=m.playerIds.map(pid=>savedPlayers.find(p=>p.id===pid)?.name||"Jugador por confirmar");return {index:m.pairIndex,homePlayers:fixture.home?names:m.opponents,awayPlayers:fixture.home?m.opponents:names,sets:m.sets||[]};})};
   }
-  return cachedSnp("match-"+id,async()=>parseMatch(await snpClient.html(`/enfrentamiento/edit/${id}/verG`),id),fallback,force);
+  return cachedSnp("match-"+id,async()=>parseMatch(await snpClient.html(`/enfrentamiento/edit/${id}/verG`),id),fallback,force,force?undefined:await confirmedActa(id));
+}
+// An acta whose result is already in the calendar of the club's divisions is confirmed: it is kept
+// for a day, and read again as soon as that result changes. Without a result in the calendar (open
+// round, other divisions, SNP down or a changed format) it keeps the usual short cache time.
+const KEPT_DIVISIONS=["2318","2326"];
+async function confirmedActa(id:string):Promise<Keep<SnpMatch>|undefined>{
+  const calendars=await Promise.all(KEPT_DIVISIONS.map(division=>getSnpCompetition({division}).catch(()=>null)));
+  const score=calendars.flatMap(result=>result&&!result.stale?result.data.calendar:[]).find(fixture=>fixture.id===id)?.score;
+  // SNP shows 0-0 until the acta is confirmed; a played fixture always shares out its points.
+  if(!score||score[0]+score[1]===0)return undefined;
+  const signature=score.join("-");
+  return {signature,seconds:24*60*60,valid:match=>match.score?.join("-")===signature};
 }
 export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:string, force=false) {
   if (localPlayerId(id)) {
