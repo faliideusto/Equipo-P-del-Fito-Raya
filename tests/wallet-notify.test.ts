@@ -52,3 +52,10 @@ test("errores, límite de Google, tarjeta no guardada y canales desactivados", a
   const off = await notifyTeam({ store: await setup(), ctx, kind: "lineup", channels: { google: null, apple: null }, now: new Date() });
   assert.deepEqual(off, { total: 3, withoutPass: 1, apple: { enabled: false, ok: 0, failed: 0 }, google: { enabled: false, ok: 0, failed: 0, rateLimited: 0 } });
 });
+test("al borrar la convocatoria las tarjetas vuelven a pendiente y se avisa", async () => {
+  const store = await setup();
+  const bodies: (string | undefined)[] = [];
+  const summary = await notifyTeam({ store, ctx: { ...ctx, published: null }, kind: "lineup", channels: { google: async (_p, card, notice) => { bodies.push(card.lineupShort, notice?.body); return "ok"; }, apple: async tokens => new Map<string, PushOutcome>(tokens.map(t => [t, "ok"])) }, now: new Date() });
+  assert.deepEqual(bodies, ["Pendiente", "Convocatoria J5 pendiente"]);
+  assert.equal(summary.apple.ok, 2);
+});

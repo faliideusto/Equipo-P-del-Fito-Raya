@@ -47,3 +47,16 @@ test("supabase: filtros, upsert y tabla ausente", async () => {
   await assert.rejects(missing.passBySerial("s"), { message: /supabase\/wallet\.sql/, status: 503 });
   assert.deepEqual(await missing.devicesFor([]), []);
 });
+test("memoria y supabase: borrar la convocatoria de una jornada", async () => {
+  const store = memoryWalletStore();
+  const row = { team_id: "a" as const, fixture_id: "50", lineup_id: null, pairs: [], published_at: "x" };
+  await store.publishLineup(row); await store.publishLineup({ ...row, fixture_id: "60" });
+  await store.unpublishLineup("a", "50");
+  assert.equal(await store.publishedLineup("a", "50"), null);
+  assert.equal((await store.publishedLineup("a", "60"))?.fixture_id, "60");
+  const calls: { url: string; method: string }[] = [];
+  const remote = supabaseWalletStore({ url: "https://db.example.com", key: "k" }, (async (input: URL | string, init?: RequestInit) => { calls.push({ url: String(input), method: init?.method ?? "GET" }); return new Response(null, { status: 204 }); }) as typeof fetch);
+  await remote.unpublishLineup("b", "70");
+  assert.equal(calls[0].method, "DELETE");
+  assert.match(calls[0].url, /published_lineups\?team_id=eq\.b&fixture_id=eq\.70/);
+});
