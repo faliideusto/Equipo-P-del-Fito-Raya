@@ -1,5 +1,5 @@
 import { accountBody, accountFailure, accountReply, AccountError } from "@/lib/account-auth";
-import { notifyOptions, publishAndNotify, requireNotifier } from "@/lib/wallet-notify-service";
+import { notifyOptions, publishAndNotify, removeLineupAndNotify, requireNotifier } from "@/lib/wallet-notify-service";
 import type { TeamId } from "@/domain/types";
 export const runtime = "nodejs";
 const isTeam = (value: unknown): value is TeamId => value === "a" || value === "b";
@@ -21,5 +21,14 @@ export async function POST(request: Request) {
     if (!built && (typeof lineupId !== "string" || !/^[a-f0-9-]{36}$/.test(lineupId))) throw new AccountError("Forma al menos una pareja antes de avisar.");
     await requireNotifier(teamId);
     return accountReply({ summary: await publishAndNotify({ teamId, kind, fixtureId, ...(built ? { pairs } : { lineupId: lineupId as string }) }) });
+  } catch (error) { return accountFailure(error); }
+}
+// Deletes the published lineup of the next fixture and updates every card.
+export async function DELETE(request: Request) {
+  try {
+    const { teamId, fixtureId } = await accountBody(request);
+    if (!isTeam(teamId) || typeof fixtureId !== "string" || !/^\d{1,10}$/.test(fixtureId)) throw new AccountError("Petición no válida.");
+    await requireNotifier(teamId);
+    return accountReply({ summary: await removeLineupAndNotify({ teamId, fixtureId }) });
   } catch (error) { return accountFailure(error); }
 }

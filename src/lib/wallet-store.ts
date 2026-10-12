@@ -17,6 +17,7 @@ export interface WalletStore {
   devicePasses(deviceId: string): Promise<WalletPass[]>;
   publishedLineup(teamId: TeamId, fixtureId: string): Promise<PublishedLineup | null>;
   publishLineup(row: PublishedLineup): Promise<void>;
+  unpublishLineup(teamId: TeamId, fixtureId: string): Promise<void>;
 }
 function remove<T>(rows: T[], match: (row: T) => boolean) { for (let i = rows.length - 1; i >= 0; i--) if (match(rows[i])) rows.splice(i, 1); }
 // Test double with the same contract as Supabase.
@@ -41,6 +42,7 @@ export function memoryWalletStore(): WalletStore & { passes: WalletPass[]; devic
     async devicePasses(deviceId) { const serials = devices.filter(d => d.device_id === deviceId).map(d => d.serial); return passes.filter(p => serials.includes(p.serial)); },
     async publishedLineup(teamId, fixtureId) { return lineups.find(l => l.team_id === teamId && l.fixture_id === fixtureId) ?? null; },
     async publishLineup(row) { remove(lineups, l => l.team_id === row.team_id && l.fixture_id === row.fixture_id); lineups.push(row); },
+    async unpublishLineup(teamId, fixtureId) { remove(lineups, l => l.team_id === teamId && l.fixture_id === fixtureId); },
   };
 }
 const PASS_FIELDS = "serial,player_id,team_id,auth_token,google_object_id,updated_at";
@@ -80,6 +82,7 @@ export function supabaseWalletStore({ url, key }: { url: string; key: string }, 
     },
     async publishedLineup(teamId, fixtureId) { return (await rest<PublishedLineup[]>("published_lineups", "GET", { select: "team_id,fixture_id,lineup_id,pairs,published_at", team_id: `eq.${teamId}`, fixture_id: `eq.${fixtureId}` }))[0] ?? null; },
     async publishLineup(row) { await rest("published_lineups", "POST", { on_conflict: "team_id,fixture_id" }, row, "resolution=merge-duplicates,return=minimal"); },
+    async unpublishLineup(teamId, fixtureId) { await rest("published_lineups", "DELETE", { team_id: `eq.${teamId}`, fixture_id: `eq.${fixtureId}` }); },
   };
 }
 export const walletStore = (): WalletStore => supabaseWalletStore(accountConfig());

@@ -36,10 +36,19 @@ export async function notifyOptions(teamId: TeamId) {
   // The published lineup may have been deleted since: only offer it while it is still saved.
   return { nextFixtureId: ctx.next?.id ?? null, lastFixtureId: ctx.last?.fixtureId ?? null, lineups: saved.map(l => ({ id: l.id, name: l.name })), publishedLineupId: selectableLineup(saved, published?.lineup_id ?? null) };
 }
-// A lineup comes either built on the fixture page (pairs) or as a saved one (lineupId).
-export async function publishAndNotify({ teamId, kind, fixtureId, lineupId, pairs: built }: { teamId: TeamId; kind: NotifyKind; fixtureId: string; lineupId?: string; pairs?: unknown }, now = new Date()): Promise<NotifySummary> {
+// The real Apple and Google channels; a platform without credentials is skipped.
+function walletChannels(messageId: string): NotifyChannels {
   const apple = appleConfig(); const google = googleConfig(); const baseUrl = publicBaseUrl();
   if (!apple && !google) throw new AccountError("Wallet aún no está configurado.", 503);
+  const client = google && baseUrl ? googleWalletClient(google) : null;
+  return {
+    google: client && google && baseUrl ? (pass, card, notice) => client.update(pass.google_object_id!, googleObject(card, { issuerId: google.issuerId, serial: pass.serial, baseUrl }), notice, messageId) : null,
+    apple: apple ? tokens => withApns(apple, send => pushToDevices(tokens, send)) : null,
+  };
+}
+// A lineup comes either built on the fixture page (pairs) or as a saved one (lineupId).
+export async function publishAndNotify({ teamId, kind, fixtureId, lineupId, pairs: built }: { teamId: TeamId; kind: NotifyKind; fixtureId: string; lineupId?: string; pairs?: unknown }, now = new Date()): Promise<NotifySummary> {
+  const channels = walletChannels(`${kind}-${fixtureId}-${now.getTime()}`);
   const store = walletStore();
   let ctx = await loadTeamContext(teamId, store, now.getTime());
   if (kind === "lineup") {
@@ -59,10 +68,14 @@ export async function publishAndNotify({ teamId, kind, fixtureId, lineupId, pair
     await store.publishLineup({ team_id: teamId, fixture_id: fixtureId, lineup_id: chosen.id, pairs, published_at: now.toISOString() });
     ctx = { ...ctx, published: { fixtureId, pairs } };
   } else if (ctx.last?.fixtureId !== fixtureId) throw new AccountError("Solo se puede avisar del resultado de la última jornada.", 409);
-  const client = google && baseUrl ? googleWalletClient(google) : null;
-  const channels: NotifyChannels = {
-    google: client && google && baseUrl ? (pass, card, notice) => client.update(pass.google_object_id!, googleObject(card, { issuerId: google.issuerId, serial: pass.serial, baseUrl }), notice, `${kind}-${fixtureId}-${now.getTime()}`) : null,
-    apple: apple ? tokens => withApns(apple, send => pushToDevices(tokens, send)) : null,
-  };
   return notifyTeam({ store, ctx, kind, channels, now });
+}
+// Removes the published lineup of the next fixture; every card goes back to "pendiente" and the phones are told.
+export async function removeLineupAndNotify({ teamId, fixtureId }: { teamId: TeamId; fixtureId: string }, now = new Date()): Promise<NotifySummary> {
+  const channels = walletChannels(`unpublish-${fixtureId}-${now.getTime()}`);
+  const store = walletStore();
+  const ctx = await loadTeamContext(teamId, store, now.getTime());
+  if (ctx.next?.id !== fixtureId) throw new AccountError("Solo se puede borrar la convocatoria del próximo partido.", 409);
+  await store.unpublishLineup(teamId, fixtureId);
+  return notifyTeam({ store, ctx: { ...ctx, published: null }, kind: "lineup", channels, now });
 }
