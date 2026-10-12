@@ -6,7 +6,7 @@ import { buildLineupMessage, whatsappShareUrl } from "@/domain/team-result-messa
 import type { Pair, Player, TeamId } from "@/domain/types";
 import { LineupBuilder } from "./lineup/lineup-builder";
 import { WhatsAppIcon } from "./team-result-share";
-type Match = { round: number; opponent: string; date: string; home: boolean };
+type Match = { round: number; opponent: string; date: string; home: boolean; venue?: string | null };
 // Coach or captain: build the next fixture's lineup right here, publish it in Wallet and share it on WhatsApp.
 export function WalletNotify({ teamId, fixtureId, match, players, publishedPairs, availability }: { teamId: TeamId; fixtureId: string; match: Match; players: Player[]; publishedPairs: Pair[] | null; availability: string[] }) {
   const [busy, setBusy] = useState(false); const [status, setStatus] = useState(""); const [error, setError] = useState("");
