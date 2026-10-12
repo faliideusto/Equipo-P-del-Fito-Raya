@@ -71,8 +71,11 @@ export function rankingForecast(history: RankingHistory, title: string, round: n
   const previousRow = done.sort(([a], [b]) => roundOrder(a) - roundOrder(b)).at(-1)?.[1];
   // Sin jornadas previas esta temporada, el ranking de partida es el de la convocatoria del acta.
   const before = previousRow ? num(previousRow.puntos) : lineupPoints;
-  const published = num(phase.j_a) >= round ? rounds(phase).find(([key]) => roundOrder(key) === round)?.[1] : undefined;
-  if (published && before !== null) return { before, after: num(published.puntos), published: true };
+  const row = num(phase.j_a) >= round ? rounds(phase).find(([key]) => roundOrder(key) === round)?.[1] : undefined;
+  // SNP abre la jornada al llegar la fecha y solo cuenta el partido al confirmar el acta: hasta
+  // entonces su fila no tiene partido (pd) y el ranking solo ha perdido la jornada de hace un año.
+  const counted = row && num(row.pd) >= 1;
+  if (counted && before !== null) return { before, after: num(row.puntos), published: true };
   let points = gained; let played = 1;
   for (const [, row] of done) { points += num(row.ptos_c); played += num(row.pd); }
   for (const old of Object.values(history.previous)) {
@@ -81,5 +84,7 @@ export function rankingForecast(history: RankingHistory, title: string, round: n
     for (const [key, row] of rounds(old)) if (!regular || roundOrder(key) > round) { points += num(row.ptos_c); played += num(row.pd); }
   }
   const after = Math.round(12500 * points / Math.max(4, played) * 100) / 100;
-  return before === null ? null : { before, after, published: false };
+  // Con la jornada abierta se parte del ranking que SNP muestra ahora, para que la suma cuadre.
+  const from = row ? num(row.puntos) : before;
+  return from === null ? null : { before: from, after, published: false };
 }
