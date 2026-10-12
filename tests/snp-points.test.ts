@@ -38,3 +38,11 @@ test("previsión del ranking con un historial real de SNP (J2 en 2ª, +7,6)", as
   const open = { current: { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "2", J: { "1": { ptos_c: 6.65, pd: 1, puntos: 51062.5 }, "2": { ptos_c: 0, puntos: 46015.63 } } } }, previous: { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "10", J: { "2": { ptos_c: 5.7, pd: 1 }, "4": { ptos_c: 3.325, pd: 1 }, "6": { ptos_c: 3.8, pd: 1 }, "7": { ptos_c: 0.95, pd: 1 } } } } };
   assert.deepEqual(rankingForecast(open, title, 2, 2.85, 46015.63), { before: 46015.63, after: 43937.5, published: false });
 });
+
+test("publicado por SNP, la variación parte de los puntos de la convocatoria, como la previsión", async () => {
+  const { rankingForecast } = await import("../src/domain/snp-points");
+  const title = "Enfrentamiento (#55260): SNP ESPAÑA - FASE REGULAR CÁDIZ - MASCULINO - Future - 2ª División [Jornada 2]";
+  const history = { current: { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "2", J: { "1": { ptos_c: 6.65, pd: 1, puntos: 51062.5 }, "2": { ptos_c: 2.85, pd: 1, puntos: 43937.5 } } } }, previous: {} };
+  // 46.015,63 PTS −2.078 → 43.938, no −7.125 desde el ranking de la jornada 1.
+  assert.deepEqual(rankingForecast(history, title, 2, 2.85, 46015.63), { before: 46015.63, after: 43937.5, published: true });
+});

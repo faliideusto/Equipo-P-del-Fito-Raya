@@ -69,8 +69,10 @@ export function rankingForecast(history: RankingHistory, title: string, round: n
   if (!phase) return null;
   const done = rounds(phase).filter(([key]) => roundOrder(key) < round);
   const previousRow = done.sort(([a], [b]) => roundOrder(a) - roundOrder(b)).at(-1)?.[1];
-  // Sin jornadas previas esta temporada, el ranking de partida es el de la convocatoria del acta.
-  const before = previousRow ? num(previousRow.puntos) : lineupPoints;
+  // El ranking de partida es el de la convocatoria del acta, el que se muestra junto al jugador:
+  // SNP ya le ha quitado la jornada de hace un año, así que la variación es solo la de este partido
+  // y la suma cuadra, igual en la previsión que en el dato publicado. Sin él, el de la jornada anterior.
+  const before = lineupPoints ?? (previousRow ? num(previousRow.puntos) : null);
   const row = num(phase.j_a) >= round ? rounds(phase).find(([key]) => roundOrder(key) === round)?.[1] : undefined;
   // SNP abre la jornada al llegar la fecha y solo cuenta el partido al confirmar el acta: hasta
   // entonces su fila no tiene partido (pd) y el ranking solo ha perdido la jornada de hace un año.
@@ -84,7 +86,7 @@ export function rankingForecast(history: RankingHistory, title: string, round: n
     for (const [key, row] of rounds(old)) if (!regular || roundOrder(key) > round) { points += num(row.ptos_c); played += num(row.pd); }
   }
   const after = Math.round(12500 * points / Math.max(4, played) * 100) / 100;
-  // Con la jornada abierta se parte del ranking que SNP muestra ahora, para que la suma cuadre.
-  const from = row ? num(row.puntos) : before;
+  // Sin convocatoria y con la jornada abierta se parte del ranking que SNP da ahora.
+  const from = lineupPoints === null && row ? num(row.puntos) : before;
   return from === null ? null : { before: from, after, published: false };
 }
