@@ -4,6 +4,7 @@ import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
 import { NextMatchBoard, ResultRow, StandingsTable } from "@/components/sports";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { cardPhoto } from "@/data/player-photos";
 import { formatPoints } from "@/lib/format";
 import { lineupHref } from "@/domain/wallet-ui";
 import { canPublishLineup } from "@/lib/wallet-notify-service";
@@ -74,7 +75,7 @@ export default async function TeamPage({
                 <li key={player.id}>
                   <Link href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${player.sourceTeamId ?? sourceTeam}`}>
                     <span className="top-rank">{String(i + 1).padStart(2, "0")}</span>
-                    <PlayerAvatar name={player.name} photoUrl={player.photoUrl ?? null} />
+                    <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)} />
                     <span className="top-name">{player.name}</span>
                     <span className="top-points">{formatPoints(player.points)}</span>
                   </Link>

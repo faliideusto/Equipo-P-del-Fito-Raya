@@ -9,6 +9,7 @@ import {
 } from "@/domain/rules";
 import { formatPoints } from "@/lib/format";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { cardPhoto } from "@/data/player-photos";
 interface PairCardProps {
   pair: Pair;
   index: number;
@@ -72,7 +73,7 @@ export function PairCard({
                 >
                   {player ? (
                     <>
-                      <PlayerAvatar name={player.name} photoUrl={player.photoUrl} small />
+                      <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)} small />
                       <span>
                         {player.name}
                         <small title={positionLabel(player.position)}>

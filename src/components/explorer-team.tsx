@@ -7,6 +7,7 @@ import type { SnpResult, SnpTeam, SnpCompetition, SnpFixture } from "@/domain/sn
 import type { Standing } from "@/domain/types";
 import { MatchBoard, StandingsTable } from "./sports";
 import { PlayerAvatar } from "./player-avatar";
+import { cardPhoto } from "@/data/player-photos";
 import { TeamLogo } from "./team-logo";
 import { formatDate, formatPoints } from "@/lib/format";
 import { MiniLineup } from "./lineup/mini-lineup";
@@ -106,7 +107,7 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
         {players.map((player, index) => (
           <Link className="roster-row" key={player.id} href={`/competicion/jugadores/${player.id}?equipo=${id}${query ? `&${query}` : ""}`}>
             <span className="roster-rank">{String(index + 1).padStart(2, "0")}</span>
-            <PlayerAvatar name={player.name} photoUrl={player.photoUrl}/>
+            <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)}/>
             <div className="roster-name"><strong>{player.name}</strong><span>Ver ficha del jugador →</span></div>
             <div className="roster-points"><strong>{formatPoints(player.points)}</strong><span>PTS SNP</span></div>
           </Link>
@@ -183,7 +184,7 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
                       <li key={player.id}>
                         <Link href={`/competicion/jugadores/${player.id}?equipo=${id}${query ? `&${query}` : ""}`}>
                           <span className="top-rank">{String(index + 1).padStart(2, "0")}</span>
-                          <PlayerAvatar name={player.name} photoUrl={player.photoUrl} />
+                          <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)} />
                           <span className="top-name">{player.name}</span>
                           <span className="top-points">{formatPoints(player.points)}</span>
                         </Link>

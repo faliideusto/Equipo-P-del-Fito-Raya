@@ -4,6 +4,7 @@ import { Skeleton } from "./skeletons";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PlayerAvatar } from "./player-avatar";
+import { cardPhoto } from "@/data/player-photos";
 import { formatWinRate } from "@/lib/format";
 import type { seasonRanking } from "@/domain/season-ranking";
 import type { SnpPlayerProfile, SnpResult } from "@/domain/snp";
@@ -54,7 +55,7 @@ export function SeasonRankingTable({ rows, teamId }: { rows: Row[]; teamId: Team
     <thead><tr><th>POS.</th><th>JUGADOR</th><th>PTS EQUIPO</th><th>PJ</th><th>GANADOS</th><th>PERDIDOS</th><th>WINRATE TEMPORADA</th><th>WINRATE TOTAL</th><th>SETS GANADOS</th><th>SETS PERDIDOS</th></tr></thead>
     <tbody>{rows.map((row, i) => <tr key={row.player.id}>
       <td><span className="rank">{i + 1}</span></td>
-      <td><Link className="standing-team" href={`/competicion/jugadores/${row.player.sourceId ?? row.player.id}?equipo=${row.player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`}><PlayerAvatar name={row.player.name} photoUrl={row.player.photoUrl ?? null} small/><span>{row.player.name}</span></Link></td>
+      <td><Link className="standing-team" href={`/competicion/jugadores/${row.player.sourceId ?? row.player.id}?equipo=${row.player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`}><PlayerAvatar name={row.player.name} photoUrl={cardPhoto(row.player)} small/><span>{row.player.name}</span></Link></td>
       <td><strong>{row.points}</strong></td><td>{row.played}</td><td>{row.won}</td><td>{row.lost}</td>
       {winRateCell(row.player.id, "current")}{winRateCell(row.player.id, "total")}
       <td>{row.setsWon}</td><td>{row.setsLost}</td>

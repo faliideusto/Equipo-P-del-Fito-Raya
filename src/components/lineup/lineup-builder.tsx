@@ -21,6 +21,7 @@ import {
 } from "@/domain/rules";
 import { formatPoints } from "@/lib/format";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { cardPhoto } from "@/data/player-photos";
 import { PlayerPicker } from "./player-picker";
 import { PairCard } from "./pair-card";
 import { useIsCoach } from "../app-shell";
@@ -249,7 +250,7 @@ export function LineupBuilder({
                 aria-pressed={armed === p.id}
               >
                 <GripVertical size={13} />
-                <PlayerAvatar name={p.name} photoUrl={p.photoUrl} small />
+                <PlayerAvatar name={p.name} photoUrl={cardPhoto(p)} small />
                 <span>
                   {p.name}
                   <small>{formatPoints(p.points)} pts SNP · {positionLabel(p.position)}</small>

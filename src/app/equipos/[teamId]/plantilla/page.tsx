@@ -61,7 +61,7 @@ export default async function RosterPage({
               <span className={`roster-rank ${i < 3 ? "top" : ""}`}>
                 {player.points === null ? "—" : String(i + 1).padStart(2, "0")}
               </span>
-              <PlayerAvatar name={player.name} photoUrl={player.photoUrl ?? null} />
+              <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)} />
               <div className="roster-name">
                 <strong>{player.name}</strong>
                 <span>{positionLabel(player.position)}</span>
