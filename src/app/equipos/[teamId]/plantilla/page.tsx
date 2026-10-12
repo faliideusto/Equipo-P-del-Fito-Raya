@@ -10,6 +10,8 @@ import { SquadCourt } from "@/components/squad-court";
 import { ViewToggle, squadView } from "@/components/view-toggle";
 import { cardPhoto } from "@/data/player-photos";
 import { compactPoints, pointsTier, sideShort } from "@/domain/squad";
+import { isInForm } from "@/domain/mvp";
+import { inFormPlayers } from "@/lib/mvp";
 export default async function RosterPage({
   params,
   searchParams,
@@ -21,6 +23,8 @@ export default async function RosterPage({
   const view = squadView((await searchParams).vista);
   const team = (await clubRepository.getTeam(teamId))!;
   const players = await clubRepository.getPlayers(teamId);
+  // Last month's MVP wears the black IF card.
+  const inForm = view === "cartas" ? await inFormPlayers() : [];
   return (
     <>
       <PageHeading
@@ -45,7 +49,7 @@ export default async function RosterPage({
                 photoUrl={cardPhoto(player)}
                 rating={compactPoints(player.points)}
                 ratingLabel={sideShort(player.position)}
-                tier={pointsTier(player.points)}
+                tier={isInForm(player, inForm) ? "if" : pointsTier(player.points)}
                 href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`}
                 stats={[
                   { label: "RANK", value: player.points === null ? "—" : rank },

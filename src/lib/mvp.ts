@@ -1,8 +1,11 @@
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import type { TeamId } from "@/domain/types";
+import { inFormIds } from "@/domain/mvp";
 export type MvpAward = { team_id: TeamId; month: string; player_id: string; source_id: string; name: string; photo_url: string | null; updated_at: string };
 let pending: Promise<void> = Promise.resolve();
+// Players who wear the IF card this month. Without the MVP storage, nobody does.
+export const inFormPlayers = async (): Promise<string[]> => inFormIds(await mvpAwards().catch(() => []));
 export async function mvpAwards(award?: MvpAward, removal?: { team_id: TeamId; month: string }): Promise<MvpAward[]> {
   const url = process.env.SUPABASE_URL; const key = process.env.SUPABASE_SECRET_KEY;
   if (url && key) {
