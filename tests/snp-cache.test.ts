@@ -27,3 +27,13 @@ test("a failed cache write preserves live SNP data and source errors still use t
     await rm(directory, { recursive: true });
   }
 });
+
+test("an expired copy of the shared cache is read again from SNP", async () => {
+  const { unexpired } = await import("../src/lib/snp-cache");
+  const copy = (data: { sets: number[][] }, age: number) => ({ data, updatedAt: new Date(Date.now() - age).toISOString(), source: "live" as const, stale: false });
+  const before = copy({ sets: [] }, 3_600_000); const after = copy({ sets: [[6, 3]] }, 0);
+  assert.deepEqual((await unexpired(before, 60_000, async () => after)).data, { sets: [[6, 3]] });
+  assert.equal(await unexpired(before, 60_000, async () => { throw new Error("SNP unavailable"); }), before);
+  const recent = copy({ sets: [] }, 5_000);
+  assert.equal(await unexpired(recent, 60_000, async () => after), recent);
+});
