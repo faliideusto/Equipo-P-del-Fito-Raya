@@ -3,6 +3,7 @@ import type { TeamId } from "@/domain/types";
 import type { WalletCardData } from "@/domain/wallet-card";
 import type { GoogleConfig } from "./wallet-config";
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
+const MESSAGE_DAYS = 3;
 export type GoogleOutcome = "ok" | "rateLimited" | "missing" | "failed";
 const text = (value: string) => ({ defaultValue: { language: "es", value } });
 export const googleClassId = (issuerId: string, teamId: TeamId) => `${issuerId}.fito-raya-${teamId}`;
@@ -51,15 +52,16 @@ export function googleWalletClient(config: GoogleConfig, fetchImpl: typeof fetch
   async function call(path: string, method: string, body: object) {
     return fetchImpl(`${API}${path}`, { method, headers: { Authorization: `Bearer ${await accessToken()}`, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(15000) });
   }
+  // Players cannot dismiss Google Wallet messages, so every update clears the old ones and each new one hides itself after a while.
   return {
     async update(objectId: string, object: object, notice: { header: string; body: string } | null, messageId: string): Promise<GoogleOutcome> {
       try {
         const path = `/genericObject/${encodeURIComponent(objectId)}`;
-        const patched = await call(path, "PATCH", object);
+        const patched = await call(path, "PATCH", { ...object, messages: [] });
         if (patched.status === 404) return "missing";
         if (!patched.ok) return "failed";
         if (!notice) return "ok";
-        const message = await call(`${path}/addMessage`, "POST", { message: { id: messageId, header: notice.header, body: notice.body, messageType: "TEXT_AND_NOTIFY" } });
+        const message = await call(`${path}/addMessage`, "POST", { message: { id: messageId, header: notice.header, body: notice.body, messageType: "TEXT_AND_NOTIFY", displayInterval: { start: { date: new Date(clock()).toISOString() }, end: { date: new Date(clock() + MESSAGE_DAYS * 86400000).toISOString() } } } });
         return message.ok ? "ok" : message.status === 429 ? "rateLimited" : "failed";
       } catch { return "failed"; }
     },

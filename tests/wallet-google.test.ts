@@ -41,7 +41,7 @@ test("signJwt produce tres partes verificables", () => {
   assert.deepEqual(decode(c), { a: 1 });
   assert.equal(createVerify("RSA-SHA256").update(`${h}.${c}`).verify(publicKey, s, "base64url"), true);
 });
-test("cliente: token cacheado, PATCH + addMessage y resultados", async () => {
+test("cliente: token cacheado, PATCH que borra los mensajes viejos + addMessage que caduca a los 3 días", async () => {
   const calls: { url: string; method: string; body: string }[] = [];
   let patchStatus = 200; let messageStatus = 200;
   const fake = (async (input: URL | string, init?: RequestInit) => {
@@ -55,7 +55,8 @@ test("cliente: token cacheado, PATCH + addMessage y resultados", async () => {
   assert.equal(calls.filter(c => c.url.includes("oauth2")).length, 1);
   assert.equal(calls[1].method, "PATCH");
   assert.match(calls[1].url, /\/genericObject\/3388\.s$/);
-  assert.deepEqual(JSON.parse(calls[2].body), { message: { id: "lineup-50-1", header: "Convocatoria J5", body: "No convocado en J5", messageType: "TEXT_AND_NOTIFY" } });
+  assert.deepEqual(JSON.parse(calls[1].body), { id: "3388.s", messages: [] });
+  assert.deepEqual(JSON.parse(calls[2].body), { message: { id: "lineup-50-1", header: "Convocatoria J5", body: "No convocado en J5", messageType: "TEXT_AND_NOTIFY", displayInterval: { start: { date: "2025-10-09T08:53:20.000Z" }, end: { date: "2025-10-12T08:53:20.000Z" } } } });
   assert.equal(await client.update("3388.s", {}, null, "x"), "ok");
   assert.equal(calls.filter(c => c.url.includes("oauth2")).length, 1);
   messageStatus = 429; assert.equal(await client.update("3388.s", {}, notice, "y"), "rateLimited");
