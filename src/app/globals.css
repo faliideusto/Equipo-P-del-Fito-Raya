@@ -4097,3 +4097,16 @@ a.fifa-card:focus-visible {outline:none}
 .wallet-result.error { background: var(--warn-soft); border: 1px solid var(--warn-line); }
 @media (max-width: 700px) { .wallet-body { padding: 16px; } .wallet-send-actions { width: 100%; } .wallet-send .button { width: 100%; justify-content: center; } }
 #convocatoria { scroll-margin-top: 96px; }
+/* Ranking de jugadores en móvil: filas bajas y nombre recortado para que quepa la primera columna de puntos. */
+@media (max-width: 640px) {
+  .standings.ranking th,
+  .standings.ranking td { padding: 8px 8px; font-size: 12px; }
+  .standings.ranking th { font-size: 10px; letter-spacing: .4px; line-height: 1.25; white-space: normal; vertical-align: bottom; }
+  .standings.ranking th:first-child,
+  .standings.ranking td:first-child { padding-left: 12px; padding-right: 2px; }
+  .standings.ranking .rank { width: 18px; color: var(--muted); }
+  .standings.ranking .standing-team { gap: 8px; }
+  .standings.ranking .small-avatar { width: 22px; height: 22px; font-size: 10px; }
+  .standings.ranking .standing-team > span:last-child { max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
+  .standings.ranking td:nth-child(3) strong { font-size: 14px; color: var(--accent); }
+}

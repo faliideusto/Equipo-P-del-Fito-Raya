@@ -49,7 +49,7 @@ export function SeasonRankingTable({ rows, teamId }: { rows: Row[]; teamId: Team
     return <td title={description}><span aria-label={`${value}. ${description}`}>{result ? value : <Skeleton className="skeleton-inline"/>}</span></td>;
   }
 
-  return <div className="table-scroll"><table className="standings">
+  return <div className="table-scroll"><table className="standings ranking">
     <caption className="sr-only">Estadísticas de jugadores de la temporada actual y winrate del historial SNP disponible</caption>
     <thead><tr><th>POS.</th><th>JUGADOR</th><th>PTS EQUIPO</th><th>PJ</th><th>GANADOS</th><th>PERDIDOS</th><th>WINRATE TEMPORADA</th><th>WINRATE TOTAL</th><th>SETS GANADOS</th><th>SETS PERDIDOS</th></tr></thead>
     <tbody>{rows.map((row, i) => <tr key={row.player.id}>
