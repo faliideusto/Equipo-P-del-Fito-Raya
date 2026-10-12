@@ -4,6 +4,7 @@ import { cardPhoto } from "@/data/player-photos";
 import { pointsTier, sideShort } from "@/domain/squad";
 import type { seasonRanking } from "@/domain/season-ranking";
 import type { TeamId } from "@/domain/types";
+import { isInForm } from "@/domain/mvp";
 
 export type RankingRow = ReturnType<typeof seasonRanking>["rows"][number];
 
@@ -15,7 +16,7 @@ export const rankingStats = (row: RankingRow): CardStat[] => [
 export const playerHref = (row: RankingRow, teamId: TeamId) =>
   `/competicion/jugadores/${row.player.sourceId ?? row.player.id}?equipo=${row.player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`;
 
-export function SeasonRankingCards({ rows, teamId, teamName }: { rows: RankingRow[]; teamId: TeamId; teamName: string }) {
+export function SeasonRankingCards({ rows, teamId, teamName, inForm = [] }: { rows: RankingRow[]; teamId: TeamId; teamName: string; inForm?: string[] }) {
   return <SquadCourt
     ranked={rows}
     keyOf={row => row.player.id}
@@ -23,6 +24,6 @@ export function SeasonRankingCards({ rows, teamId, teamName }: { rows: RankingRo
     benchLabel="Ordenados por puntos SNP"
     benchOrder={(a, b) => (b.player.points ?? -1) - (a.player.points ?? -1)}
     card={row => <FifaCard name={row.player.name} photoUrl={cardPhoto(row.player)} rating={String(row.points)} ratingLabel="PTS"
-      badge={sideShort(row.player.position)} tier={pointsTier(row.player.points)} href={playerHref(row, teamId)} stats={rankingStats(row)}/>}
+      badge={sideShort(row.player.position)} tier={isInForm(row.player, inForm) ? "if" : pointsTier(row.player.points)} href={playerHref(row, teamId)} stats={rankingStats(row)}/>}
   />;
 }
