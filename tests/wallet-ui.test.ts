@@ -40,10 +40,12 @@ test("preparar la alineación lleva a la jornada a quien puede publicarla", () =
   assert.equal(lineupHref("a", "55262", true), "/equipos/a/jornadas/55262#convocatoria");
   assert.equal(lineupHref("a", "55262", false), "/equipos/a/parejas");
 });
-test("disponibles de la jornada: lo guardado, más quien ya está en una pareja; sin nada guardado, toda la plantilla", () => {
+test("disponibles de la jornada: exactamente lo guardado; sin nada guardado, toda la plantilla", () => {
   const roster = ["a-1", "a-2", "a-3", "a-4"];
-  assert.deepEqual(initialAvailability(null, roster, null), roster);
-  assert.deepEqual(initialAvailability([], roster, null), []);
-  assert.deepEqual(initialAvailability(["a-3", "a-1", "a-99"], roster, null), ["a-1", "a-3"]);
-  assert.deepEqual(initialAvailability(["a-1"], roster, [{ id: "p0", players: ["a-4", null] }]), ["a-1", "a-4"]);
+  assert.deepEqual(initialAvailability(null, roster), roster);
+  assert.deepEqual(initialAvailability([], roster), []);
+  assert.deepEqual(initialAvailability(["a-3", "a-1", "a-99"], roster), ["a-1", "a-3"]);
+  // A player unticked after the lineup was published stays unticked and leaves a free slot.
+  const pairs = [{ id: "p0", players: ["a-1", "a-4"] as [string, string] }, ...[1, 2, 3, 4].map(i => ({ id: `p${i}`, players: [null, null] as [null, null] }))];
+  assert.deepEqual(usablePairs(pairs, initialAvailability(["a-1"], roster))![0], { id: "p0", players: ["a-1", null] });
 });

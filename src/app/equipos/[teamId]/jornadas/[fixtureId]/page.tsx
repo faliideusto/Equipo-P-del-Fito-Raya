@@ -37,10 +37,10 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   const walletKind=teams.includes(teamId)&&(available.apple||available.google)?notifyKindFor(fixtures,fixtureId):null;
   // The coach builds the lineup right here, starting from the one already published for this fixture.
   const [roster,published,available_]=walletKind==="lineup"?await Promise.all([clubRepository.getPlayers(teamId).catch(()=>[]),publishedPairs(teamId,fixtureId),savedAvailability(teamId,fixtureId)]):[[],null,null];
-  const rosterIds=roster.map(p=>p.id);const editable=published?usablePairs(published,rosterIds):null;
+  const availability=initialAvailability(available_,roster.map(p=>p.id));const editable=published?usablePairs(published,availability):null;
   // Away matches show where they are played, from the SNP acta.
   const venue=fixture.home?null:result?.data.venue??null;
-  const wallet=walletKind==="lineup"&&<WalletNotify teamId={teamId} fixtureId={fixtureId} match={{round:fixture.round,opponent:fixture.opponent,date:fixture.date,home:fixture.home,venue}} players={roster} publishedPairs={editable} availability={initialAvailability(available_,rosterIds,editable)}/>;
+  const wallet=walletKind==="lineup"&&<WalletNotify teamId={teamId} fixtureId={fixtureId} match={{round:fixture.round,opponent:fixture.opponent,date:fixture.date,home:fixture.home,venue}} players={roster} publishedPairs={editable} availability={availability}/>;
   if(result){
     const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data,teams.includes(teamId));
     return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} venue={venue} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}{wallet}</MatchdaySlide>;
