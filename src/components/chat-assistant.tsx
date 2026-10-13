@@ -3,19 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import { RotateCcw, SendHorizontal } from "lucide-react";
 import { useIsCoach } from "./app-shell";
 import { parseMarkdown, type Inline } from "@/lib/chat/markdown";
+import { historyStore } from "@/lib/chat/history-store";
 import type { ChatEvent, ChatHealth } from "@/lib/chat/types";
 
 type Message = { role: "user" | "assistant"; content: string; error?: string };
-const STORAGE = "fito-asistente";
 const TOOL_LABELS: Record<string, string> = { calendario: "el calendario", clasificacion: "la clasificación", ranking_temporada: "el ranking de la temporada", acta: "el acta", jugador: "la ficha del jugador", disponibilidad: "los disponibles", posiciones_y_parejas: "posiciones y alineaciones" };
 const SUGGESTIONS = {
   player: ["¿Cuándo jugamos el próximo partido del equipo A?", "¿En qué puesto va el equipo B en la clasificación?", "¿Quién lidera el ranking de la temporada del equipo A?"],
   coach: ["¿Quién está disponible para la próxima jornada del equipo A?", "Propón parejas para la próxima jornada del equipo B", "¿Cómo quedó el acta de la última jornada del equipo A?"],
 };
 
-function restored(): Message[] {
-  try { const saved = JSON.parse(sessionStorage.getItem(STORAGE) ?? "[]"); return Array.isArray(saved) ? saved : []; } catch { return []; }
-}
+const fetchHealth = () => fetch("/api/chat/estado", { cache: "no-store" }).then(r => r.json() as Promise<ChatHealth>)
+  .catch(() => ({ disponible: false, motivo: "No se pudo comprobar el asistente." }));
 
 function Rich({ text }: { text: string }) {
   const parts = (inl: Inline[]) => inl.map((p, i) => p.bold ? <strong key={i}>{p.text}</strong> : <span key={i}>{p.text}</span>);
@@ -30,18 +29,15 @@ export function ChatAssistant() {
   const [sending, setSending] = useState(false);
   const [tool, setTool] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const [store] = useState(() => historyStore<Message>(() => sessionStorage));
 
   // State is only set from the fetch callback: react-hooks/set-state-in-effect rejects synchronous setState in effects.
-  const load = (restore: boolean) => fetch("/api/chat/estado", { cache: "no-store" }).then(r => r.json()).then((h: ChatHealth) => {
-    setHealth(h);
-    if (restore) setMessages(restored());
-  }).catch(() => setHealth({ disponible: false, motivo: "No se pudo comprobar el asistente." }));
-  useEffect(() => { void load(true); }, []);
+  useEffect(() => { void fetchHealth().then(h => { setHealth(h); setMessages(store.load()); }); }, [store]);
   useEffect(() => {
-    try { sessionStorage.setItem(STORAGE, JSON.stringify(messages)); } catch { /* private mode */ }
+    store.save(messages);
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [messages]);
-  const check = () => { setHealth(null); void load(false); };
+  }, [messages, store]);
+  const check = () => { setHealth(null); void fetchHealth().then(setHealth); };
 
   const update = (fn: (last: Message) => Message) => setMessages(list => [...list.slice(0, -1), fn(list[list.length - 1])]);
 
