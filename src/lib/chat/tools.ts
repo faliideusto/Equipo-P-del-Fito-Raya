@@ -41,6 +41,12 @@ async function fixtureFor(args: Args, data: ChatData, required: boolean) {
   if (!fixture) throw new ToolInputError(wanted === null ? "no quedan jornadas pendientes" : `no existe la jornada ${wanted} para ese equipo`);
   return fixture;
 }
+// SNP dates come in UTC; the model must read Madrid time or it gets kick-off two hours early.
+const MADRID = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", dateStyle: "full", timeStyle: "short" });
+function when(date: string) {
+  if (!date) return "sin fecha";
+  return /(z|[+-]\d\d:?\d\d)$/i.test(date) && !Number.isNaN(Date.parse(date)) ? MADRID.format(new Date(date)) : date;
+}
 const names = (ids: (string | null)[], players: Player[]) => ids.map(id => players.find(p => p.id === id)?.name ?? "hueco libre").join(" / ");
 
 const TEAM = { type: "string", enum: ["a", "b"], description: "Equipo del club: a (2ª División) o b (10ª División)" };
@@ -52,7 +58,7 @@ const TOOLS: Tool[] = [
   tool("calendario", "Jornadas de un equipo: rival, fecha, en casa o fuera y resultado (club-rival).", { equipo: TEAM }, ["equipo"], false, async (args, data) =>
     (await data.fixtures(team(args))).map(f => {
       const ours = f.score ? (f.home ? f.score : [f.score[1], f.score[0]]) : null;
-      return { jornada: f.round, rival: f.opponent, fecha: f.date || "sin fecha", campo: f.home ? "en casa" : "fuera", estado: f.status === "played" ? "jugado" : "pendiente", resultado: ours ? `${ours[0]}-${ours[1]} (club-rival)` : null };
+      return { jornada: f.round, rival: f.opponent, fecha: when(f.date), campo: f.home ? "en casa" : "fuera", estado: f.status === "played" ? "jugado" : "pendiente", resultado: ours ? `${ours[0]}-${ours[1]} (club-rival)` : null };
     })),
   tool("clasificacion", "Clasificación oficial de la división de un equipo.", { equipo: TEAM }, ["equipo"], false, async (args, data) =>
     (await data.standings(team(args))).map((s, i) => ({ posicion: i + 1, equipo: s.name, jugados: s.played, ganados: s.won, perdidos: s.lost, puntos: s.points, es_nuestro: Boolean(s.own) }))),
@@ -60,7 +66,7 @@ const TOOLS: Tool[] = [
     (await data.ranking(team(args))).map((r, i) => ({ posicion: i + 1, jugador: r.player.name, jugados: r.played, ganados: r.won, perdidos: r.lost, puntos: r.points }))),
   tool("acta", "Acta de una jornada: parejas, rivales y sets.", { equipo: TEAM, jornada: ROUND }, ["equipo", "jornada"], false, async (args, data) => {
     const fixture = await fixtureFor(args, data, true);
-    if (fixture.status === "pending") return { jornada: fixture.round, rival: fixture.opponent, fecha: fixture.date || "sin fecha", estado: "pendiente" };
+    if (fixture.status === "pending") return { jornada: fixture.round, rival: fixture.opponent, fecha: when(fixture.date), estado: "pendiente" };
     const match = await data.match(fixture.id); const side = fixture.home ? 0 : 1;
     return { jornada: fixture.round, rival: fixture.opponent, parejas: match.games.map(g => ({
       pareja: g.index + 1,
@@ -91,7 +97,7 @@ const TOOLS: Tool[] = [
     const fixture = await fixtureFor(args, data, false);
     const [ids, roster] = await Promise.all([data.availability(team(args), fixture.id), data.players(team(args))]);
     if (ids === null) return { jornada: fixture.round, rival: fixture.opponent, guardada: false, nota: "Todavía no se ha guardado la lista de disponibles de esta jornada." };
-    return { jornada: fixture.round, rival: fixture.opponent, fecha: fixture.date || "sin fecha", disponibles: roster.filter(p => ids.includes(p.id)).map(p => p.name), no_disponibles: roster.filter(p => !ids.includes(p.id)).map(p => p.name) };
+    return { jornada: fixture.round, rival: fixture.opponent, fecha: when(fixture.date), disponibles: roster.filter(p => ids.includes(p.id)).map(p => p.name), no_disponibles: roster.filter(p => !ids.includes(p.id)).map(p => p.name) };
   }),
   tool("posiciones_y_parejas", "Posición (derecha/revés) y puntos de cada jugador, y alineaciones guardadas del equipo.", { equipo: TEAM }, ["equipo"], true, async (args, data) => {
     const [roster, saved] = await Promise.all([data.players(team(args)), data.lineups(team(args))]);

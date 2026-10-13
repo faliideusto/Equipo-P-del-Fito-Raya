@@ -82,3 +82,9 @@ test("sin una pregunta del usuario al final no se llama al modelo", async () => 
   assert.deepEqual(await ask(fakeLlm([[]], seen), [{ role: "assistant", content: "hola" }]), [{ tipo: "error", motivo: "Escribe una pregunta." }]);
   assert.equal(seen.length, 0);
 });
+
+test("el entrenador sabe que un encuentro tiene 5 parejas y cuánto vale cada una", () => {
+  const coach = systemPrompt("coach", "el entrenador", now);
+  assert.match(coach, /5 parejas/);
+  assert.match(coach, /parejas 1 y 2 valen 3 puntos/);
+});

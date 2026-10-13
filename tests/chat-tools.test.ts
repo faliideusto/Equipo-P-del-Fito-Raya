@@ -81,3 +81,11 @@ test("un fallo de datos o un resultado enorme no rompen la conversación", async
   assert.ok(big.length <= 6020);
   assert.ok(big.endsWith("…(recortado)"));
 });
+
+test("las fechas de SNP en UTC se dan en hora de Madrid", async () => {
+  const utc: ChatData = { ...data, fixtures: async () => [fixture(1, { date: "2026-10-17T08:00:00.000Z" })] };
+  const cal = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", utc));
+  assert.equal(cal[0].fecha, "sábado, 17 de octubre de 2026, 10:00");
+  const sin = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", { ...data, fixtures: async () => [fixture(1, { date: "" })] }));
+  assert.equal(sin[0].fecha, "sin fecha");
+});

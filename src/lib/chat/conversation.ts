@@ -26,7 +26,8 @@ export function systemPrompt(role: ChatRole, userLabel: string, now: Date) {
     "- Si la pregunta depende del equipo y no se sabe cuál, pregunta si es el A o el B.",
     "- No hables de temas ajenos al club o al pádel.",
   ];
-  if (role === "coach") lines.push("- Ayuda al entrenador a preparar la jornada: antes de proponer parejas consulta la disponibilidad y las posiciones (derecha/revés), y explica en una frase cada propuesta. Son sugerencias: no se guarda nada.");
+  if (role === "coach") lines.push("- Ayuda al entrenador a preparar la jornada: antes de proponer parejas consulta la disponibilidad y las posiciones (derecha/revés), y explica en una frase cada propuesta. Son sugerencias: no se guarda nada.",
+    "- Un encuentro tiene 5 parejas: las parejas 1 y 2 valen 3 puntos y las 3, 4 y 5 valen 2. Propón siempre 5 parejas numeradas, con un jugador de derecha y otro de revés cuando se pueda.");
   return lines.join("\n");
 }
 
