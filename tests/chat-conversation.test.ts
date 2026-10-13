@@ -14,7 +14,7 @@ function fakeLlm(rounds: (LlmChunk[] | Error)[], seen: Seen[] = []): LlmClient {
 }
 const collect = async (gen: AsyncGenerator<ChatEvent>) => { const out: ChatEvent[] = []; for await (const e of gen) out.push(e); return out; };
 const ask = (llm: LlmClient, history: unknown = [{ role: "user", content: "¿Cuándo jugamos?" }], role: "player" | "coach" = "player") =>
-  collect(runConversation({ history, role, userLabel: "Ana, jugadora del club", now, llm, data }));
+  collect(runConversation({ history, role, userLabel: "Ana, jugadora del club", now, llm, data, team: "a" }));
 const toolCall = (name: string, args: object) => ({ type: "tools" as const, calls: [{ function: { name, arguments: args as Record<string, unknown> } }] });
 
 test("trimHistory descarta roles inventados y mensajes vacíos, y recorta longitud y cantidad", () => {
@@ -73,7 +73,9 @@ test("tope de vueltas: la última se pide sin herramientas y nunca hay bucle inf
 test("si el PC falla, también a mitad de respuesta, se emite un error con el motivo", async () => {
   assert.deepEqual(await ask(fakeLlm([new ChatUnavailableError("El asistente está desconectado ahora mismo.")])), [{ tipo: "error", motivo: "El asistente está desconectado ahora mismo." }]);
   const midway: LlmClient = { async *stream() { yield { type: "text", delta: "Juga" }; throw new ChatUnavailableError("El asistente está desconectado ahora mismo."); } };
-  assert.deepEqual(await ask(midway), [{ tipo: "texto", delta: "Juga" }, { tipo: "error", motivo: "El asistente está desconectado ahora mismo." }]);
+  assert.deepEqual(await ask(midway), [{ tipo: "error", motivo: "El asistente está desconectado ahora mismo." }], "el texto sin herramientas se retiene, así que solo llega el error");
+  const afterTool = fakeLlm([[toolCall("calendario", { equipo: "a" })], new ChatUnavailableError("El asistente está desconectado ahora mismo.")]);
+  assert.deepEqual((await ask(afterTool)).at(-1), { tipo: "error", motivo: "El asistente está desconectado ahora mismo." });
   assert.deepEqual(await ask(fakeLlm([new Error("boom")])), [{ tipo: "error", motivo: "El asistente ha fallado. Inténtalo de nuevo." }]);
 });
 
@@ -112,4 +114,80 @@ test("con un equipo seleccionado no se pide consultar los dos equipos", () => {
   assert.doesNotMatch(a, /responde para los dos equipos/);
   assert.match(a, /no pases equipo/);
   assert.match(systemPrompt("player", "un jugador", now, null), /responde para los dos equipos/);
+});
+
+test("las reglas: consejos de pádel sí, datos siempre recién consultados y acta para quién jugó", () => {
+  const p = systemPrompt("player", "un jugador", now);
+  assert.match(p, /consejos generales de pádel/);
+  assert.match(p, /vuelve a consultar/);
+  assert.match(p, /usa acta/);
+});
+
+test("un jugador sabe que no ve disponibilidad ni convocatorias; el entrenador sí", () => {
+  assert.match(systemPrompt("player", "un jugador", now), /convocatorias/);
+  assert.doesNotMatch(systemPrompt("coach", "el entrenador", now), /No tienes acceso/);
+});
+
+test("en una pregunta de seguimiento se recuerda al modelo que consulte de nuevo", async () => {
+  const seen: Seen[] = [];
+  await ask(fakeLlm([[{ type: "text", delta: "ok" }]], seen), [{ role: "user", content: "¿Cuándo jugamos?" }, { role: "assistant", content: "El sábado." }, { role: "user", content: "¿Y la siguiente?" }]);
+  assert.match(seen[0].messages.at(-1)!.content, /^¿Y la siguiente\?\n\n\([^]*herramientas[^]*\)$/);
+  const first: Seen[] = [];
+  await ask(fakeLlm([[{ type: "text", delta: "ok" }]], first));
+  assert.equal(first[0].messages.at(-1)!.content, "¿Cuándo jugamos?");
+});
+
+test("una respuesta con datos del club sin consultar herramientas no se muestra: se reintenta", async () => {
+  const seen: Seen[] = [];
+  const events = await ask(fakeLlm([[{ type: "text", delta: "La jornada 4 es el 25 de octubre a las 12:00." }], [toolCall("calendario", { equipo: "a" })], [{ type: "text", delta: "Contra Rival 1." }]], seen));
+  assert.deepEqual(events, [{ tipo: "herramienta", nombre: "calendario" }, { tipo: "texto", delta: "Contra Rival 1." }, { tipo: "fin" }]);
+  assert.match(seen[1].messages.at(-1)!.content, /herramientas/);
+});
+
+test("si al reintentar sigue sin consultar, se avisa en vez de dar datos inventados", async () => {
+  const events = await ask(fakeLlm([[{ type: "text", delta: "Jornada 4: 25 de octubre a las 12:00." }]]));
+  assert.equal(events.filter(e => e.tipo === "texto").map(e => (e as { delta: string }).delta).join(""), "No he podido comprobar ese dato. Pregúntalo de nuevo indicando el equipo o la jornada.");
+  assert.equal(events.at(-1)!.tipo, "fin");
+});
+
+test("una respuesta vacía también se reintenta", async () => {
+  const seen: Seen[] = [];
+  const events = await ask(fakeLlm([[], [{ type: "text", delta: "Hola" }]], seen));
+  assert.equal(seen.length, 2);
+  assert.deepEqual(events, [{ tipo: "texto", delta: "Hola" }, { tipo: "fin" }]);
+  assert.deepEqual(await ask(fakeLlm([[]])), [{ tipo: "texto", delta: "No he podido completar la consulta. Prueba a preguntarlo de otra forma." }, { tipo: "fin" }]);
+});
+
+test("una respuesta sin datos del club (un consejo de pádel) sale a la primera", async () => {
+  const seen: Seen[] = [];
+  const events = await ask(fakeLlm([[{ type: "text", delta: "Golpea el globo " }, { type: "text", delta: "con la pala abierta." }]], seen));
+  assert.equal(seen.length, 1);
+  assert.deepEqual(events, [{ tipo: "texto", delta: "Golpea el globo " }, { tipo: "texto", delta: "con la pala abierta." }, { tipo: "fin" }]);
+});
+
+test("con Ambos y sin nombrar equipo, si el modelo consulta un solo equipo se añade la consulta del otro, por separado", async () => {
+  const seen: Seen[] = [];
+  const llm = fakeLlm([[toolCall("calendario", { equipo: "a" }), toolCall("clasificacion", { equipo: "a" })], [{ type: "text", delta: "ok" }]], seen);
+  const events = await collect(runConversation({ history: [{ role: "user", content: "¿A qué hora jugamos?" }], role: "player", userLabel: "x", now, llm, data, team: null }));
+  const second = seen[1].messages;
+  assert.deepEqual(second.find(m => m.role === "assistant")!.tool_calls!.map(c => `${c.function.name}:${c.function.arguments.equipo}`), ["calendario:a", "clasificacion:a", "calendario:b"]);
+  assert.equal(second.filter(m => m.role === "tool").length, 3);
+  assert.equal(events.filter(e => e.tipo === "herramienta").length, 3);
+  const both: Seen[] = [];
+  await collect(runConversation({ history: [{ role: "user", content: "¿A qué hora jugamos?" }], role: "player", userLabel: "x", now, llm: fakeLlm([[toolCall("calendario", { equipo: "a" }), toolCall("calendario", { equipo: "b" })], [{ type: "text", delta: "ok" }]], both), data, team: null }));
+  assert.equal(both[1].messages.filter(m => m.role === "tool").length, 2);
+});
+
+test("si el usuario nombra un equipo, o hay uno seleccionado, se respeta", async () => {
+  for (const [content, team] of [["¿Y el B cuándo juega?", null], ["¿Cuándo juega el equipo A?", null], ["¿Cuándo jugamos?", "a"]] as const) {
+    const seen: Seen[] = [];
+    await collect(runConversation({ history: [{ role: "user", content }], role: "player", userLabel: "x", now, llm: fakeLlm([[toolCall("calendario", { equipo: "a" })], [{ type: "text", delta: "ok" }]], seen), data, team }));
+    assert.equal(seen[1].messages.filter(m => m.role === "tool").length, 1, content);
+  }
+});
+
+test("sin equipo seleccionado no se pide consultar sin equipo (qwen3 devuelve una llamada vacía)", () => {
+  const p = systemPrompt("player", "un jugador", now, null);
+  assert.doesNotMatch(p, /consulta sin equipo/);
+  assert.match(p, /responde para los dos equipos/);
 });
