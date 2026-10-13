@@ -88,3 +88,13 @@ test("el entrenador sabe que un encuentro tiene 5 parejas y cuánto vale cada un
   assert.match(coach, /5 parejas/);
   assert.match(coach, /parejas 1 y 2 valen 3 puntos/);
 });
+
+test("las reglas piden responder a todo lo preguntado y a los dos equipos cuando vienen los dos", () => {
+  const prompt = systemPrompt("player", "un jugador", now);
+  assert.match(prompt, /Responde a todo lo que se pregunta/);
+  assert.match(prompt, /los dos equipos/);
+});
+
+test("las reglas piden usar resumen y texto tal cual", () => {
+  assert.match(systemPrompt("player", "un jugador", now), /resumen.*texto/);
+});

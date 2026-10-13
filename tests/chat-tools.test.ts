@@ -33,13 +33,13 @@ test("un jugador no recibe ni puede ejecutar las herramientas del entrenador", a
 test("argumentos inválidos devuelven un error legible al modelo", async () => {
   assert.match((await run("calendario", { equipo: "c" })).error, /equipo/);
   assert.match((await run("acta", { equipo: "a", jornada: "tres" })).error, /jornada/);
-  assert.match((await run("calendario", null)).error, /equipo/);
+  assert.ok((await run("calendario", null)).equipo_a, "sin argumentos devuelve los dos equipos");
   assert.match((await run("jugador", { nombre: "a" })).error, /nombre/);
 });
 
 test("calendario y clasificación salen desde el punto de vista del club", async () => {
-  const cal = await run("calendario", { equipo: "a" });
-  assert.deepEqual(cal[0], { jornada: 1, rival: "Rival 1", fecha: "2026-10-11T10:00", campo: "fuera", estado: "jugado", resultado: "4-1 (club-rival)" });
+  const cal = (await run("calendario", { equipo: "a" })).jornadas;
+  assert.deepEqual(cal[0], { jornada: 1, vuelta: 1, rival: "Rival 1", fecha: "2026-10-11T10:00", campo: "fuera", estado: "jugado", resultado: "4-1 (club-rival)" });
   assert.equal(cal[1].resultado, null);
   const tabla = await run("clasificacion", { equipo: "a" });
   assert.deepEqual(tabla[1], { posicion: 2, equipo: "Fito Raya", jugados: 2, ganados: 1, perdidos: 1, puntos: 4, es_nuestro: true });
@@ -84,9 +84,9 @@ test("un fallo de datos o un resultado enorme no rompen la conversación", async
 
 test("las fechas de SNP en UTC se dan en hora de Madrid", async () => {
   const utc: ChatData = { ...data, fixtures: async () => [fixture(1, { date: "2026-10-17T08:00:00.000Z" })] };
-  const cal = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", utc));
+  const cal = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", utc)).jornadas;
   assert.equal(cal[0].fecha, "sábado, 17 de octubre de 2026, 10:00");
-  const sin = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", { ...data, fixtures: async () => [fixture(1, { date: "" })] }));
+  const sin = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", { ...data, fixtures: async () => [fixture(1, { date: "" })] })).jornadas;
   assert.equal(sin[0].fecha, "sin fecha");
 });
 
@@ -96,7 +96,7 @@ test("ranking: porcentaje de victorias calculado y todos los empatados en el mej
   const r = JSON.parse(await runTool("ranking_temporada", { equipo: "a" }, "player", ranked));
   assert.equal(r.jugadores[1].porcentaje_victorias, 75);
   assert.equal(r.jugadores[4].porcentaje_victorias, null);
-  assert.deepEqual(r.mejor_porcentaje, { porcentaje: 100, empatados: ["Ana (2-0)", "Pablo (2-0)", "Marta (1-0)"] });
+  assert.deepEqual(r.mejor_porcentaje, { porcentaje: 100, empatados: ["Ana (2-0)", "Pablo (2-0)", "Marta (1-0)"], texto: "3 jugadores empatados al 100%: Ana (2-0), Pablo (2-0) y Marta (1-0)." });
 });
 
 test("ranking sin equipo: los dos equipos y el mejor porcentaje de todo el club", async () => {
@@ -105,7 +105,59 @@ test("ranking sin equipo: los dos equipos y el mejor porcentaje de todo el club"
   const r = JSON.parse(await runTool("ranking_temporada", {}, "player", both));
   assert.equal(r.equipo_a.jugadores.length, 2);
   assert.equal(r.equipo_b.jugadores.length, 2);
-  assert.deepEqual(r.mejor_porcentaje_club, { porcentaje: 100, empatados: ["Ana (A, 2-0)", "Ana (B, 2-0)", "Pablo (B, 1-0)"] });
+  assert.deepEqual(r.mejor_porcentaje_club, { porcentaje: 100, empatados: ["Ana (A, 2-0)", "Ana (B, 2-0)", "Pablo (B, 1-0)"], texto: "3 jugadores empatados al 100%: Ana (A, 2-0), Ana (B, 2-0) y Pablo (B, 1-0)." });
   assert.match((await run("ranking_temporada", { equipo: "c" })).error, /equipo/);
   assert.deepEqual((toolsFor("player").find(t => t.function.name === "ranking_temporada")!.function.parameters as { required: string[] }).required, []);
+});
+
+test("calendario: cada jornada dice de qué vuelta es, también con jornadas de descanso", async () => {
+  const liga: ChatData = { ...data, fixtures: async () => [2, 3, 4, 5, 7, 8, 9, 10].map(r => fixture(r)) };
+  const cal = JSON.parse(await runTool("calendario", { equipo: "b" }, "player", liga)).jornadas;
+  assert.deepEqual(cal.map((f: { jornada: number; vuelta: number }) => [f.jornada, f.vuelta]), [[2, 1], [3, 1], [4, 1], [5, 1], [7, 2], [8, 2], [9, 2], [10, 2]]);
+});
+
+test("acta da el lugar: en casa, o la sede de SNP fuera aunque no se haya jugado", async () => {
+  const venues: ChatData = { ...data, fixtures: async () => [fixture(1, { home: true }), fixture(2, { home: false }), fixture(3, { home: false })], match: async id => ({ id, title: "", dateLabel: "", teams: ["X", "Y"], score: null, games: [], venue: id === "5002" ? "PADEL CLUB TRES CAMINOS" : null }) };
+  const run2 = async (j: number) => JSON.parse(await runTool("acta", { equipo: "a", jornada: j }, "player", venues));
+  assert.equal((await run2(1)).lugar, "en casa");
+  assert.deepEqual(await run2(2), { jornada: 2, rival: "Rival 2", fecha: "2026-10-12T10:00", estado: "pendiente", lugar: "PADEL CLUB TRES CAMINOS" });
+  assert.equal((await run2(3)).lugar, "fuera, sede sin publicar en SNP");
+  const down: ChatData = { ...venues, match: async () => { throw new Error("SNP caído"); } };
+  assert.equal(JSON.parse(await runTool("acta", { equipo: "a", jornada: 2 }, "player", down)).lugar, "fuera, sede sin publicar en SNP");
+});
+
+test("calendario: jornadas destacadas ya resueltas, con lugar, y los dos equipos si no se dice cuál", async () => {
+  const liga: ChatData = {
+    ...data,
+    fixtures: async t => t === "a"
+      ? [fixture(1, { status: "played", score: [3, 2] }), fixture(2, { home: false }), fixture(3), fixture(4, { home: false })]
+      : [fixture(2, { teamId: "b" }), fixture(4, { teamId: "b", home: false })],
+    match: async id => ({ id, title: "", dateLabel: "", teams: ["X", "Y"], score: null, games: [], venue: id === "5002" ? "PADEL CLUB TRES CAMINOS" : null }),
+  };
+  const a = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", liga));
+  assert.deepEqual(a.destacadas.ultima_de_primera_vuelta, { jornada: 2, estado: "pendiente", rival: "Rival 2", dia: "2026-10-12T10:00", hora: null, campo: "fuera", lugar: "PADEL CLUB TRES CAMINOS", resumen: "Equipo A · Jornada 2 (pendiente): 2026-10-12T10:00, fuera contra Rival 2, en PADEL CLUB TRES CAMINOS." });
+  assert.equal(a.destacadas.ultima_jugada.estado, "jugado");
+  assert.equal(a.destacadas.primera_de_segunda_vuelta.jornada, 3);
+  assert.equal(a.destacadas.primera_de_segunda_vuelta.lugar, "en casa");
+  assert.equal(a.destacadas.proxima.jornada, 2);
+  assert.equal(a.destacadas.ultima_jugada.jornada, 1);
+  const both = JSON.parse(await runTool("calendario", {}, "player", liga));
+  assert.equal(both.equipo_a.destacadas.ultima_de_primera_vuelta.jornada, 2);
+  assert.equal(both.equipo_b.destacadas.ultima_de_primera_vuelta.jornada, 2);
+  assert.equal(both.equipo_b.destacadas.ultima_jugada, null);
+  assert.match(both.equipo_b.destacadas.ultima_de_primera_vuelta.resumen, /^Equipo B · Jornada 2/);
+  assert.deepEqual((toolsFor("player").find(t => t.function.name === "calendario")!.function.parameters as { required: string[] }).required, []);
+});
+
+test("destacadas: día y hora por separado en hora de Madrid", async () => {
+  const utc: ChatData = { ...data, fixtures: async () => [fixture(5, { date: "2026-11-08T16:00:00.000Z", home: true })] };
+  const d = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", utc)).destacadas.proxima;
+  assert.equal(d.dia, "domingo, 8 de noviembre de 2026");
+  assert.equal(d.hora, "17:00");
+  assert.equal(d.resumen, "Equipo A · Jornada 5 (pendiente): domingo, 8 de noviembre de 2026 a las 17:00, en casa contra Rival 5.");
+});
+
+test("un único mejor porcentaje no habla de empate", async () => {
+  const one: ChatData = { ...data, ranking: async () => [{ player: player("x", "Ana", "a"), played: 3, won: 3, lost: 0, points: 9 }, { player: player("y", "Luis", "a"), played: 2, won: 1, lost: 1, points: 3 }] };
+  assert.equal(JSON.parse(await runTool("ranking_temporada", { equipo: "a" }, "player", one)).mejor_porcentaje.texto, "Ana (3-0) tiene el mejor porcentaje: 100%.");
 });
