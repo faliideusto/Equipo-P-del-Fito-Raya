@@ -43,7 +43,7 @@ test("calendario y clasificación salen desde el punto de vista del club", async
   assert.equal(cal[1].resultado, null);
   const tabla = await run("clasificacion", { equipo: "a" });
   assert.deepEqual(tabla[1], { posicion: 2, equipo: "Fito Raya", jugados: 2, ganados: 1, perdidos: 1, puntos: 4, es_nuestro: true });
-  assert.deepEqual(await run("ranking_temporada", { equipo: "a" }), [{ posicion: 1, jugador: "Ana Pérez", jugados: 2, ganados: 2, perdidos: 0, puntos: 8 }]);
+  assert.deepEqual((await run("ranking_temporada", { equipo: "a" })).jugadores, [{ posicion: 1, jugador: "Ana Pérez", jugados: 2, ganados: 2, perdidos: 0, puntos: 8, porcentaje_victorias: 100 }]);
 });
 
 test("acta: parejas con nuestro lado primero; jornada pendiente o inexistente", async () => {
@@ -88,4 +88,24 @@ test("las fechas de SNP en UTC se dan en hora de Madrid", async () => {
   assert.equal(cal[0].fecha, "sábado, 17 de octubre de 2026, 10:00");
   const sin = JSON.parse(await runTool("calendario", { equipo: "a" }, "player", { ...data, fixtures: async () => [fixture(1, { date: "" })] }));
   assert.equal(sin[0].fecha, "sin fecha");
+});
+
+test("ranking: porcentaje de victorias calculado y todos los empatados en el mejor porcentaje", async () => {
+  const row = (name: string, won: number, lost: number, points: number) => ({ player: player(name, name, "a"), played: won + lost, won, lost, points });
+  const ranked: ChatData = { ...data, ranking: async () => [row("Ana", 2, 0, 9), row("Luis", 3, 1, 8), row("Marta", 1, 0, 3), row("Pablo", 2, 0, 6), row("Sin jugar", 0, 0, 0)] };
+  const r = JSON.parse(await runTool("ranking_temporada", { equipo: "a" }, "player", ranked));
+  assert.equal(r.jugadores[1].porcentaje_victorias, 75);
+  assert.equal(r.jugadores[4].porcentaje_victorias, null);
+  assert.deepEqual(r.mejor_porcentaje, { porcentaje: 100, empatados: ["Ana (2-0)", "Pablo (2-0)", "Marta (1-0)"] });
+});
+
+test("ranking sin equipo: los dos equipos y el mejor porcentaje de todo el club", async () => {
+  const row = (name: string, team: "a" | "b", won: number, lost: number) => ({ player: player(name, name, team), played: won + lost, won, lost, points: won });
+  const both: ChatData = { ...data, ranking: async t => t === "a" ? [row("Ana", "a", 2, 0), row("Luis", "a", 1, 1)] : [row("Pablo", "b", 1, 0), row("Ana", "b", 2, 0)] };
+  const r = JSON.parse(await runTool("ranking_temporada", {}, "player", both));
+  assert.equal(r.equipo_a.jugadores.length, 2);
+  assert.equal(r.equipo_b.jugadores.length, 2);
+  assert.deepEqual(r.mejor_porcentaje_club, { porcentaje: 100, empatados: ["Ana (A, 2-0)", "Ana (B, 2-0)", "Pablo (B, 1-0)"] });
+  assert.match((await run("ranking_temporada", { equipo: "c" })).error, /equipo/);
+  assert.deepEqual((toolsFor("player").find(t => t.function.name === "ranking_temporada")!.function.parameters as { required: string[] }).required, []);
 });

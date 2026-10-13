@@ -49,6 +49,15 @@ function when(date: string) {
 }
 const names = (ids: (string | null)[], players: Player[]) => ids.map(id => players.find(p => p.id === id)?.name ?? "hueco libre").join(" / ");
 
+// The model compares percentages badly and drops ties, so both come computed.
+type Ranked = { posicion: number; jugador: string; jugados: number; ganados: number; perdidos: number; puntos: number; porcentaje_victorias: number | null; equipo?: string };
+const rankRows = (rows: RankingRow[]): Ranked[] => rows.map((r, i) => ({ posicion: i + 1, jugador: r.player.name, jugados: r.played, ganados: r.won, perdidos: r.lost, puntos: r.points, porcentaje_victorias: r.won + r.lost ? Math.round(100 * r.won / (r.won + r.lost)) : null }));
+function bestOf(rows: Ranked[]) {
+  const best = Math.max(-1, ...rows.map(r => r.porcentaje_victorias ?? -1));
+  if (best < 0) return null;
+  const tied = rows.filter(r => r.porcentaje_victorias === best).sort((x, y) => y.ganados + y.perdidos - (x.ganados + x.perdidos));
+  return { porcentaje: best, empatados: tied.map(r => `${r.jugador} (${r.equipo ? `${r.equipo}, ` : ""}${r.ganados}-${r.perdidos})`) };
+}
 const TEAM = { type: "string", enum: ["a", "b"], description: "Equipo del club: a (2ª División) o b (10ª División)" };
 const ROUND = { type: "integer", description: "Número de jornada" };
 const tool = (name: string, description: string, properties: Args, required: string[], coach: boolean, run: Tool["run"]): Tool =>
@@ -62,8 +71,15 @@ const TOOLS: Tool[] = [
     })),
   tool("clasificacion", "Clasificación oficial de la división de un equipo.", { equipo: TEAM }, ["equipo"], false, async (args, data) =>
     (await data.standings(team(args))).map((s, i) => ({ posicion: i + 1, equipo: s.name, jugados: s.played, ganados: s.won, perdidos: s.lost, puntos: s.points, es_nuestro: Boolean(s.own) }))),
-  tool("ranking_temporada", "Ranking interno de jugadores del equipo esta temporada (partidos y puntos aportados).", { equipo: TEAM }, ["equipo"], false, async (args, data) =>
-    (await data.ranking(team(args))).map((r, i) => ({ posicion: i + 1, jugador: r.player.name, jugados: r.played, ganados: r.won, perdidos: r.lost, puntos: r.points }))),
+  tool("ranking_temporada", "Ranking interno de jugadores esta temporada con el club: partidos, puntos aportados y porcentaje de victorias (winrate), con los empatados en el mejor porcentaje. Sin equipo devuelve los dos equipos y el mejor porcentaje de todo el club.", { equipo: TEAM }, [], false, async (args, data) => {
+    if (args.equipo === undefined || args.equipo === null) {
+      const [a, b] = await Promise.all([data.ranking("a"), data.ranking("b")]);
+      const ra = rankRows(a); const rb = rankRows(b);
+      return { equipo_a: { jugadores: ra }, equipo_b: { jugadores: rb }, mejor_porcentaje_club: bestOf([...ra.map(r => ({ ...r, equipo: "A" })), ...rb.map(r => ({ ...r, equipo: "B" }))]) };
+    }
+    const rows = rankRows(await data.ranking(team(args)));
+    return { jugadores: rows, mejor_porcentaje: bestOf(rows) };
+  }),
   tool("acta", "Acta de una jornada: parejas, rivales y sets.", { equipo: TEAM, jornada: ROUND }, ["equipo", "jornada"], false, async (args, data) => {
     const fixture = await fixtureFor(args, data, true);
     if (fixture.status === "pending") return { jornada: fixture.round, rival: fixture.opponent, fecha: when(fixture.date), estado: "pendiente" };

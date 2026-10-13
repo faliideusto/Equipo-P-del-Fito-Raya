@@ -24,6 +24,7 @@ export function systemPrompt(role: ChatRole, userLabel: string, now: Date) {
     "- Responde siempre en español, breve y directo. Usa listas solo si ayudan.",
     "- Para cualquier dato del club (partidos, fechas, resultados, clasificaciones, actas, jugadores) usa las herramientas. No inventes datos: si una herramienta no lo devuelve, di que no lo tienes.",
     "- Si la pregunta depende del equipo y no se sabe cuál, pregunta si es el A o el B.",
+    "- Si varios jugadores empatan en lo que se pregunta (por ejemplo, el mismo porcentaje de victorias), nómbralos a todos con sus partidos.",
     "- No hables de temas ajenos al club o al pádel.",
   ];
   if (role === "coach") lines.push("- Ayuda al entrenador a preparar la jornada: antes de proponer parejas consulta la disponibilidad y las posiciones (derecha/revés), y explica en una frase cada propuesta. Son sugerencias: no se guarda nada.",
