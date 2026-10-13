@@ -27,12 +27,12 @@ function* chunksOf(line: string): Generator<LlmChunk> {
 }
 
 export async function* parseNdjson(body: ReadableStream<Uint8Array>): AsyncGenerator<LlmChunk> {
-  const reader = body.pipeThrough(new TextDecoderStream()).getReader();
+  const reader = body.getReader(); const decoder = new TextDecoder();
   let buffer = "";
   for (;;) {
     const { value, done } = await reader.read();
     if (done) break;
-    buffer += value;
+    buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
     for (const line of lines) yield* chunksOf(line);
   }
