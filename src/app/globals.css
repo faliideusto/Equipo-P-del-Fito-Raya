@@ -4133,7 +4133,13 @@ dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480p
 .chat-suggestions p { margin: 0 0 4px; }
 .chat-offline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 20px; padding: 12px 14px; border: 1px solid var(--warn-line); border-radius: 10px; background: var(--warn-soft); }
 .chat-offline p { margin: 0; }
-.chat-form { position: sticky; bottom: 12px; display: flex; gap: 8px; align-items: center; padding: 12px 20px 16px; background: var(--panel); border-top: 1px solid var(--line); }
+.chat-composer { position: sticky; bottom: 12px; background: var(--panel); border-top: 1px solid var(--line); }
+.chat-teams { display: flex; gap: 6px; padding: 12px 20px 0; flex-wrap: wrap; }
+.chat-teams button { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
+.chat-teams button.active { background: var(--accent-soft); border-color: var(--accent-line); color: var(--ink); font-weight: 700; }
+.chat-teams button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chat-teams button:disabled { cursor: default; opacity: 0.6; }
+.chat-form { display: flex; gap: 8px; align-items: center; padding: 10px 20px 16px; }
 .chat-form input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--bg-deep); color: var(--ink); font: inherit; }
 .chat-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .chat-reset { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
@@ -4141,6 +4147,8 @@ dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480p
 @media (max-width: 900px) {
   .chat-log { padding: 14px; }
   .chat-msg { max-width: 92%; }
-  .chat-form { bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom, 0px) + 8px); padding: 10px 14px 12px; }
+  .chat-composer { bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom, 0px) + 8px); }
+  .chat-form { padding: 8px 14px 12px; }
   .chat-offline { margin: 0 14px; }
+  .chat-teams { padding: 10px 14px 0; }
 }

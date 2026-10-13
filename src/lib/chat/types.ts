@@ -7,4 +7,4 @@ export type LlmChunk = { type: "text"; delta: string } | { type: "tools"; calls:
 export interface LlmClient { stream(messages: LlmMessage[], tools: LlmTool[]): AsyncGenerator<LlmChunk> }
 export type HistoryMessage = { role: "user" | "assistant"; content: string };
 export type ChatEvent = { tipo: "herramienta"; nombre: string } | { tipo: "texto"; delta: string } | { tipo: "fin" } | { tipo: "error"; motivo: string };
-export type ChatHealth = { disponible: boolean; motivo?: string };
+export type ChatHealth = { disponible: boolean; motivo?: string; equipo?: "a" | "b" | null };

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { historyStore } from "../src/lib/chat/history-store";
+import { historyStore, teamChoice } from "../src/lib/chat/history-store";
 
 const memory = (initial: Record<string, string> = {}) => {
   const data = { ...initial };
@@ -20,4 +20,16 @@ test("sin almacenamiento o con datos rotos se empieza vacío", () => {
   assert.deepEqual(historyStore(() => { throw new Error("private mode"); }).load(), []);
   assert.deepEqual(historyStore(() => memory({ "fito-asistente": "{roto" })).load(), []);
   assert.deepEqual(historyStore(() => memory({ "fito-asistente": "{}" })).load(), []);
+});
+
+test("el equipo elegido se recuerda en la pestaña; sin elección, manda el valor por defecto", () => {
+  const storage = memory();
+  const choice = teamChoice(() => storage);
+  assert.equal(choice.load("b"), "b");
+  choice.save(null);
+  assert.equal(choice.load("b"), null, "Ambos guardado gana al defecto");
+  choice.save("a");
+  assert.equal(choice.load(null), "a");
+  assert.equal(teamChoice(() => memory({ "fito-asistente-equipo": "zzz" })).load("a"), "a");
+  assert.equal(teamChoice(() => { throw new Error("private mode"); }).load("b"), "b");
 });

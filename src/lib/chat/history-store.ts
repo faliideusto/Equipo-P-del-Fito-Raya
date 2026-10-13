@@ -15,3 +15,15 @@ export function historyStore<T>(storage: () => Storage) {
     },
   };
 }
+// The team selector: what the viewer picked in this tab, or the default for them ("ambos" = null).
+const TEAM_KEY = "fito-asistente-equipo";
+export function teamChoice(storage: () => Storage) {
+  return {
+    load(fallback: "a" | "b" | null): "a" | "b" | null {
+      try { const saved = storage().getItem(TEAM_KEY); return saved === "a" || saved === "b" ? saved : saved === "ambos" ? null : fallback; } catch { return fallback; }
+    },
+    save(team: "a" | "b" | null) {
+      try { storage().setItem(TEAM_KEY, team ?? "ambos"); } catch { /* private mode: the default is used next time */ }
+    },
+  };
+}

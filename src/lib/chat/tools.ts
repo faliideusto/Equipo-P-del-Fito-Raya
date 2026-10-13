@@ -171,11 +171,13 @@ const TOOLS: Tool[] = [
 
 export function toolsFor(role: ChatRole) { return TOOLS.filter(t => role === "coach" || !t.coach).map(t => t.def); }
 
-export async function runTool(name: string, args: unknown, role: ChatRole, data: ChatData): Promise<string> {
+// team is the chat's team selector: it fills in a team the model left out, never one it named.
+export async function runTool(name: string, args: unknown, role: ChatRole, data: ChatData, team: TeamId | null = null): Promise<string> {
   const found = TOOLS.find(t => t.def.function.name === name);
   if (!found || (found.coach && role !== "coach")) return JSON.stringify({ error: `Herramienta no disponible: ${name}` });
   try {
-    const text = JSON.stringify(await found.run(args && typeof args === "object" ? args as Args : {}, data));
+    const given = args && typeof args === "object" ? args as Args : {};
+    const text = JSON.stringify(await found.run(team && (given.equipo === undefined || given.equipo === null) ? { ...given, equipo: team } : given, data));
     return text.length > MAX_RESULT ? `${text.slice(0, MAX_RESULT)}…(recortado)` : text;
   } catch (error) {
     return JSON.stringify({ error: error instanceof ToolInputError ? error.message : "No se pudieron consultar los datos ahora mismo." });

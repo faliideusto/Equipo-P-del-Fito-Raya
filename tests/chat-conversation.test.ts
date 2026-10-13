@@ -98,3 +98,18 @@ test("las reglas piden responder a todo lo preguntado y a los dos equipos cuando
 test("las reglas piden usar resumen y texto tal cual", () => {
   assert.match(systemPrompt("player", "un jugador", now), /resumen.*texto/);
 });
+
+test("el equipo del selector llega al prompt y a las herramientas", async () => {
+  assert.match(systemPrompt("player", "un jugador", now, "b"), /equipo B/);
+  assert.doesNotMatch(systemPrompt("player", "un jugador", now, null), /seleccionado/);
+  const seen: Seen[] = [];
+  await collect(runConversation({ history: [{ role: "user", content: "¿Cuándo jugamos?" }], role: "player", userLabel: "x", now, llm: fakeLlm([[toolCall("calendario", {})], [{ type: "text", delta: "ok" }]], seen), data, team: "a" }));
+  assert.ok(JSON.parse(seen[1].messages.at(-1)!.content).destacadas, "la herramienta recibió el equipo A");
+});
+
+test("con un equipo seleccionado no se pide consultar los dos equipos", () => {
+  const a = systemPrompt("player", "un jugador", now, "a");
+  assert.doesNotMatch(a, /responde para los dos equipos/);
+  assert.match(a, /no pases equipo/);
+  assert.match(systemPrompt("player", "un jugador", now, null), /responde para los dos equipos/);
+});

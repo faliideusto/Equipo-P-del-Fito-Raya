@@ -19,3 +19,8 @@ test("límite de mensajes por usuario y hora", () => {
   assert.equal(allowChat("u2", t), true);
   assert.equal(allowChat("u1", t + 3_600_001), true);
 });
+
+test("la API del chat rechaza un equipo que no es A, B ni ambos", async () => {
+  const bad = await POST(request("http://localhost", JSON.stringify({ messages: [{ role: "user", content: "hola" }], equipo: "c" })));
+  assert.equal(bad.status, 400);
+});

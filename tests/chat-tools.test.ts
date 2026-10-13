@@ -161,3 +161,13 @@ test("un único mejor porcentaje no habla de empate", async () => {
   const one: ChatData = { ...data, ranking: async () => [{ player: player("x", "Ana", "a"), played: 3, won: 3, lost: 0, points: 9 }, { player: player("y", "Luis", "a"), played: 2, won: 1, lost: 1, points: 3 }] };
   assert.equal(JSON.parse(await runTool("ranking_temporada", { equipo: "a" }, "player", one)).mejor_porcentaje.texto, "Ana (3-0) tiene el mejor porcentaje: 100%.");
 });
+
+test("el equipo del selector rellena el que el modelo no indica, pero no pisa el que sí indica", async () => {
+  const withTeam = async (args: object, team: "a" | "b" | null) => JSON.parse(await runTool("calendario", args, "player", data, team));
+  assert.ok((await withTeam({}, "a")).destacadas, "con selector A devuelve solo el A");
+  assert.equal((await withTeam({}, "a")).equipo_a, undefined);
+  assert.ok((await withTeam({}, null)).equipo_a, "con Ambos devuelve los dos");
+  assert.match(JSON.parse(await runTool("acta", { jornada: 1 }, "player", data, "a")).parejas[0].nuestros, /Ana Pérez/);
+  const explicit = JSON.parse(await runTool("ranking_temporada", { equipo: "b" }, "player", { ...data, ranking: async t => t === "b" ? [{ player: player("9", "Solo B", "b"), played: 1, won: 1, lost: 0, points: 2 }] : [] }, "a"));
+  assert.equal(explicit.jugadores[0].jugador, "Solo B");
+});

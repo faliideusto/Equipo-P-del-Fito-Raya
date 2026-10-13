@@ -1,6 +1,7 @@
 import { ChatUnavailableError } from "./llm-client";
 import { runTool, toolsFor, type ChatData } from "./tools";
 import type { ChatEvent, ChatRole, HistoryMessage, LlmClient, LlmMessage, LlmToolCall } from "./types";
+import type { TeamId } from "@/domain/types";
 
 export const MAX_ROUNDS = 4;
 const MAX_HISTORY = 10;
@@ -15,7 +16,7 @@ export function trimHistory(history: unknown): HistoryMessage[] {
     .map(m => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
 }
 
-export function systemPrompt(role: ChatRole, userLabel: string, now: Date) {
+export function systemPrompt(role: ChatRole, userLabel: string, now: Date, team: TeamId | null = null) {
   const today = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", dateStyle: "full", timeStyle: "short" }).format(now);
   const lines = [
     "Eres el asistente de la Escuela Fito Raya, un club de pádel con dos equipos en las Series Nacionales de Pádel (SNP): el equipo A juega en 2ª División Future y el equipo B en 10ª División Future.",
@@ -23,7 +24,9 @@ export function systemPrompt(role: ChatRole, userLabel: string, now: Date) {
     "Reglas:",
     "- Responde siempre en español, breve y directo. Usa listas solo si ayudan.",
     "- Para cualquier dato del club (partidos, fechas, resultados, clasificaciones, actas, jugadores) usa las herramientas. No inventes datos: si una herramienta no lo devuelve, di que no lo tienes.",
-    "- Si no se indica el equipo: con calendario o ranking_temporada consulta sin equipo y responde para los dos equipos; con el resto de herramientas, pregunta si es el A o el B.",
+    team
+      ? `- En el chat está seleccionado el equipo ${team.toUpperCase()}: si el usuario no nombra otro equipo, no pases equipo a las herramientas (se usa el ${team.toUpperCase()}) y responde solo para ese equipo. Si nombra el otro, pásalo.`
+      : "- Si no se indica el equipo: con calendario o ranking_temporada consulta sin equipo y responde para los dos equipos; con el resto de herramientas, pregunta si es el A o el B.",
     "- Cuando una herramienta da un campo resumen o texto, úsalo tal cual en la respuesta, uno por equipo si vienen los dos, sin mezclar datos de un equipo con los del otro.",
     "- Responde a todo lo que se pregunta (por ejemplo día, hora, rival y lugar) y usa el tiempo verbal según la jornada esté jugada o pendiente.",
     "- Si varios jugadores empatan en lo que se pregunta (por ejemplo, el mismo porcentaje de victorias), nómbralos a todos con sus partidos.",
@@ -34,11 +37,11 @@ export function systemPrompt(role: ChatRole, userLabel: string, now: Date) {
   return lines.join("\n");
 }
 
-export async function* runConversation(input: { history: unknown; role: ChatRole; userLabel: string; now: Date; llm: LlmClient; data: ChatData }): AsyncGenerator<ChatEvent> {
-  const { role, llm, data } = input;
+export async function* runConversation(input: { history: unknown; role: ChatRole; userLabel: string; now: Date; llm: LlmClient; data: ChatData; team?: TeamId | null }): AsyncGenerator<ChatEvent> {
+  const { role, llm, data } = input; const team = input.team ?? null;
   const history = trimHistory(input.history);
   if (history.at(-1)?.role !== "user") { yield { tipo: "error", motivo: "Escribe una pregunta." }; return; }
-  const messages: LlmMessage[] = [{ role: "system", content: systemPrompt(role, input.userLabel, input.now) }, ...history];
+  const messages: LlmMessage[] = [{ role: "system", content: systemPrompt(role, input.userLabel, input.now, team) }, ...history];
   try {
     for (let round = 1; round <= MAX_ROUNDS; round++) {
       let text = ""; const calls: LlmToolCall[] = [];
@@ -50,7 +53,7 @@ export async function* runConversation(input: { history: unknown; role: ChatRole
       messages.push({ role: "assistant", content: text, tool_calls: calls });
       for (const call of calls) {
         yield { tipo: "herramienta", nombre: call.function.name };
-        messages.push({ role: "tool", tool_name: call.function.name, content: await runTool(call.function.name, call.function.arguments, role, data) });
+        messages.push({ role: "tool", tool_name: call.function.name, content: await runTool(call.function.name, call.function.arguments, role, data, team) });
       }
     }
     yield { tipo: "texto", delta: "No he podido completar la consulta. Prueba a preguntarlo de otra forma." };
