@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { PKPass } from "passkit-generator";
 import { applePassJson } from "../src/lib/wallet-apple";
 import type { WalletCardData } from "../src/domain/wallet-card";
 
@@ -46,12 +47,18 @@ test("sin próximo partido y sin acta", () => {
 test("con hora, la pantalla de bloqueo marca la hora del partido; sin hora, el día entero; sin partido, nada", () => {
   const json = applePassJson(card, meta);
   assert.equal(json.relevantDate, "2026-10-18T08:00:00.000Z");
-  assert.deepEqual(json.relevantDates, [{ date: "2026-10-18T08:00:00.000Z" }]);
+  assert.deepEqual(json.relevantDates, [{ date: "2026-10-18T08:00:00.000Z", relevantDate: "2026-10-18T08:00:00.000Z" }]);
   const allDay = applePassJson({ ...card, next: { ...card.next!, time: null }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-17T22:00:00.000Z" } }, meta);
   assert.deepEqual(allDay.relevantDates, [{ startDate: "2026-10-17T22:00:00.000Z", endDate: "2026-10-18T22:00:00.000Z" }]);
   const none = applePassJson({ ...card, next: null, matchDay: null }, meta);
   assert.equal(none.relevantDate, undefined);
   assert.equal(none.relevantDates, undefined);
+});
+// passkit-generator drops a pass.json it finds invalid, and then the pass cannot be signed.
+test("passkit-generator acepta las fechas de la pantalla de bloqueo, con y sin hora", () => {
+  const props = (data: WalletCardData) => new PKPass({ "pass.json": Buffer.from(JSON.stringify(applePassJson(data, meta))) }, { wwdr: "x", signerCert: "x", signerKey: "x" }).props;
+  assert.deepEqual(props(card).relevantDates, [{ date: "2026-10-18T08:00:00.000Z", relevantDate: "2026-10-18T08:00:00.000Z" }]);
+  assert.deepEqual(props({ ...card, next: { ...card.next!, time: null } }).relevantDates, [{ startDate: "2026-10-17T22:00:00.000Z", endDate: "2026-10-18T22:00:00.000Z" }]);
 });
 test("fuera de casa con lugar: Lugar y Cómo llegar en el reverso", () => {
   const away = { ...card, next: { ...card.next!, venue: "Visitante", place: "PADEL CUBIERTO ARCOS SL" } };
