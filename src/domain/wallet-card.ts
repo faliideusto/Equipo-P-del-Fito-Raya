@@ -7,17 +7,22 @@ export type CardFixture = { id: string; round: number; opponent: string; date: s
 export type CardResult = { fixtureId: string; round: number; opponent: string; ours: number; theirs: number };
 export type TeamCardContext = { teamId: TeamId; players: CardPlayer[]; next: CardFixture | null; published: { fixtureId: string; pairs: Pair[] } | null; last: CardResult | null };
 // The next fixture split into short pieces: long sentences get cut on the front of a pass.
-export type CardNext = { round: string; opponent: string; day: string; time: string | null; venue: string; place: string | null };
+// arrival: when the team has to be at the club, ARRIVAL_MINUTES before the start.
+export type CardNext = { round: string; opponent: string; day: string; time: string | null; arrival: string | null; venue: string; place: string | null };
 // The whole match day in Madrid (ISO, UTC) and the start time, or the day's start when SNP gives no time.
 export type MatchDay = { start: string; end: string; at: string };
 export type WalletCardData = { teamId: TeamId; playerSourceId: string; teamLabel: string; playerName: string; playerLine: string; next: CardNext | null; matchDay: MatchDay | null; nextMatch: string; lineup: string; lineupShort: string; lastResult: string; snpPoints: string; teamPath: string; actaPath: string | null };
 export type NotifyKind = "lineup" | "result";
+export const ARRIVAL_MINUTES = 30;
+export const arrivalAt = (start: string) => new Date(Date.parse(start) - ARRIVAL_MINUTES * 60000).toISOString();
+export const arrivalLine = (arrival: string) => `${arrival} · ${ARRIVAL_MINUTES} min antes del partido`;
+const clock = (time: number) => new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }).format(new Date(time));
 // "Sáb 18/10" and "10:00" in Madrid time; dates without time have no hour.
 function dateParts(date: string): { day: string; time: string | null } | null {
   const time = Date.parse(date); if (!date || Number.isNaN(time)) return null;
   const parts = Object.fromEntries(new Intl.DateTimeFormat("es-ES", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "Europe/Madrid" }).formatToParts(new Date(time)).map(p => [p.type, p.value]));
   const day = `${parts.weekday.charAt(0).toUpperCase()}${parts.weekday.slice(1).replace(".", "")} ${parts.day}/${parts.month}`;
-  return { day, time: date.includes("T") ? new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }).format(new Date(time)) : null };
+  return { day, time: date.includes("T") ? clock(time) : null };
 }
 // SNP writes some club names with underscores ("CD_PADEL_ARCOS"); the web shows them with spaces.
 const teamName = (name: string) => name.replaceAll("_", " ");
@@ -28,7 +33,7 @@ export function shortDate(date: string): string | null {
 function cardNext(next: CardFixture | null): CardNext | null {
   if (!next) return null;
   const parts = dateParts(next.date);
-  return { round: `J${next.round}`, opponent: teamName(next.opponent), day: parts?.day ?? "Por confirmar", time: parts?.time ?? null, venue: next.home ? "Local" : "Visitante", place: next.home ? null : next.place ?? null };
+  return { round: `J${next.round}`, opponent: teamName(next.opponent), day: parts?.day ?? "Por confirmar", time: parts?.time ?? null, arrival: parts?.time ? clock(Date.parse(arrivalAt(next.date))) : null, venue: next.home ? "Local" : "Visitante", place: next.home ? null : next.place ?? null };
 }
 // Midnight in Madrid of the match's local day: a UTC guess corrected by Madrid's offset that day.
 function madridMidnight(year: number, month: number, day: number): number {

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { PKPass } from "passkit-generator";
-import type { WalletCardData } from "@/domain/wallet-card";
+import { arrivalAt, arrivalLine, type WalletCardData } from "@/domain/wallet-card";
 import type { AppleConfig } from "./wallet-config";
 import { mapsSearchUrl } from "@/domain/team-result-message";
 import { renderStrip } from "./wallet-strip";
@@ -11,9 +11,9 @@ type Field = { key: string; label: string; value: string; changeMessage?: string
 // No front fields under the strip repeat them; the back keeps both as text.
 // Apple notifies on a field whose value changed only when it has a changeMessage, back fields included.
 // The pink background matches the left end of the strip's gradient.
-// On match day the pass shows on the lock screen: with a start time, relevantDates (iOS 18+) is that time,
-// so the lock screen shows the hour and drops the pass once the match has started; without one, it covers
-// the whole day in Madrid. relevantDate (older iOS) is the start time. A single time needs both keys:
+// On match day the pass shows on the lock screen: with a start time, relevantDates (iOS 18+) is the arrival
+// time, so the lock screen shows the hour the team meets and drops the pass after it; without one, it covers
+// the whole day in Madrid. relevantDate (older iOS) is the same time. A single time needs both keys:
 // iOS 18 reads relevantDate, iOS 26 renamed it to date, and passkit-generator rejects the entry without relevantDate.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
   const next = card.next; const round = next ? ` ${next.round}` : "";
@@ -21,10 +21,12 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
     { key: "lineup", label: `Tu convocatoria${round}`, value: card.lineupShort, changeMessage: `Convocatoria${round}: %@` },
     { key: "player", label: "Jugador", value: card.playerLine }, { key: "team", label: "Equipo", value: `Fito Raya ${card.teamId.toUpperCase()}` },
     { key: "result", label: "Último resultado", value: card.lastResult, changeMessage: "%@" }, { key: "next", label: "Próximo partido", value: card.nextMatch },
+    ...(next?.arrival ? [{ key: "arrival", label: "Presentación", value: arrivalLine(next.arrival) }] : []),
     ...(next?.place ? [{ key: "place", label: "Lugar", value: next.place }, { key: "maps", label: "Cómo llegar", value: mapsSearchUrl(next.place) }] : []),
     { key: "web", label: "Web del equipo", value: `${meta.baseUrl}${card.teamPath}` },
     ...(card.actaPath ? [{ key: "acta", label: "Acta de la última jornada", value: `${meta.baseUrl}${card.actaPath}` }] : []),
   ];
+  const relevant = card.matchDay && (next?.time ? arrivalAt(card.matchDay.at) : card.matchDay.at);
   return {
     formatVersion: 1, passTypeIdentifier: meta.passTypeId, teamIdentifier: meta.teamIdentifier, serialNumber: meta.serial,
     authenticationToken: meta.authToken, webServiceURL: `${meta.baseUrl}/api/wallet/apple`,
@@ -35,7 +37,7 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
       backFields: back,
     },
     barcodes: [{ format: "PKBarcodeFormatQR", message: `${meta.baseUrl}/mi-perfil`, messageEncoding: "iso-8859-1" }],
-    ...(card.matchDay ? { relevantDate: card.matchDay.at, relevantDates: [next?.time ? { date: card.matchDay.at, relevantDate: card.matchDay.at } : { startDate: card.matchDay.start, endDate: card.matchDay.end }] } : {}),
+    ...(card.matchDay ? { relevantDate: relevant, relevantDates: [next?.time ? { date: relevant, relevantDate: relevant } : { startDate: card.matchDay.start, endDate: card.matchDay.end }] } : {}),
   };
 }
 // Icon and round logo are fixed; the strip is drawn for each card.
