@@ -11,8 +11,9 @@ type Field = { key: string; label: string; value: string; changeMessage?: string
 // No front fields under the strip repeat them; the back keeps both as text.
 // Apple notifies on a field whose value changed only when it has a changeMessage, back fields included.
 // The pink background matches the left end of the strip's gradient.
-// On match day the pass shows on the lock screen: relevantDates (iOS 18+) covers the whole day in Madrid,
-// relevantDate (older iOS) is the start time.
+// On match day the pass shows on the lock screen: with a start time, relevantDates (iOS 18+) is that time,
+// so the lock screen shows the hour and drops the pass once the match has started; without one, it covers
+// the whole day in Madrid. relevantDate (older iOS) is the start time.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
   const next = card.next; const round = next ? ` ${next.round}` : "";
   const back: Field[] = [
@@ -33,7 +34,7 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
       backFields: back,
     },
     barcodes: [{ format: "PKBarcodeFormatQR", message: `${meta.baseUrl}/mi-perfil`, messageEncoding: "iso-8859-1" }],
-    ...(card.matchDay ? { relevantDate: card.matchDay.at, relevantDates: [{ startDate: card.matchDay.start, endDate: card.matchDay.end }] } : {}),
+    ...(card.matchDay ? { relevantDate: card.matchDay.at, relevantDates: [next?.time ? { date: card.matchDay.at } : { startDate: card.matchDay.start, endDate: card.matchDay.end }] } : {}),
   };
 }
 // Icon and round logo are fixed; the strip is drawn for each card.

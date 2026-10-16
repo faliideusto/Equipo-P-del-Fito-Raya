@@ -43,10 +43,12 @@ test("sin próximo partido y sin acta", () => {
   assert.deepEqual(none.backFields[0], { key: "lineup", label: "Tu convocatoria", value: "Sin convocatoria", changeMessage: "Convocatoria: %@" });
   assert.equal(none.backFields.some(f => f.key === "acta"), false);
 });
-test("el día del partido sale en la pantalla de bloqueo; sin partido, no", () => {
+test("con hora, la pantalla de bloqueo marca la hora del partido; sin hora, el día entero; sin partido, nada", () => {
   const json = applePassJson(card, meta);
   assert.equal(json.relevantDate, "2026-10-18T08:00:00.000Z");
-  assert.deepEqual(json.relevantDates, [{ startDate: "2026-10-17T22:00:00.000Z", endDate: "2026-10-18T22:00:00.000Z" }]);
+  assert.deepEqual(json.relevantDates, [{ date: "2026-10-18T08:00:00.000Z" }]);
+  const allDay = applePassJson({ ...card, next: { ...card.next!, time: null }, matchDay: { start: "2026-10-17T22:00:00.000Z", end: "2026-10-18T22:00:00.000Z", at: "2026-10-17T22:00:00.000Z" } }, meta);
+  assert.deepEqual(allDay.relevantDates, [{ startDate: "2026-10-17T22:00:00.000Z", endDate: "2026-10-18T22:00:00.000Z" }]);
   const none = applePassJson({ ...card, next: null, matchDay: null }, meta);
   assert.equal(none.relevantDate, undefined);
   assert.equal(none.relevantDates, undefined);
