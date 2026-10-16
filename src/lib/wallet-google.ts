@@ -1,6 +1,6 @@
 import { createHash, createSign } from "node:crypto";
 import type { TeamId } from "@/domain/types";
-import type { WalletCardData } from "@/domain/wallet-card";
+import { arrivalLine, type WalletCardData } from "@/domain/wallet-card";
 import type { GoogleConfig } from "./wallet-config";
 import { mapsSearchUrl } from "@/domain/team-result-message";
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
@@ -20,6 +20,7 @@ export function googleObject(card: WalletCardData, { issuerId, serial, baseUrl }
     cardTitle: text(`Fito Raya · ${card.teamLabel}`), subheader: text(`Puntos SNP · ${card.snpPoints}`), header: text(card.playerName),
     textModulesData: [
       { id: "next", header: "Próximo partido", body: card.nextMatch },
+      ...(card.next?.arrival ? [{ id: "arrival", header: "Presentación", body: arrivalLine(card.next.arrival) }] : []),
       ...(card.next?.place ? [{ id: "place", header: "Lugar", body: card.next.place }] : []),
       { id: "lineup", header: "Convocatoria", body: card.lineup },
       { id: "result", header: "Último resultado", body: card.lastResult },
