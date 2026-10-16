@@ -13,7 +13,8 @@ type Field = { key: string; label: string; value: string; changeMessage?: string
 // The pink background matches the left end of the strip's gradient.
 // On match day the pass shows on the lock screen: with a start time, relevantDates (iOS 18+) is that time,
 // so the lock screen shows the hour and drops the pass once the match has started; without one, it covers
-// the whole day in Madrid. relevantDate (older iOS) is the start time.
+// the whole day in Madrid. relevantDate (older iOS) is the start time. A single time needs both keys:
+// iOS 18 reads relevantDate, iOS 26 renamed it to date, and passkit-generator rejects the entry without relevantDate.
 export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record<string, unknown> {
   const next = card.next; const round = next ? ` ${next.round}` : "";
   const back: Field[] = [
@@ -34,7 +35,7 @@ export function applePassJson(card: WalletCardData, meta: ApplePassMeta): Record
       backFields: back,
     },
     barcodes: [{ format: "PKBarcodeFormatQR", message: `${meta.baseUrl}/mi-perfil`, messageEncoding: "iso-8859-1" }],
-    ...(card.matchDay ? { relevantDate: card.matchDay.at, relevantDates: [next?.time ? { date: card.matchDay.at } : { startDate: card.matchDay.start, endDate: card.matchDay.end }] } : {}),
+    ...(card.matchDay ? { relevantDate: card.matchDay.at, relevantDates: [next?.time ? { date: card.matchDay.at, relevantDate: card.matchDay.at } : { startDate: card.matchDay.start, endDate: card.matchDay.end }] } : {}),
   };
 }
 // Icon and round logo are fixed; the strip is drawn for each card.
