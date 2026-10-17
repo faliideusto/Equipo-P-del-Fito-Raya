@@ -1,6 +1,7 @@
 "use client";
 import { ArrowRightLeft, Plus, Trash2, X } from "lucide-react";
 import type { Pair, Player } from "@/domain/types";
+import { withNickname } from "@/domain/team-result-message";
 import {
   compatible,
   matchValue,
@@ -75,7 +76,7 @@ export function PairCard({
                     <>
                       <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)} small />
                       <span>
-                        {player.name}
+                        {withNickname(player.name, player.nickname)}
                         <small title={positionLabel(player.position)}>
                           {formatPoints(player.points)} pts SNP ·{" "}
                           {positionLabel(player.position)}

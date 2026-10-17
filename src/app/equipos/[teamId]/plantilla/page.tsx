@@ -1,3 +1,4 @@
+import { withNickname } from "@/domain/team-result-message";
 import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
 import { positionLabel } from "@/domain/rules";
@@ -46,6 +47,7 @@ export default async function RosterPage({
             card={(player, rank) => (
               <FifaCard
                 name={player.name}
+                nickname={player.nickname}
                 photoUrl={cardPhoto(player)}
                 rating={compactPoints(player.points)}
                 ratingLabel={sideShort(player.position)}
@@ -67,7 +69,7 @@ export default async function RosterPage({
               </span>
               <PlayerAvatar name={player.name} photoUrl={cardPhoto(player)} />
               <div className="roster-name">
-                <strong>{player.name}</strong>
+                <strong>{withNickname(player.name, player.nickname)}</strong>
                 <span>{positionLabel(player.position)}</span>
               </div>
               <div className="points-bar">

@@ -29,6 +29,8 @@ En Supabase crea un proyecto del plan Free y ejecuta `supabase/positions.sql` en
 
 Las posiciones se guardan mediante upsert por jugador, sin reemplazar las de otros equipos. El almacenamiento local sigue siendo la alternativa de desarrollo cuando no están configuradas las variables de Supabase. Los datos actuales del archivo privado se pueden importar con el script `pnpm positions:migrate` antes del despliegue. Supabase Free puede pausar proyectos inactivos y tiene límites de uso; no garantiza disponibilidad continua.
 
+Los motes de los jugadores, que editan el entrenador y los capitanes de cada equipo, necesitan además `supabase/nicknames.sql`. Se guardan por id de SNP (`.club-private/nicknames.json` en local, o `PLAYER_NICKNAMES_FILE`). Mientras la tabla no exista, la web sigue funcionando sin motes.
+
 Render Free duerme tras 15 minutos sin tráfico y borra archivos locales al dormir, reiniciar o desplegar. La caché SNP es recuperable desde la fuente. Las posiciones del club necesitan una base de datos externa para conservarse; no deben tratarse como caché. Sin almacenamiento persistente externo, la edición se bloquea en Render para evitar perder cambios.
 
 No se programan solicitudes artificiales para mantener el servidor despierto. Los resultados se actualizan al consultar la web, según lo que SNP haya publicado. Configuramos una caché de cinco minutos para reducir consultas a SNP.

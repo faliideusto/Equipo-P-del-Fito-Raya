@@ -1,7 +1,7 @@
 import type { Pair, Position, TeamId } from "./types";
 import { POSITION_LABELS } from "./rules";
-import { displayName } from "./team-result-message";
-export type CardPlayer = { id: string; sourceId: string; name: string; position: Position | null; points: number | null };
+import { shortPlayerName } from "./team-result-message";
+export type CardPlayer = { id: string; sourceId: string; name: string; nickname?: string | null; position: Position | null; points: number | null };
 // place: where an away match is played, from the SNP acta (club name only).
 export type CardFixture = { id: string; round: number; opponent: string; date: string; home: boolean; place?: string | null };
 export type CardResult = { fixtureId: string; round: number; opponent: string; ours: number; theirs: number };
@@ -60,12 +60,12 @@ function lineup(ctx: TeamCardContext, player: CardPlayer): [string, string] {
   if (index < 0) return [`No convocado en ${round}`, "No convocado"];
   const partnerId = ctx.published.pairs[index].players.find(id => id !== null && id !== player.id);
   const partner = partnerId ? ctx.players.find(p => p.id === partnerId) : undefined;
-  const pair = `Pareja ${index + 1}${partner ? ` con ${displayName(partner.name)}` : ""}`;
+  const pair = `Pareja ${index + 1}${partner ? ` con ${shortPlayerName(partner.name, partner.nickname)}` : ""}`;
   return [`Convocado ${round} · ${pair}`, pair];
 }
 export function buildWalletCard(ctx: TeamCardContext, sourceId: string): WalletCardData | null {
   const player = ctx.players.find(p => p.sourceId === sourceId); if (!player) return null;
-  const team = ctx.teamId.toUpperCase(); const name = displayName(player.name);
+  const team = ctx.teamId.toUpperCase(); const name = shortPlayerName(player.name, player.nickname);
   const [lineupText, lineupShort] = lineup(ctx, player);
   return {
     teamId: ctx.teamId, playerSourceId: sourceId, teamLabel: `Equipo ${team}`, playerName: name,

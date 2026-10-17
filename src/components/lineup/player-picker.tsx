@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import type { Player } from "@/domain/types";
+import { withNickname } from "@/domain/team-result-message";
 import { positionLabel } from "@/domain/rules";
 import { formatPoints } from "@/lib/format";
 import { PlayerAvatar } from "@/components/player-avatar";
@@ -48,7 +49,7 @@ export function PlayerPicker({
           <button key={p.id} onClick={() => onChoose(p.id)} className={p.id === partner?.id || !partner ? "" : p.position === "BOTH" ? "suggest-both" : (partner.position === "LEFT" && p.position === "RIGHT") || (partner.position === "RIGHT" && p.position === "LEFT") ? "suggest-opposite" : ""}>
             <PlayerAvatar name={p.name} photoUrl={cardPhoto(p)} small />
             <span>
-              {p.name}
+              {withNickname(p.name, p.nickname)}
               <small>
                 {positionLabel(p.position)}
                 {used.includes(p.id) ? " · En pareja" : " · Sin pareja"}

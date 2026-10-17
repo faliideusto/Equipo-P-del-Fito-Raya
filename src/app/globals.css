@@ -2531,10 +2531,11 @@ body {
 .position-editor h2 {font-size:22px;margin-bottom:8px}
 .position-editor > p {color:var(--muted);margin:12px 0}
 .position-unlock,.position-editor-actions {display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
-.position-unlock input,.position-editor select {border:1px solid var(--border);border-radius:8px;padding:10px;font:inherit;background:var(--panel);min-height:44px}
+.position-unlock input,.position-editor select,.position-editor-list input {border:1px solid var(--border);border-radius:8px;padding:10px;font:inherit;background:var(--panel);min-height:44px}
 .position-editor-list {display:grid;gap:10px;margin:20px 0}
 .position-editor-list label {display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px}
 .position-editor-list label > span:not(.avatar) {flex:1}
+.position-editor-list input {width:150px;color:inherit}
 .position-legend {display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:12px}
 .position-legend span:first-child {color:var(--green)}
 .position-legend span:last-child {color:var(--warn)}
@@ -2619,7 +2620,7 @@ a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);bo
 .account-section-title {font-size:26px;margin:32px 0 16px}
 .account-stat-note {padding:0 28px 24px}
 @media(max-width:700px){.account-card {padding:22px}.account-card .profile-tabs {flex-wrap:wrap}.account-toolbar {padding:16px}.account-stat-note {padding:0 18px 18px}}
-@media(max-width:600px) {.position-editor-list label {flex-wrap:wrap}.position-editor-list select {width:100%}.position-unlock input {width:100%}}
+@media(max-width:600px) {.position-editor-list label {flex-wrap:wrap}.position-editor-list select,.position-editor-list input {width:100%}.position-unlock input {width:100%}}
 
 .account-snp-registration { border: 1px solid var(--accent-line); background: var(--panel-2); border-radius: 12px; padding: 24px; display: grid; gap: 18px; }
 .account-snp-registration h2 { font-size: 20px; margin: 0; }

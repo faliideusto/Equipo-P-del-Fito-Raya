@@ -52,7 +52,7 @@ export function WalletNotify({ teamId, fixtureId, match, players, publishedPairs
     <div className="wallet-body">
       <p className="wallet-intro">Marca quién se ha apuntado, forma las parejas y avisa al equipo. La lista de disponibles se guarda sola para esta jornada y la comparten el entrenador y los capitanes. Cada jugador verá su pareja en la tarjeta de Wallet y recibirá un aviso en el móvil.{published ? " Abajo tienes la convocatoria publicada: si la cambias y vuelves a avisar, sustituye a la anterior." : ""}</p>
       {saved && <p className={`wallet-saved ${saved === "saving" || saved === "saved" ? "" : "error"}`} role="status">{saved === "saving" ? "Guardando la lista de disponibles…" : saved === "saved" ? "✓ Lista de disponibles guardada para esta jornada." : saved}</p>}
-      <LineupBuilder key={`${teamId}-${fixtureId}-${start.version}`} players={players} teamId={teamId} initialPairs={start.pairs ?? undefined} initialSelected={start.selected} onSelectedChange={saveAvailability} actions={pairs => {
+      <LineupBuilder key={`${teamId}-${fixtureId}-${start.version}`} players={players} teamId={teamId} initialPairs={start.pairs ?? undefined} initialSelected={start.selected} onSelectedChange={saveAvailability} canEditNicknames actions={pairs => {
         const empty = !pairs.some(p => p.players.some(Boolean));
         return <div className="wallet-send">
           <p>Se envía la alineación tal como está arriba, sin guardarla ni ponerle nombre. En Wallet, los jugadores que no estén en ninguna pareja verán «No convocado».</p>
