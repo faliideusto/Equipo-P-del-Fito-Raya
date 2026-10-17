@@ -23,3 +23,12 @@ El menú incluye «Última jornada», que abre la jornada ya empezada más recie
 ## Límites
 
 La app no escribe en SNP: el capitán sigue completando el acta en SNP. Un fallo de SNP no crea avisos. Se reintenta al cambiar de sección. Los resultados se pueden modificar desde la vista de la jornada («Tu resultado en la app» → Modificar) mientras SNP no publique los sets de ese partido. Puede hacerlo quien lo envió, el compañero convocado en esa pareja o quien lo confirmó con «Es mi partido». El entrenador y el capitán de cada equipo pueden modificar el de cualquier pareja de su equipo desde la misma vista, también a partir de una hora después del inicio; se conserva quién lo envió. Además, el capitán puede usar «Añadir resultado» en las parejas sin resultado en la app, con el mismo plazo y siempre que SNP no haya publicado sus sets. El nuevo resultado queda registrado a nombre del capitán.
+
+## Ranking y plantilla antes de que SNP cierre la jornada
+
+Una hora después del inicio, mientras el calendario de SNP no tenga el marcador del enfrentamiento, la jornada se completa con lo que sabe la app (`src/lib/provisional-results.ts`): los sets de SNP si ya están y, si no, los resultados guardados en la app; los jugadores del acta si SNP ya los muestra y, si no, la convocatoria publicada (o, sin ella, quien envió el resultado).
+
+- **Ranking de la temporada**: suma esos partidos y lo indica («provisional hasta que SNP publique el acta»).
+- **Plantilla**: los jugadores de esa jornada muestran «PREVISIÓN», el ranking SNP calculado como en el acta (`docs/puntos-snp.md`). Necesita el historial SNP de cada jugador; si SNP no lo devuelve, se muestran los puntos publicados.
+
+En cuanto SNP publica los jugadores de cada partido y el marcador, se usan solo sus datos.
