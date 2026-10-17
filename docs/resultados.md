@@ -31,4 +31,6 @@ Una hora después del inicio, mientras el calendario de SNP no tenga el marcador
 - **Ranking de la temporada**: suma esos partidos y lo indica («provisional hasta que SNP publique el acta»).
 - **Plantilla**: los jugadores de esa jornada muestran «PREVISIÓN», el ranking SNP calculado como en el acta (`docs/puntos-snp.md`). Necesita el historial SNP de cada jugador; si SNP no lo devuelve, se muestran los puntos publicados.
 
+- **Resto de la web** (inicio, resumen del equipo, calendario, Wallet, asistente): la jornada cuenta como jugada, con un marcador provisional de los partidos ya decididos, en cuanto uno tiene ganador; el próximo partido pasa a ser el siguiente. Se aplica a jornadas de la última semana.
+
 En cuanto SNP publica los jugadores de cada partido y el marcador, se usan solo sus datos.

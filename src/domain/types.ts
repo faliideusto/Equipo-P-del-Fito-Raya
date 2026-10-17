@@ -46,4 +46,6 @@ export interface Fixture {
   status: "pending" | "played";
   matches: Match[];
   score?: [number, number] | null;
+  // Played but not closed by SNP: status and score come from the acta completed with the app results.
+  provisional?: boolean;
 }

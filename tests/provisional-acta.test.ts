@@ -40,3 +40,11 @@ test("solo se completan las jornadas jugadas que SNP no ha cerrado", async () =>
   ];
   assert.deepEqual(unpublishedFixtures(fixtures, now).map(f => f.id), ["3"]);
 });
+test("marcador provisional local–visitante con los partidos ya decididos", async () => {
+  const { actaScore } = await import("../src/domain/provisional-acta");
+  assert.equal(actaScore(acta.games.length ? { ...acta, games: acta.games.map(g => ({ ...g, sets: [] })) } : acta), null);
+  // Away team: app results are ours first; the acta is home first.
+  const match = provisionalActa({ acta, ownSide: 1, appResults: { 2: [[0, 6], [0, 6]], 3: [[6, 2], [6, 3]], 4: [[3, 6], [3, 6]], 5: [[4, 6], [6, 2], [6, 2]] }, lineup: {} });
+  // Pair 1 (3) and 2 (3) and 4 (2) for home; 3 (2) and 5 (2) for us.
+  assert.deepEqual(actaScore(match), [8, 4]);
+});
