@@ -2577,6 +2577,9 @@ a.sponsor-card:hover,a.sponsor-card:focus-visible {transform:translateY(-4px);bo
 .sponsor-content .eyebrow {font-size:11px}
 .sponsor-action {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:18px;border-top:1px solid var(--line);color:var(--accent);font-weight:600}
 .mini-lineup {margin-top:24px;padding:24px}
+.rival-preparation-context {display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px;font-size:13px;color:var(--muted)}
+.rival-player-search {display:flex;flex-direction:column;gap:8px;margin-top:18px;font-size:13px;max-width:420px}
+.rival-player-search input {width:100%;min-width:0;padding:12px;border:1px solid var(--accent-line);border-radius:8px;background:var(--panel);color:var(--accent)}
 .mini-lineup .panel-heading {padding:0;gap:16px;flex-wrap:wrap}
 .mini-lineup .panel-heading p {margin:8px 0;color:var(--accent)}
 .mini-player-pool {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:300px;overflow:auto;margin:20px 0}

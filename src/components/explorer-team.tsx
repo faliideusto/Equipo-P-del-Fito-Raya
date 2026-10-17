@@ -15,8 +15,9 @@ import { TeamSchedule } from "./team-schedule";
 import { RivalTabs, type RivalView } from "./team-tabs";
 import { PageSkeleton } from "./skeletons";
 import { isForcedCheck, SNP_CHECKED_EVENT } from "@/lib/snp-updates";
+import type { RivalPreparation } from "@/lib/rival-preparation";
 
-export function ExplorerTeam({ id, filters, view }: { id: string; filters: Partial<SnpCompetition["filters"]>; view: RivalView }) {
+export function ExplorerTeam({ id, filters, view, preparations = [] }: { id: string; filters: Partial<SnpCompetition["filters"]>; view: RivalView; preparations?: RivalPreparation[] }) {
   const [result, setResult] = useState<SnpResult<SnpTeam> | null>(null);
   const [error, setError] = useState("");
   const [competition, setCompetition] = useState<SnpResult<SnpCompetition> | null>(null);
@@ -207,14 +208,10 @@ export function ExplorerTeam({ id, filters, view }: { id: string; filters: Parti
         </section>
       ) : loadingCompetition)}
 
-      {view === "plantilla" && (roster || loadingTeam)}
-
-      {view === "parejas" && (team ? (
-        <section className="panel team-tools">
-          <div className="panel-heading"><h2>Crear parejas</h2><span className="badge blue">Puntos SNP</span></div>
-          <MiniLineup key={id} players={team.players}/>
-        </section>
-      ) : loadingTeam)}
+      {view === "plantilla" && <>
+        {team && preparations.map(preparation => <MiniLineup key={`${id}-${preparation.teamId}-${preparation.fixtureId}`} players={team.players} preparation={preparation}/>)}
+        {roster || loadingTeam}
+      </>}
 
       {result && <p className="data-note">Consulta: {new Date(result.updatedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })} · SNP</p>}
     </>
