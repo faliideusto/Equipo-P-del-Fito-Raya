@@ -26,6 +26,8 @@ export interface Standing {
   lost: number;
   points: number;
   own?: boolean;
+  // Includes an encounter that SNP has not closed yet, from its acta and the app results.
+  provisional?: boolean;
 }
 export type Pair = { id: string; players: [string | null, string | null] };
 export interface Match {

@@ -60,7 +60,7 @@ export function StandingsTable({ rows, division, compact = false, ownLabel = "NO
                   </span>
                 </Link>
               </td>
-              <td>{row.played}</td>
+              <td>{row.played}{row.provisional && <span title="Incluye un resultado provisional">*</span>}</td>
               <td>{row.won}</td>
               <td>{row.lost}</td>
               <td>
@@ -70,6 +70,7 @@ export function StandingsTable({ rows, division, compact = false, ownLabel = "NO
           ))}
         </tbody>
       </table>
+      {rows.some(row => row.provisional) && <p className="data-note">* Incluye enfrentamientos ya jugados que SNP todavía no ha cerrado, con los sets del acta y los resultados de la app. Provisional hasta que SNP publique.</p>}
     </div>
   );
 }

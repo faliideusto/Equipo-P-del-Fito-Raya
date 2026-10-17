@@ -1,6 +1,6 @@
 import { sourceTeams } from "@/data/repository";
 import { fixtureStart, RESULT_DELAY_MS } from "@/domain/pending-results";
-import { actaHasLineup, provisionalActa, type ProvisionalPlayer } from "@/domain/provisional-acta";
+import { actaHasLineup, emptyActa, provisionalActa, type ProvisionalPlayer } from "@/domain/provisional-acta";
 import type { SnpMatch } from "@/domain/snp";
 import { actaForecast, rankingForecast } from "@/domain/snp-points";
 import type { Fixture, Player, TeamId } from "@/domain/types";
@@ -16,7 +16,7 @@ export const unpublishedFixtures = (fixtures: Fixture[], now = Date.now()) =>
 // the lineup of every game. null when SNP already has it or there is nothing to add.
 export async function provisionalMatch(teamId: TeamId, fixture: Fixture, players: Player[]): Promise<ProvisionalMatch | null> {
   const [acta, rows, published] = await Promise.all([
-    getSnpMatch(fixture.id).then(r => r.data),
+    getSnpMatch(fixture.id).then(r => r.data).catch(() => emptyActa(fixture.id)),
     listResults([fixture.id]).catch(() => []),
     walletStore().publishedLineup(teamId, fixture.id).catch(() => null),
   ]);

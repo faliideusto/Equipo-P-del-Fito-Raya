@@ -48,3 +48,10 @@ test("marcador provisional local–visitante con los partidos ya decididos", asy
   // Pair 1 (3) and 2 (3) and 4 (2) for home; 3 (2) and 5 (2) for us.
   assert.deepEqual(actaScore(match), [8, 4]);
 });
+test("sin acta de SNP cuentan solo los resultados de la app", async () => {
+  const { emptyActa, actaScore } = await import("../src/domain/provisional-acta");
+  const all = { 1: [[2, 6], [5, 7]], 2: [[0, 6], [0, 6]], 3: [[6, 2], [6, 3]], 4: [[3, 6], [3, 6]], 5: [[4, 6], [6, 2], [6, 2]] } as Record<number, [number, number][]>;
+  const match = provisionalActa({ acta: emptyActa("55266"), ownSide: 1, appResults: all, lineup: { 3: [{ id: "320953", name: "Javier" }] } });
+  assert.deepEqual(actaScore(match), [8, 4]);
+  assert.deepEqual(match.games[2].away?.map(p => p.id), ["320953"]);
+});
