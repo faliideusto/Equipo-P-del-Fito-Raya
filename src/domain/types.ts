@@ -9,6 +9,8 @@ export interface Player {
   photoUrl?: string | null;
   points: number | null;
   position: Position | null;
+  // Set by the coach; shown as "Name (nickname)" in lineups and rankings and alone in Wallet.
+  nickname?: string | null;
 }
 export interface Team {
   id: TeamId;

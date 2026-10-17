@@ -9,6 +9,18 @@ const PARTICLES = new Set(["de", "del", "la", "las", "los", "y"]);
 export function displayName(name: string) {
   return name.trim().split(/\s+/).map((word, i) => word.toLocaleLowerCase("es").split("-").map(part => i > 0 && PARTICLES.has(part) ? part : part.charAt(0).toLocaleUpperCase("es") + part.slice(1)).join("-")).join(" ");
 }
+// "Jose Luis Narbona (Pepe)" in lineups and rankings; Wallet shows only the nickname.
+export const withNickname = (name: string, nickname?: string | null) => nickname ? `${name} (${nickname})` : name;
+export const shortPlayerName = (name: string, nickname?: string | null) => nickname || displayName(name);
+export const MAX_NICKNAME = 20;
+// Trimmed nickname, null to clear it, undefined if the value is not valid.
+export function cleanNickname(value: unknown): string | null | undefined {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "string") return undefined;
+  const nickname = value.trim().replace(/\s+/g, " ");
+  if (!nickname) return null;
+  return nickname.length <= MAX_NICKNAME && !/[\p{Cc}()]/u.test(nickname) ? nickname : undefined;
+}
 // The five pairs from our side: app results first, otherwise sets published by SNP.
 export function teamResultPairs({ appResults, acta, ownSide, submitterNames }: { appResults: Record<number, SetScore[]>; acta: SnpMatch | null; ownSide: 0 | 1; submitterNames: Record<number, string> }): TeamResultPair[] | null {
   const pairs: TeamResultPair[] = [];
@@ -44,11 +56,11 @@ export function buildTeamResultMessage({ round, teamId, opponent, home, date, pa
 }
 // The lineup for the group: only pairs with someone in them, numbered in the order given (already sorted by SNP points).
 // Away matches add the venue from the SNP acta and a Google Maps search for it.
-export function buildLineupMessage({ round, teamId, opponent, home, date, pairs, players, venue = null }: { round: number; teamId: TeamId; opponent: string; home: boolean; date: string; pairs: Pair[]; players: { id: string; name: string }[]; venue?: string | null }) {
+export function buildLineupMessage({ round, teamId, opponent, home, date, pairs, players, venue = null }: { round: number; teamId: TeamId; opponent: string; home: boolean; date: string; pairs: Pair[]; players: { id: string; name: string; nickname?: string | null }[]; venue?: string | null }) {
   const place = !home && venue ? `📍 ${venue}\n${mapsSearchUrl(venue)}` : null;
   const header = [`🎾 *Convocatoria · Jornada ${round} · Fito Raya ${teamId.toUpperCase()}*`, `🆚 ${opponent.replaceAll("_", " ")} · ${home ? "🏠 Local" : "✈️ Visitante"}`, dateLine(date), place].filter((line): line is string => line !== null);
   const blocks = pairs.flatMap((pair, index) => {
-    const names = pair.players.flatMap(id => { const player = id === null ? undefined : players.find(p => p.id === id); return player ? [displayName(player.name)] : []; });
+    const names = pair.players.flatMap(id => { const player = id === null ? undefined : players.find(p => p.id === id); return player ? [withNickname(displayName(player.name), player.nickname)] : []; });
     return names.length ? [`*Pareja ${index + 1}* (${MATCH_VALUES[index] ?? 2} pts)\n${names.join(" / ")}`] : [];
   });
   return [header.join("\n"), ...blocks, "💪 ¡Vamos Fito Raya!"].join("\n\n");
