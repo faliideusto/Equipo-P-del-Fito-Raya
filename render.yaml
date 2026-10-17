@@ -39,5 +39,9 @@ services:
         sync: false
       - key: GOOGLE_WALLET_SA_JSON
         sync: false
+      - key: CHAT_LLM_URL
+        sync: false
+      - key: CHAT_LLM_KEY
+        sync: false
       - key: SNP_CACHE_SECONDS
         value: "300"

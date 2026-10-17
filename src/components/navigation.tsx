@@ -9,6 +9,7 @@ import {
   HeartHandshake,
   House,
   Menu,
+  MessageCircle,
   Search,
   Trophy,
   UserRound,
@@ -32,6 +33,7 @@ const clubItems: Item[] = [
   { href: "/competicion", label: "Competición", icon: Search, match: (path) => path.startsWith("/competicion") },
   { href: "/mvp", label: "MVP del mes", icon: Trophy, match: (path) => path === "/mvp" },
   { href: "/patrocinadores", label: "Patrocinadores", icon: HeartHandshake, match: (path) => path === "/patrocinadores" },
+  { href: "/asistente", label: "Asistente", icon: MessageCircle, match: (path) => path === "/asistente" },
 ];
 const home: Item = { href: "/", label: "Inicio", icon: House, match: (path) => path === "/" };
 const profile: Item = { href: "/mi-perfil", label: "Mi perfil", icon: UserRound, match: (path) => path === "/mi-perfil" || path === "/acceso" };
