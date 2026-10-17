@@ -4,6 +4,8 @@ import { toActaSets } from "./result-edit";
 import { MATCH_VALUES } from "./rules";
 // Our side of a game, by SNP player id: from the acta when SNP has the lineup, otherwise from the app.
 export type ProvisionalPlayer = { id: string; name: string };
+// Stands in for an acta that SNP cannot give right now: the app results still count.
+export const emptyActa = (id: string): SnpMatch => ({ id, title: "", dateLabel: "", teams: ["", ""], score: null, games: [] });
 // True once SNP shows who played every game on our side: from then on only SNP data counts.
 export const actaHasLineup = (acta: SnpMatch, ownSide: 0 | 1) =>
   acta.games.length >= MATCH_VALUES.length && acta.games.every(game => ((ownSide === 0 ? game.home : game.away) ?? []).some(p => p.id));
