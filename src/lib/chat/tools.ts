@@ -70,14 +70,21 @@ const names = (ids: (string | null)[], players: Player[]) => ids.map(id => playe
 type Ranked = { posicion: number; jugador: string; jugados: number; ganados: number; perdidos: number; puntos: number; porcentaje_victorias: number | null; equipo?: string };
 const rankRows = (rows: RankingRow[]): Ranked[] => rows.map((r, i) => ({ posicion: i + 1, jugador: r.player.name, jugados: r.played, ganados: r.won, perdidos: r.lost, puntos: r.points, porcentaje_victorias: r.won + r.lost ? Math.round(100 * r.won / (r.won + r.lost)) : null }));
 // label names the team: with one call per team the model otherwise keeps only the last team's text.
-function bestOf(rows: Ranked[], label = "") {
-  const best = Math.max(-1, ...rows.map(r => r.porcentaje_victorias ?? -1));
-  if (best < 0) return null;
-  const tied = rows.filter(r => r.porcentaje_victorias === best).sort((x, y) => y.ganados + y.perdidos - (x.ganados + x.perdidos));
+// The lowest one comes too: without it the model answers "¿quién es el peor?" saying it has no such data.
+function extremeOf(rows: Ranked[], label: string, lowest: boolean) {
+  const pcts = rows.map(r => r.porcentaje_victorias).filter((p): p is number => p !== null);
+  if (!pcts.length) return null;
+  const pct = lowest ? Math.min(...pcts) : Math.max(...pcts);
+  const tied = rows.filter(r => r.porcentaje_victorias === pct).sort((x, y) => y.ganados + y.perdidos - (x.ganados + x.perdidos));
   const empatados = tied.map(r => `${r.jugador} (${r.equipo ? `${r.equipo}, ` : ""}${r.ganados}-${r.perdidos})`);
   const list = empatados.length > 1 ? `${empatados.slice(0, -1).join(", ")} y ${empatados.at(-1)}` : empatados[0];
-  return { porcentaje: best, empatados, texto: label + (empatados.length > 1 ? `${empatados.length} jugadores empatados al ${best}%: ${list}.` : `${list} tiene el mejor porcentaje: ${best}%.`) };
+  const texto = empatados.length > 1
+    ? `${empatados.length} jugadores empatados ${lowest ? `en el porcentaje más bajo, ${pct}%` : `al ${pct}%`}: ${list}.`
+    : `${list} tiene el ${lowest ? "porcentaje más bajo" : "mejor porcentaje"}: ${pct}%.`;
+  return { porcentaje: pct, empatados, texto: label + texto };
 }
+const bestOf = (rows: Ranked[], label = "") => extremeOf(rows, label, false);
+const worstOf = (rows: Ranked[], label = "") => extremeOf(rows, label, true);
 const DAY = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", dateStyle: "full" });
 const TIME = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", timeStyle: "short" });
 // Separate fields: with day and time in one string the model tends to drop the time.
@@ -159,14 +166,16 @@ const TOOLS: Tool[] = [
   }),
   tool("clasificacion", "Clasificación oficial de la división de un equipo.", { equipo: TEAM }, ["equipo"], false, async (args, data) =>
     (await data.standings(team(args))).map((s, i) => ({ posicion: i + 1, equipo: s.name, jugados: s.played, ganados: s.won, perdidos: s.lost, puntos: s.points, es_nuestro: Boolean(s.own) }))),
-  tool("ranking_temporada", "Ranking interno de jugadores (no del equipo) esta temporada con el club: partidos, puntos aportados y porcentaje de victorias (winrate), con los empatados en el mejor porcentaje. Sin equipo devuelve los dos equipos y el mejor porcentaje de todo el club.", { equipo: TEAM }, [], false, async (args, data) => {
+  tool("ranking_temporada", "Ranking interno de jugadores (no del equipo) esta temporada con el club: partidos, puntos aportados y porcentaje de victorias (winrate), con los empatados en el mejor y en el peor porcentaje (el más bajo). Sin equipo devuelve los dos equipos y el mejor y el peor porcentaje de todo el club.", { equipo: TEAM }, [], false, async (args, data) => {
     if (args.equipo === undefined || args.equipo === null) {
       const [a, b] = await Promise.all([data.ranking("a"), data.ranking("b")]);
       const ra = rankRows(a); const rb = rankRows(b);
-      return { equipo_a: { jugadores: ra }, equipo_b: { jugadores: rb }, mejor_porcentaje_club: bestOf([...ra.map(r => ({ ...r, equipo: "A" })), ...rb.map(r => ({ ...r, equipo: "B" }))]) };
+      const club = [...ra.map(r => ({ ...r, equipo: "A" })), ...rb.map(r => ({ ...r, equipo: "B" }))];
+      return { equipo_a: { jugadores: ra }, equipo_b: { jugadores: rb }, mejor_porcentaje_club: bestOf(club), peor_porcentaje_club: worstOf(club) };
     }
     const id = team(args); const rows = rankRows(await data.ranking(id));
-    return { jugadores: rows, mejor_porcentaje: bestOf(rows, `Equipo ${id.toUpperCase()}: `) };
+    const label = `Equipo ${id.toUpperCase()}: `;
+    return { jugadores: rows, mejor_porcentaje: bestOf(rows, label), peor_porcentaje: worstOf(rows, label) };
   }),
   tool("acta", "Quién jugó en cada pareja y los sets de una jornada jugada (sin jornada, la última jugada); de una pendiente, fecha, rival y lugar (sede).", { equipo: TEAM, jornada: ROUND }, ["equipo"], false, async (args, data) => {
     const fixture = await fixtureFor(args, data, "played");

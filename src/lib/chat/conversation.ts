@@ -42,6 +42,7 @@ export function systemPrompt(role: ChatRole, userLabel: string, now: Date, team:
       : "- En el chat están elegidos los dos equipos: si el usuario no nombra uno, responde para los dos equipos (calendario y ranking_temporada ya devuelven los dos); con el resto de herramientas, pregunta si es el A o el B.",
     "- Cuando una herramienta da un campo resumen o texto, úsalo tal cual en la respuesta, uno por equipo si vienen los dos, sin mezclar datos de un equipo con los del otro.",
     "- Responde a todo lo que se pregunta (por ejemplo día, hora, rival y lugar) y usa el tiempo verbal según la jornada esté jugada o pendiente.",
+    "- Para el mejor o el peor jugador, usa el mejor o el peor porcentaje de ranking_temporada (el peor es el porcentaje más bajo) y di que es por porcentaje de victorias.",
     "- Si varios jugadores empatan en lo que se pregunta (por ejemplo, el mismo porcentaje de victorias), nómbralos a todos con sus partidos.",
     "- Puedes dar consejos generales de pádel (golpes como el globo, la bandeja o la víbora, táctica, reglas) sin herramientas. No hables de temas ajenos al club o al pádel.",
   ];

@@ -98,6 +98,7 @@ test("ranking: porcentaje de victorias calculado y todos los empatados en el mej
   assert.equal(r.jugadores[1].porcentaje_victorias, 75);
   assert.equal(r.jugadores[4].porcentaje_victorias, null);
   assert.deepEqual(r.mejor_porcentaje, { porcentaje: 100, empatados: ["Ana (2-0)", "Pablo (2-0)", "Marta (1-0)"], texto: "Equipo A: 3 jugadores empatados al 100%: Ana (2-0), Pablo (2-0) y Marta (1-0)." });
+  assert.deepEqual(r.peor_porcentaje, { porcentaje: 75, empatados: ["Luis (3-1)"], texto: "Equipo A: Luis (3-1) tiene el porcentaje más bajo: 75%." });
 });
 
 test("ranking sin equipo: los dos equipos y el mejor porcentaje de todo el club", async () => {
@@ -107,6 +108,7 @@ test("ranking sin equipo: los dos equipos y el mejor porcentaje de todo el club"
   assert.equal(r.equipo_a.jugadores.length, 2);
   assert.equal(r.equipo_b.jugadores.length, 2);
   assert.deepEqual(r.mejor_porcentaje_club, { porcentaje: 100, empatados: ["Ana (A, 2-0)", "Ana (B, 2-0)", "Pablo (B, 1-0)"], texto: "3 jugadores empatados al 100%: Ana (A, 2-0), Ana (B, 2-0) y Pablo (B, 1-0)." });
+  assert.equal(r.peor_porcentaje_club.texto, "Luis (A, 1-1) tiene el porcentaje más bajo: 50%.");
   assert.match((await run("ranking_temporada", { equipo: "c" })).error, /equipo/);
   assert.deepEqual((toolsFor("player").find(t => t.function.name === "ranking_temporada")!.function.parameters as { required: string[] }).required, []);
 });
@@ -161,6 +163,12 @@ test("destacadas: día y hora por separado en hora de Madrid", async () => {
 test("un único mejor porcentaje no habla de empate", async () => {
   const one: ChatData = { ...data, ranking: async () => [{ player: player("x", "Ana", "a"), played: 3, won: 3, lost: 0, points: 9 }, { player: player("y", "Luis", "a"), played: 2, won: 1, lost: 1, points: 3 }] };
   assert.equal(JSON.parse(await runTool("ranking_temporada", { equipo: "a" }, "player", one)).mejor_porcentaje.texto, "Equipo A: Ana (3-0) tiene el mejor porcentaje: 100%.");
+});
+
+test("empatados en el porcentaje más bajo", async () => {
+  const row = (name: string, won: number, lost: number) => ({ player: player(name, name, "a"), played: won + lost, won, lost, points: won });
+  const tied: ChatData = { ...data, ranking: async () => [row("Ana", 2, 0), row("Luis", 1, 3), row("Marta", 0, 2), row("Pablo", 0, 1)] };
+  assert.equal(JSON.parse(await runTool("ranking_temporada", { equipo: "a" }, "player", tied)).peor_porcentaje.texto, "Equipo A: 2 jugadores empatados en el porcentaje más bajo, 0%: Marta (0-2) y Pablo (0-1).");
 });
 
 test("el equipo del selector rellena el que el modelo no indica, pero no pisa el que sí indica", async () => {

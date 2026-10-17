@@ -29,7 +29,7 @@ export function ChatAssistant() {
   const [health, setHealth] = useState<ChatHealth | null>(null);
   const [sending, setSending] = useState(false);
   const [tool, setTool] = useState<string | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   const [store] = useState(() => historyStore<Message>(() => sessionStorage));
   const [choice] = useState(() => teamChoice(() => sessionStorage));
   const [team, setTeam] = useState<"a" | "b" | null>(null);
@@ -39,7 +39,8 @@ export function ChatAssistant() {
   useEffect(() => { void fetchHealth().then(h => { setHealth(h); setMessages(store.load()); setTeam(choice.load(h.equipo ?? null)); }); }, [store, choice]);
   useEffect(() => {
     store.save(messages);
-    endRef.current?.scrollIntoView({ block: "end" });
+    // Scrolls the log only: scrollIntoView would also move the page.
+    const log = logRef.current; if (log) log.scrollTop = log.scrollHeight;
   }, [messages, store]);
   const check = () => { setHealth(null); void fetchHealth().then(setHealth); };
 
@@ -78,7 +79,7 @@ export function ChatAssistant() {
   const offline = health && !health.disponible;
   return (
     <section className="panel chat-panel">
-      <div className="chat-log" aria-live="polite">
+      <div className="chat-log" aria-live="polite" ref={logRef}>
         {!messages.length && <div className="chat-suggestions">
           <p>Pregunta por partidos, clasificaciones, actas o jugadores{coach ? ", o pide ayuda con las parejas" : ""}.</p>
           {SUGGESTIONS[coach ? "coach" : "player"].map(s => <button key={s} type="button" className="button secondary small" disabled={!health?.disponible} onClick={() => send(s)}>{s}</button>)}
@@ -91,7 +92,6 @@ export function ChatAssistant() {
           </div>
         ))}
         {sending && tool && messages.at(-1)?.content && <p className="chat-status">Consultando {tool}…</p>}
-        <div ref={endRef}/>
       </div>
       {offline && <div className="chat-offline"><p>{health.motivo ?? "El asistente está desconectado ahora mismo."}</p><button type="button" className="button secondary small" onClick={check}>Reintentar</button></div>}
       <div className="chat-composer">
