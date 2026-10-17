@@ -9,9 +9,9 @@ import { getSnpMatch } from "./snp-service";
 import { getRankingHistory } from "./snp-ranking";
 import { walletStore } from "./wallet-store";
 export type ProvisionalMatch = { fixture: Fixture; match: SnpMatch; side: 0 | 1 };
-// Fixtures already played (the usual hour after the start) that SNP has not closed: no score in the calendar.
+// Fixtures already played (the usual hour after the start) that SNP has not closed: no SNP score in the calendar.
 export const unpublishedFixtures = (fixtures: Fixture[], now = Date.now()) =>
-  fixtures.filter(f => { const start = fixtureStart(f.date); return start !== null && start + RESULT_DELAY_MS <= now && !(f.score && f.score[0] + f.score[1] > 0); });
+  fixtures.filter(f => { const start = fixtureStart(f.date); return start !== null && start + RESULT_DELAY_MS <= now && (f.provisional || !(f.score && f.score[0] + f.score[1] > 0)); });
 // The acta of a played fixture completed with the app (results and published lineup) until SNP shows
 // the lineup of every game. null when SNP already has it or there is nothing to add.
 export async function provisionalMatch(teamId: TeamId, fixture: Fixture, players: Player[]): Promise<ProvisionalMatch | null> {

@@ -21,3 +21,14 @@ export function provisionalActa({ acta, ownSide, appResults, lineup }: { acta: S
   });
   return { ...acta, games };
 }
+// [home, away] like the SNP calendar, from the games of the acta that already have a winner;
+// null while no game has one.
+export function actaScore(match: SnpMatch): [number, number] | null {
+  const score: [number, number] = [0, 0]; let decided = false;
+  for (const game of match.games) {
+    const home = game.sets.filter(s => s[0] > s[1]).length, away = game.sets.filter(s => s[1] > s[0]).length;
+    if (home < 2 && away < 2) continue;
+    score[home >= 2 ? 0 : 1] += MATCH_VALUES[game.index] ?? 0; decided = true;
+  }
+  return decided ? score : null;
+}

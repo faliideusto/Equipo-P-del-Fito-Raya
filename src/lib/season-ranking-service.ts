@@ -7,7 +7,7 @@ import { provisionalMatch, unpublishedFixtures } from "./provisional-results";
 
 export async function loadSeasonRanking(teamId: TeamId, players?: Player[], now = Date.now()) {
   const [roster, fixtures] = await Promise.all([players ?? clubRepository.getPlayers(teamId), clubRepository.getFixtures(teamId)]);
-  const completed = fixtures.filter(f => f.score && f.score[0] + f.score[1] > 0);
+  const completed = fixtures.filter(f => !f.provisional && f.score && f.score[0] + f.score[1] > 0);
   const matches: { match: SnpMatch; side: 0 | 1 }[] = [];
   let unavailable = 0; let saved = 0;
   for (let offset = 0; offset < completed.length; offset += 3) {
