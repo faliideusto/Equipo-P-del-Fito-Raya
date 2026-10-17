@@ -16,9 +16,9 @@ export function myResult({ results, userId, playerId, confirmedPair, acta, ownSn
 }
 // App results are stored [nosotros, rivales]; the acta shows [local, visitante].
 export const toActaSets = (sets: SetScore[], ownSide: 0 | 1): SetScore[] => sets.map(([ours, theirs]) => ownSide === 0 ? [ours, theirs] : [theirs, ours]);
-// Coach and team captains can correct any pair's app result once the usual hour
+// Coach and team captains can enter or correct any pair's app result once the usual hour
 // after the start has passed, until SNP publishes the sets of that pair.
-export function managedEditablePairs({ results, acta, start, now, delay }: { results: Pick<SavedPairResult, "pairIndex">[]; acta: SnpMatch | null; start: number | null; now: number; delay: number }): number[] {
+export function managedEditablePairs({ acta, start, now, delay }: { acta: SnpMatch | null; start: number | null; now: number; delay: number }): number[] {
   if (start === null || start + delay > now) return [];
-  return results.map(r => r.pairIndex).filter(pair => !acta?.games.find(g => g.index + 1 === pair)?.sets.length).sort((a, b) => a - b);
+  return [1, 2, 3, 4, 5].filter(pair => !acta?.games.find(g => g.index + 1 === pair)?.sets.length);
 }

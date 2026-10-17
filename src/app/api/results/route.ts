@@ -23,18 +23,29 @@ export async function POST(request: Request) {
     const user = await currentAccount();
     if (!user) throw new AccountError("Inicia sesión para registrar resultados.", 401);
     if (body.action === "edit" && isTeam(body.teamId) && isFixture(body.fixtureId) && (await shareableTeams(user)).includes(body.teamId)) {
-      // Coach or captain: correct any pair, keeping who originally sent it.
+      // Coach or captain: enter missing results or correct them, keeping the original author.
       limitAccountAttempts(`result:${user.id}`);
+      const pair = resolvePair(null, body.pairIndex);
+      if (!pair) throw new AccountError("Elige tu número de pareja (1 a 5).");
       const fixture = (await clubRepository.getFixtures(body.teamId)).find(f => f.id === body.fixtureId);
       if (!fixture) throw new AccountError("No se encontró la jornada.", 404);
       const rows = await listResults([fixture.id]);
-      const existing = rows.find(r => r.team_id === body.teamId && r.pair_index === body.pairIndex);
-      if (!existing) throw new AccountError("Esa pareja no tiene resultado en la app.", 404);
+      const existing = rows.find(r => r.team_id === body.teamId && r.pair_index === pair);
       const acta = await getSnpMatch(fixture.id).then(r => r.data).catch(() => null);
-      if (!managedPairs(rows, body.teamId, fixture, acta).includes(existing.pair_index)) throw new AccountError("Este resultado ya no se puede modificar: aún no ha pasado una hora desde el inicio o SNP ya lo ha publicado.", 409);
+      if (!managedPairs(fixture, acta).includes(pair)) throw new AccountError("Este resultado ya no se puede modificar: aún no ha pasado una hora desde el inicio o SNP ya lo ha publicado.", 409);
       const check = checkSets(body.sets);
       if (!check.ok) throw new AccountError(check.error);
-      await replaceResult({ ...existing, sets: check.sets });
+      if (existing) await replaceResult({ ...existing, sets: check.sets });
+      else {
+        if (user.role === "coach") throw new AccountError("Para añadir un resultado, inicia sesión con una cuenta de capitán.", 403);
+        const link = await playerLink(user.id);
+        if (!link) throw new AccountError("Vincula primero tu ficha SNP.");
+        try { await saveResult({ fixture_id: fixture.id, team_id: body.teamId, pair_index: pair, sets: check.sets, player_id: link.player_id, submitted_by: user.id, created_at: new Date().toISOString() }); }
+        catch (error) {
+          if (!(error instanceof DuplicateResultError)) throw error;
+          throw new AccountError("Esta pareja acaba de registrar un resultado. Recarga el acta antes de modificarlo.", 409);
+        }
+      }
       return accountReply({ ok: true });
     }
     if (user.role === "coach" || user.role === "visitor") throw new AccountError("Solo los jugadores registran resultados.", 403);

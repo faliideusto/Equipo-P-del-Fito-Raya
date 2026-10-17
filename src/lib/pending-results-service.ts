@@ -65,14 +65,16 @@ export async function latestFixtureFor(playerId: string | null, now = Date.now()
   return latestStarted(await Promise.all(teams.map(async teamId => ({ teamId, fixtures: await clubRepository.getFixtures(teamId).catch(() => []) }))), now);
 }
 // Pairs whose app result the coach or a captain may correct (see managedEditablePairs).
-export function managedPairs(rows: MatchResultRow[], teamId: TeamId, fixture: Fixture, acta: SnpMatch | null, now = Date.now()) {
-  return managedEditablePairs({ results: rows.filter(r => r.team_id === teamId).map(r => ({ pairIndex: r.pair_index })), acta, start: fixtureStart(fixture.date), now, delay: RESULT_DELAY_MS });
+export function managedPairs(fixture: Fixture, acta: SnpMatch | null, now = Date.now()) {
+  return managedEditablePairs({ acta, start: fixtureStart(fixture.date), now, delay: RESULT_DELAY_MS });
 }
 // Provisional app results shown inside the acta: players edit their own pair; the coach
 // and the team's captain (manager) can edit every pair that SNP has not published yet.
 export async function fixtureProvisional(userId: string | null, playerId: string | null, teamId: TeamId, fixture: Fixture, acta: SnpMatch, manager = false) {
   const { own, mine } = await ownResult(userId, playerId, teamId, fixture, acta).catch(() => ({ own: [], mine: null }));
   const ownIndex = acta.teamIds?.indexOf(sourceTeams[teamId]) ?? -1;
-  const editablePairs = manager ? managedPairs(own, teamId, fixture, acta) : mine?.editable ? [mine.pairIndex] : [];
+  // The shared coach login has no auth.users identity to attribute a new result to.
+  // It can still correct existing results, preserving their original author.
+  const editablePairs = manager ? managedPairs(fixture, acta).filter(pair => Boolean(userId) || own.some(r => r.pair_index === pair)) : mine?.editable ? [mine.pairIndex] : [];
   return { fixtureId: fixture.id, teamId, ownSide: (ownIndex >= 0 ? ownIndex : fixture.home ? 0 : 1) as 0 | 1, results: Object.fromEntries(own.map(r => [r.pair_index, r.sets])), editablePairs };
 }
