@@ -27,7 +27,6 @@ import { PlayerPicker } from "./player-picker";
 import { PairCard } from "./pair-card";
 import { useIsCoach } from "../app-shell";
 import { PositionEditor } from "./position-editor";
-import { NicknameEditor } from "./nickname-editor";
 import { SavedLineups } from "./saved-lineups";
 // With `actions` the builder is embedded in a fixture: it starts from the published pairs and shows the given controls under the lineup.
 export function LineupBuilder({
@@ -37,7 +36,6 @@ export function LineupBuilder({
   initialSelected,
   onSelectedChange,
   actions,
-  canEditNicknames = false,
 }: {
   players: Player[];
   teamId: TeamId;
@@ -45,7 +43,6 @@ export function LineupBuilder({
   initialSelected?: string[];
   onSelectedChange?: (ids: string[]) => void;
   actions?: (pairs: Pair[]) => React.ReactNode;
-  canEditNicknames?: boolean;
 }) {
   const isCoach = useIsCoach();
   const [players, setPlayers] = useState(initialPlayers);
@@ -325,7 +322,6 @@ export function LineupBuilder({
           conflictos de posición son avisos y permiten seguir probando.
         </p>}
         {!actions && <PositionEditor players={players} teamId={teamId} onSaved={saved => setPlayers(current => current.map(p => { const row = saved.find(s => s.id === p.id); return row ? { ...p, position: row.position } : p; }))} />}
-        {canEditNicknames && <NicknameEditor players={players} teamId={teamId} onSaved={saved => setPlayers(current => current.map(p => { const row = saved.find(s => s.id === p.id); return row ? { ...p, nickname: row.nickname } : p; }))} />}
         <SavedLineups teamId={teamId} pairs={ordered} players={players} onLoad={saved => { setPairs(saved); const loaded = saved.flatMap(p => p.players); setSelected(current => onSelectedChange ? players.map(p => p.id).filter(id => current.includes(id) || loaded.includes(id)) : players.map(p => p.id)); setArmed(null); setPicker(null); setNotice("Alineación privada recuperada. Puedes seguir ajustándola sin cambiar la copia guardada."); }} />
       </div>
       {picker && (

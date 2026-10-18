@@ -2533,8 +2533,8 @@ body {
 .position-unlock,.position-editor-actions {display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
 .position-unlock input,.position-editor select,.position-editor-list input {border:1px solid var(--border);border-radius:8px;padding:10px;font:inherit;background:var(--panel);min-height:44px}
 .position-editor-list {display:grid;gap:10px;margin:20px 0}
-.position-editor-list label {display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px}
-.position-editor-list label > span:not(.avatar) {flex:1}
+.position-editor-list label,.position-editor-row {display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:8px}
+.position-editor-list label > span:not(.avatar),.position-editor-row > span:not(.avatar) {flex:1}
 .position-editor-list input {width:150px;color:inherit}
 .position-legend {display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:12px}
 .position-legend span:first-child {color:var(--green)}

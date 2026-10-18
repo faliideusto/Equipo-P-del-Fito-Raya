@@ -5,7 +5,7 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { cardPhoto } from "@/data/player-photos";
 import { MAX_NICKNAME } from "@/domain/team-result-message";
 // Coach and captains of the team: the server checks it again on save.
-export function NicknameEditor({ players, teamId, onSaved }: { players: Player[]; teamId: TeamId; onSaved: (players: Player[]) => void }) {
+export function NicknameEditor({ players, teamId, onSaved }: { players: Player[]; teamId: TeamId; onSaved?: (players: Player[]) => void }) {
   const [draft, setDraft] = useState(players);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -16,7 +16,7 @@ export function NicknameEditor({ players, teamId, onSaved }: { players: Player[]
       const response = await fetch("/api/nicknames", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teamId, nicknames: saved.map(({ id, nickname }) => ({ id, nickname })) }) });
       const result = await response.json();
       if (!response.ok) { setMessage(result.error || "No se pudo completar la operación."); return; }
-      setDraft(saved); onSaved(saved); setMessage("Motes guardados.");
+      setDraft(saved); onSaved?.(saved); setMessage("Motes guardados.");
     } catch { setMessage("No se pudo conectar con el servidor."); }
     finally { setBusy(false); }
   }
