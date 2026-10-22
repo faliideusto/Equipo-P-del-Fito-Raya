@@ -4256,6 +4256,10 @@ dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480p
 .hs-slot-profile {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:52px;align-self:stretch;border-left:1px solid var(--line);color:var(--ink);font-size:11px;font-weight:700}
 .hs-slot-profile:hover {color:var(--accent)}
 .hs-editor.is-rival .hs-slot-profile:hover {color:var(--rival)}
+.hs-slot-stats {font-family:var(--font-mono);font-size:12px;color:var(--ink)}
+.hs-slot-stats em {font-style:normal;font-weight:700;color:var(--accent)}
+.hs-editor.is-rival .hs-slot-stats em {color:var(--rival)}
+.hs-slot-stats.is-loading {color:var(--faint)}
 .hs-slot-remove {display:grid;place-items:center;width:40px;align-self:stretch;border:0;border-left:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;border-radius:0 10px 10px 0}
 .hs-slot-remove:hover {color:var(--danger)}
 .hs-picker .panel-heading {padding:18px 20px 8px}
