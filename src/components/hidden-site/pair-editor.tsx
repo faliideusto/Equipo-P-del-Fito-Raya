@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Search, X } from "lucide-react";
+import Link from "next/link";
+import { IdCard, Plus, Search, X } from "lucide-react";
 import type { Pair } from "@/domain/types";
 import { matchValue } from "@/domain/rules";
 import { completePairPoints, orderedPairs } from "@/domain/head-to-head";
@@ -11,7 +12,7 @@ import type { LineupPlayer } from "./types";
 type Slot = { pairId: string; slot: 0 | 1 };
 // Five pairs ordered by SNP points. Tapping a slot opens the player list; a player who already has a
 // pair swaps places with the one in the slot.
-export function PairEditor({ players, pairs, onChange, side }: { players: LineupPlayer[]; pairs: Pair[]; onChange: (pairs: Pair[]) => void; side: "own" | "rival" }) {
+export function PairEditor({ players, pairs, onChange, side, profile }: { players: LineupPlayer[]; pairs: Pair[]; onChange: (pairs: Pair[]) => void; side: "own" | "rival"; profile: (player: LineupPlayer) => string | null }) {
   const [picking, setPicking] = useState<Slot | null>(null);
   const person = (id: string | null) => players.find(player => player.id === id);
   const points = (id: string) => person(id)?.points;
@@ -36,6 +37,7 @@ export function PairEditor({ players, pairs, onChange, side }: { players: Lineup
             return player
               ? <div key={slot} className="hs-slot is-filled">
                 <button type="button" className="hs-slot-main" onClick={() => setPicking({ pairId: pair.id, slot })} aria-label={`Cambiar a ${player.name}`}><PlayerAvatar name={player.name} photoUrl={player.photo} small/><span><b>{player.name}</b><small>{formatPoints(player.points)} pts SNP</small></span></button>
+                {profile(player) && <Link className="hs-slot-profile" href={profile(player)!} aria-label={`Ficha SNP de ${player.name}`}><IdCard size={16}/><span>Ficha</span></Link>}
                 <button type="button" className="hs-slot-remove" aria-label={`Quitar a ${player.name}`} onClick={() => place({ pairId: pair.id, slot }, null)}><X size={16}/></button>
               </div>
               : <button key={slot} type="button" className="hs-slot is-empty" onClick={() => setPicking({ pairId: pair.id, slot })}><Plus size={16}/> Añadir jugador</button>;

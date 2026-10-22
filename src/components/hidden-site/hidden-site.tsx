@@ -86,7 +86,7 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
 
     {tab === "rival" && <section className="hs-panel">
       <div className="hs-panel-head"><div><h2>Alineación del rival</h2><p>La que esperáis que traiga {preparation.rivalName}. Al guardarla la ven el entrenador y todos los capitanes.</p></div></div>
-      <PairEditor side="rival" players={rivalPlayers} pairs={rivalPairs} onChange={pairs => { setRivalPairs(pairs); setMessage(""); }}/>
+      <PairEditor side="rival" players={rivalPlayers} pairs={rivalPairs} profile={player => profile(player, preparation.rivalId)} onChange={pairs => { setRivalPairs(pairs); setMessage(""); }}/>
       <div className="hs-actions">
         <button type="button" className="button" disabled={busy || !rivalDirty || !filled(rivalPairs)} onClick={() => send("save")}><Save size={16}/> {busy ? "Guardando…" : rivalDirty || !savedRival ? "Guardar alineación" : "Guardada"}</button>
         {rivalDirty && savedRival && <button type="button" className="button secondary" disabled={busy} onClick={() => setRivalPairs(savedRival)}><Undo2 size={16}/> Descartar cambios</button>}
@@ -96,7 +96,7 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
 
     {tab === "own" && <section className="hs-panel">
       <div className="hs-panel-head"><div><h2>Nuestra alineación</h2><p>Prueba combinaciones y mira los cruces. Al guardarla la ven el entrenador y los capitanes; no cambia la convocatoria publicada de la jornada.</p></div></div>
-      <PairEditor side="own" players={ownPlayers} pairs={ownPairs} onChange={pairs => { setOwnPairs(pairs); setMessage(""); }}/>
+      <PairEditor side="own" players={ownPlayers} pairs={ownPairs} profile={player => profile(player, player.snpTeam ?? "")} onChange={pairs => { setOwnPairs(pairs); setMessage(""); }}/>
       <div className="hs-actions">
         <button type="button" className="button" disabled={busy || !ownDirty || !filled(ownPairs)} onClick={() => send("save-own")}><Save size={16}/> {busy ? "Guardando…" : ownDirty || !savedOwn ? "Guardar alineación" : "Guardada"}</button>
         <button type="button" className="button secondary" onClick={() => setTab("h2h")}><Swords size={16}/> Ver cara a cara</button>
