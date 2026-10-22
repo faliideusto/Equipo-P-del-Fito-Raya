@@ -84,6 +84,6 @@ function PlayerRow({ player, stats, href }: { player: LineupPlayer; stats?: Play
           <div><dt>Sets</dt><dd>{sets}</dd></div>
         </dl>}
     </div>
-    {href && <Link className="hs-profile" href={href} aria-label={`Ficha SNP de ${player.name}`} title="Ficha SNP"><IdCard size={18}/></Link>}
+    {href && <Link className="hs-profile" href={href} aria-label={`Ficha SNP de ${player.name}`}><IdCard size={16}/><span>Ficha</span></Link>}
   </div>;
 }

@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Search, X } from "lucide-react";
+import Link from "next/link";
+import { IdCard, Plus, Search, X } from "lucide-react";
 import type { Pair } from "@/domain/types";
 import { matchValue } from "@/domain/rules";
 import { completePairPoints, orderedPairs } from "@/domain/head-to-head";
 import { PlayerAvatar } from "@/components/player-avatar";
-import { formatPoints } from "@/lib/format";
+import { formatPoints, formatWinRate } from "@/lib/format";
 import type { LineupPlayer } from "./types";
+import type { PlayerStats } from "./use-player-stats";
 
 type Slot = { pairId: string; slot: 0 | 1 };
 // Five pairs ordered by SNP points. Tapping a slot opens the player list; a player who already has a
 // pair swaps places with the one in the slot.
-export function PairEditor({ players, pairs, onChange, side }: { players: LineupPlayer[]; pairs: Pair[]; onChange: (pairs: Pair[]) => void; side: "own" | "rival" }) {
+export function PairEditor({ players, pairs, onChange, side, profile, stats }: { players: LineupPlayer[]; pairs: Pair[]; onChange: (pairs: Pair[]) => void; side: "own" | "rival"; profile: (player: LineupPlayer) => string | null; stats: Record<string, PlayerStats> }) {
   const [picking, setPicking] = useState<Slot | null>(null);
   const person = (id: string | null) => players.find(player => player.id === id);
   const points = (id: string) => person(id)?.points;
@@ -35,7 +37,8 @@ export function PairEditor({ players, pairs, onChange, side }: { players: Lineup
             const player = person(pair.players[slot]);
             return player
               ? <div key={slot} className="hs-slot is-filled">
-                <button type="button" className="hs-slot-main" onClick={() => setPicking({ pairId: pair.id, slot })} aria-label={`Cambiar a ${player.name}`}><PlayerAvatar name={player.name} photoUrl={player.photo} small/><span><b>{player.name}</b><small>{formatPoints(player.points)} pts SNP</small></span></button>
+                <button type="button" className="hs-slot-main" onClick={() => setPicking({ pairId: pair.id, slot })} aria-label={`Cambiar a ${player.name}`}><PlayerAvatar name={player.name} photoUrl={player.photo} small/><span><b>{player.name}</b><small>{formatPoints(player.points)} pts SNP</small><SlotStats player={player} stats={stats[player.id]}/></span></button>
+                {profile(player) && <Link className="hs-slot-profile" href={profile(player)!} aria-label={`Ficha SNP de ${player.name}`}><IdCard size={16}/><span>Ficha</span></Link>}
                 <button type="button" className="hs-slot-remove" aria-label={`Quitar a ${player.name}`} onClick={() => place({ pairId: pair.id, slot }, null)}><X size={16}/></button>
               </div>
               : <button key={slot} type="button" className="hs-slot is-empty" onClick={() => setPicking({ pairId: pair.id, slot })}><Plus size={16}/> Añadir jugador</button>;
@@ -62,4 +65,12 @@ function SlotPicker({ players, current, pairNumber, onChoose, onClose }: { playe
       <PlayerAvatar name={player.name} photoUrl={player.photo} small/><span>{player.name}<small>{pair ? `En la pareja ${pair} · se intercambian` : "Sin pareja"}</small></span><b>{formatPoints(player.points)}</b>
     </button>; })}{!visible.length && <p className="panel-empty">No hay jugadores que coincidan.</p>}</div>
   </dialog>;
+}
+
+// Total winrate and won-lost matches of the player's whole SNP history.
+function SlotStats({ player, stats }: { player: LineupPlayer; stats?: PlayerStats }) {
+  if (!player.snpId) return null;
+  if (!stats) return <small className="hs-slot-stats is-loading">Cargando estadísticas…</small>;
+  if (!stats.rate) return <small className="hs-slot-stats">Estadísticas no disponibles</small>;
+  return <small className="hs-slot-stats"><em>WR {formatWinRate(stats.rate.percentage)}</em> · {stats.rate.won}G-{stats.rate.lost}P</small>;
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { PlayerWinRate } from "@/domain/player-winrate";
+import { playerWinRates, type PlayerWinRate } from "@/domain/player-winrate";
 import type { LineupPlayer } from "./types";
 
 export type PlayerStats = { rate?: PlayerWinRate; failed?: boolean };
@@ -21,7 +21,10 @@ function load(player: LineupPlayer): Promise<PlayerStats> {
       const response = await fetch(`/api/snp/players/${player.snpId}${player.snpTeam ? `?team=${player.snpTeam}` : ""}`);
       if (!response.ok) return { failed: true };
       const result = await response.json();
-      return result.data?.winRates ? { rate: result.data.winRates.total } : { failed: true };
+      if (result.data?.winRates) return { rate: result.data.winRates.total };
+      // Without every group's winrate, the selected group's history is better than nothing.
+      const rate = playerWinRates(result.data?.stats ?? [], result.data?.previousStats ?? []).total;
+      return rate.decided ? { rate } : { failed: true };
     }).catch(() => ({ failed: true }));
     known.set(key, value);
   }
