@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { normalizeFixtures,normalizeStandings,normalizePlayerStats,photoUrl,snpNumber,parseMatch } from "../src/lib/snp-parser";
-import { normalizeTeamPlayer } from "../src/lib/snp-team";
+import { normalizeTeamPlayer, lineupPlayers } from "../src/lib/snp-team";
 import { createSnpHttp } from "../src/lib/snp-auth";
 import { snpDate } from "../src/lib/snp-date";
 import { sessionCookie } from "../src/lib/snp-client";
@@ -76,4 +76,13 @@ test("la fecha del acta no arrastra el marcador y separa la hora",async()=>{
   assert.deepEqual(matchDateParts("Sábado 17/10/2026"),{date:"Sábado 17/10/2026",time:null});
   assert.deepEqual(matchDateParts("  5-7   04 Octubre   09:00 "),{date:"04 Octubre",time:"09:00"});
   assert.deepEqual(matchDateParts(""),{date:"",time:null});
+});
+test("añade a la plantilla rival los jugadores de sus actas que SNP no lista",()=>{
+  const person=(id:string,name:string,points:number)=>({id,name,photoUrl:null,points});
+  const game=(home:ReturnType<typeof person>[],away:ReturnType<typeof person>[])=>({index:0,homePlayers:home.map(p=>p.name),awayPlayers:away.map(p=>p.name),home,away,sets:[]});
+  const older={id:"55256",title:"",dateLabel:"",teams:["Candela","Arcos"] as [string,string],teamIds:["4001","3349"] as [string,string],score:[0,12] as [number,number],games:[game([person("354406","Juan Francisco",48194.44),person("411073","Juan Zambrano",0)],[person("1","Rival",1)])]};
+  const newer={...older,id:"55258",teamIds:["2598","4001"] as [string,string],games:[game([person("2","Rival",1)],[person("371151","Jose Serna",61041.67),person("411073","Juan Zambrano",5937.5)])]};
+  const roster=[{id:"354406",name:"Juan Francisco",points:48194.44,nationalRank:null,zoneRank:null,photoUrl:null},{id:"371151",name:"Jose Serna",points:61041.67,nationalRank:null,zoneRank:null,photoUrl:null}];
+  const extra=lineupPlayers("4001",roster,[newer,older]);
+  assert.deepEqual(extra.map(p=>[p.id,p.name,p.points]),[["411073","Juan Zambrano",5937.5]]);
 });
