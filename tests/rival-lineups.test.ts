@@ -4,7 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { SnpFixture } from "../src/domain/snp";
-import { cleanRivalPairs } from "../src/domain/rival-lineup";
+import { cleanLineupPairs } from "../src/domain/rival-lineup";
 import { emptyLineup } from "../src/domain/rules";
 import type { Pair } from "../src/domain/types";
 import { canPrepareRivals, nextRivalFixture } from "../src/lib/rival-preparation";
@@ -14,13 +14,13 @@ const lineup = (...players: (string | null)[]): Pair[] => emptyLineup().map((pai
 
 test("la alineación del rival solo admite jugadores de su plantilla y sin repetir", () => {
   const squad = ["1", "2", "3", "4"];
-  assert.deepEqual(cleanRivalPairs(lineup("1", "2", "3"), squad)?.[1].players, ["3", null]);
-  assert.equal(cleanRivalPairs(lineup("1", "1"), squad), null);
-  assert.equal(cleanRivalPairs(lineup("1", "99"), squad), null);
-  assert.equal(cleanRivalPairs(lineup(), squad), null);
-  assert.equal(cleanRivalPairs(lineup("1").slice(0, 4), squad), null);
-  assert.equal(cleanRivalPairs(lineup("1").map(pair => ({ ...pair, id: "x" })), squad), null);
-  assert.equal(cleanRivalPairs("nada", squad), null);
+  assert.deepEqual(cleanLineupPairs(lineup("1", "2", "3"), squad)?.[1].players, ["3", null]);
+  assert.equal(cleanLineupPairs(lineup("1", "1"), squad), null);
+  assert.equal(cleanLineupPairs(lineup("1", "99"), squad), null);
+  assert.equal(cleanLineupPairs(lineup(), squad), null);
+  assert.equal(cleanLineupPairs(lineup("1").slice(0, 4), squad), null);
+  assert.equal(cleanLineupPairs(lineup("1").map(pair => ({ ...pair, id: "x" })), squad), null);
+  assert.equal(cleanLineupPairs("nada", squad), null);
 });
 
 test("el próximo rival sale del calendario del propio equipo, local o visitante", () => {
@@ -46,11 +46,12 @@ test("la alineación del rival se conserva por equipo y jornada hasta que se bor
   process.env.RIVAL_LINEUPS_FILE = path.join(directory, "rival.json");
   try {
     assert.equal(await readRivalLineup("a", "50"), null);
-    await saveRivalLineup({ team_id: "a", fixture_id: "50", rival_id: "9", pairs: lineup("1", "2") });
-    await saveRivalLineup({ team_id: "b", fixture_id: "60", rival_id: "8", pairs: lineup("5") });
-    await saveRivalLineup({ team_id: "a", fixture_id: "50", rival_id: "9", pairs: lineup("3", "4") });
+    await saveRivalLineup({ team_id: "a", fixture_id: "50", rival_id: "9", pairs: lineup("1", "2"), own_pairs: null });
+    await saveRivalLineup({ team_id: "b", fixture_id: "60", rival_id: "8", pairs: lineup("5"), own_pairs: lineup("a-1") });
+    await saveRivalLineup({ team_id: "a", fixture_id: "50", rival_id: "9", pairs: lineup("3", "4"), own_pairs: null });
     assert.deepEqual((await readRivalLineup("a", "50"))?.pairs[0].players, ["3", "4"]);
     assert.equal((await readRivalLineup("b", "60"))?.rival_id, "8");
+    assert.deepEqual((await readRivalLineup("b", "60"))?.own_pairs?.[0].players, ["a-1", null]);
     await clearRivalLineup("a", "50");
     assert.equal(await readRivalLineup("a", "50"), null);
     assert.ok(await readRivalLineup("b", "60"));

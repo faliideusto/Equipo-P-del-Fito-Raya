@@ -5,13 +5,17 @@ export interface PlayerWinRate {
   lost: number;
   decided: number;
   percentage: number | null;
+  // Sets of the decided matches; older stored copies do not have them.
+  setsWon?: number;
+  setsLost?: number;
 }
 
-export function playerWinRate(stats: Pick<SnpPlayerStats, "won" | "lost">[]): PlayerWinRate {
-  const won = stats.reduce((sum, phase) => sum + phase.won, 0);
-  const lost = stats.reduce((sum, phase) => sum + phase.lost, 0);
+export function playerWinRate(stats: (Pick<SnpPlayerStats, "won" | "lost"> & Partial<Pick<SnpPlayerStats, "setsWon" | "setsLost">>)[]): PlayerWinRate {
+  const total = (key: "won" | "lost" | "setsWon" | "setsLost") => stats.reduce((sum, phase) => sum + (phase[key] ?? 0), 0);
+  const won = total("won"); const lost = total("lost");
   const decided = won + lost;
-  return { won, lost, decided, percentage: decided ? won / decided * 100 : null };
+  const sets = stats.some(phase => phase.setsWon !== undefined) ? { setsWon: total("setsWon"), setsLost: total("setsLost") } : {};
+  return { won, lost, decided, percentage: decided ? won / decided * 100 : null, ...sets };
 }
 
 export function playerWinRates(current: SnpPlayerStats[], previous: SnpPlayerStats[]) {
