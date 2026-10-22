@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import type { SnpTeam,SnpPlayer } from "@/domain/snp";
+import type { SnpTeam,SnpPlayer,SnpMatch } from "@/domain/snp";
 import { snpClient } from "./snp-client";
 import { photoUrl,snpNumber } from "./snp-parser";
 type Row=Record<string,unknown>;
@@ -27,4 +27,18 @@ export async function fetchSnpTeam(id:string):Promise<SnpTeam>{
     if(rows.length<20||(expected!==undefined&&players.length>=expected))return {id,name:heading.replace(/^Jugadores de /i,"").replace(/\s+/g," ").trim(),players};
   }
   throw new Error("La plantilla de SNP supera el límite de consulta. Se conserva la última consulta completa.");
+}
+// SNP's roster endpoint only lists a team's current registrations, but its ranking and its
+// actas keep the players who have already played for it (Juan Zambrano, Globalpadel Candela).
+// These are the players of the team's actas that the roster leaves out, newest acta first.
+export function lineupPlayers(teamId:string,roster:SnpPlayer[],matches:SnpMatch[]):SnpPlayer[]{
+  const extra=new Map<string,SnpPlayer>();
+  for(const match of matches){
+    const side=match.teamIds?.indexOf(teamId);if(side!==0&&side!==1)continue;
+    for(const game of match.games)for(const person of (side===0?game.home:game.away)||[]){
+      if(!/^\d+$/.test(person.id)||!person.name||roster.some(p=>p.id===person.id)||extra.has(person.id))continue;
+      extra.set(person.id,{id:person.id,name:person.name,points:person.points??0,nationalRank:null,zoneRank:null,photoUrl:person.photoUrl});
+    }
+  }
+  return [...extra.values()];
 }

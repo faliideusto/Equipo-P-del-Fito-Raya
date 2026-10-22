@@ -2,7 +2,7 @@ import { snpClient } from "./snp-client";
 import { cachedSnp, type Keep } from "./snp-cache";
 import { readWinRates, reusableWinRates, saveWinRates, winRateFingerprint } from "./winrate-cache";
 import { normalizeFixtures, normalizeStandings, parseOptions, parseMatch } from "./snp-parser";
-import { fetchSnpTeam } from "./snp-team";
+import { fetchSnpTeam, lineupPlayers } from "./snp-team";
 import type { SnpCompetition, SnpOption, SnpTeam } from "@/domain/snp";
 import { snapshotCompetition, snapshotTeams } from "@/data/snp-explorer-snapshot";
 import { normalizePlayerStats, snpNumber,parsePlayerIdentity } from "./snp-parser";
@@ -63,7 +63,32 @@ export async function getSnpCompetition(query: Query = {}, force = false) {
 }
 export async function getSnpTeam(id: string, force = false) {
   validId(id);
-  return cachedSnp<SnpTeam>("team-" + id,async()=>fetchSnpTeam(id),snapshotTeams[id],force);
+  return cachedSnp<SnpTeam>("team-" + id,async()=>withLineupPlayers(await fetchSnpTeam(id)),snapshotTeams[id],force);
+}
+// A rival's roster in SNP can leave out players who have already played for it. They are added
+// from its played actas, with their current ranking points. The club's own teams keep SNP's roster.
+const CLUB_TEAMS=["7778","803902"];
+async function withLineupPlayers(team:SnpTeam):Promise<SnpTeam>{
+  if(CLUB_TEAMS.includes(team.id))return team;
+  try {
+    const calendars=await Promise.all(KEPT_DIVISIONS.map(division=>getSnpCompetition({division}).catch(()=>null)));
+    const played=calendars.flatMap(result=>result?result.data.calendar:[])
+      .filter(f=>(f.homeId===team.id||f.awayId===team.id)&&f.score&&f.score[0]+f.score[1]>0)
+      .sort((a,b)=>b.round-a.round);
+    const actas=await Promise.all(played.map(f=>getSnpMatch(f.id).then(result=>result.data).catch(()=>null)));
+    const extra=lineupPlayers(team.id,team.players,actas.filter(match=>match!==null));
+    if(!extra.length)return team;
+    const current=await Promise.all(extra.map(player=>rankingEntry(player.id).then(entry=>entry?{...player,...entry}:player).catch(()=>player)));
+    return {...team,players:[...team.players,...current]};
+  } catch { return team; }
+}
+// The player's points and national rank in the competition's group, as in the SNP ranking.
+async function rankingEntry(id:string){
+  const categories=await snpClient.ajax("ajaxGetCategoriaGrupoByJugador",{idjugador:id},"ranking");
+  const group=pick(undefined,options(categories.grupos_select || []),"20");
+  if(group==="00")return null;
+  const entity=(await snpClient.ajax("ajaxGetByJugadorAndGrupo",{idjugador:id,idgrupo:group},"ranking")).entity as Record<string,unknown>|undefined;
+  return entity?{points:snpNumber(entity.puntos),nationalRank:entity.orden?String(entity.orden):null}:null;
 }
 export async function getSnpMatch(id: string, force = false) {
   validId(id);
