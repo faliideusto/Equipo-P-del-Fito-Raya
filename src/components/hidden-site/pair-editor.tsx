@@ -6,9 +6,10 @@ import type { Pair } from "@/domain/types";
 import { matchValue } from "@/domain/rules";
 import { completePairPoints, orderedPairs } from "@/domain/head-to-head";
 import { PlayerAvatar } from "@/components/player-avatar";
-import { formatPoints, formatWinRate } from "@/lib/format";
+import { formatPoints } from "@/lib/format";
 import type { LineupPlayer } from "./types";
 import type { PlayerStats } from "./use-player-stats";
+import { StatsGrid } from "./stats-grid";
 
 type Slot = { pairId: string; slot: 0 | 1 };
 // Five pairs ordered by SNP points. Tapping a slot opens the player list; a player who already has a
@@ -37,9 +38,10 @@ export function PairEditor({ players, pairs, onChange, side, profile, stats }: {
             const player = person(pair.players[slot]);
             return player
               ? <div key={slot} className="hs-slot is-filled">
-                <button type="button" className="hs-slot-main" onClick={() => setPicking({ pairId: pair.id, slot })} aria-label={`Cambiar a ${player.name}`}><PlayerAvatar name={player.name} photoUrl={player.photo} small/><span><b>{player.name}</b><small>{formatPoints(player.points)} pts SNP</small><SlotStats player={player} stats={stats[player.id]}/></span></button>
+                <button type="button" className="hs-slot-main" onClick={() => setPicking({ pairId: pair.id, slot })} aria-label={`Cambiar a ${player.name}`}><PlayerAvatar name={player.name} photoUrl={player.photo} small/><span><b>{player.name}</b><small>{formatPoints(player.points)} pts SNP</small></span></button>
                 {profile(player) && <Link className="hs-slot-profile" href={profile(player)!} aria-label={`Ficha SNP de ${player.name}`}><IdCard size={16}/><span>Ficha</span></Link>}
                 <button type="button" className="hs-slot-remove" aria-label={`Quitar a ${player.name}`} onClick={() => place({ pairId: pair.id, slot }, null)}><X size={16}/></button>
+                <div className="hs-slot-stats"><StatsGrid player={player} stats={stats[player.id]}/></div>
               </div>
               : <button key={slot} type="button" className="hs-slot is-empty" onClick={() => setPicking({ pairId: pair.id, slot })}><Plus size={16}/> Añadir jugador</button>;
           })}</div>
@@ -67,10 +69,3 @@ function SlotPicker({ players, current, pairNumber, onChoose, onClose }: { playe
   </dialog>;
 }
 
-// Total winrate and won-lost matches of the player's whole SNP history.
-function SlotStats({ player, stats }: { player: LineupPlayer; stats?: PlayerStats }) {
-  if (!player.snpId) return null;
-  if (!stats) return <small className="hs-slot-stats is-loading">Cargando estadísticas…</small>;
-  if (!stats.rate) return <small className="hs-slot-stats">Estadísticas no disponibles</small>;
-  return <small className="hs-slot-stats"><em>WR {formatWinRate(stats.rate.percentage)}</em> · {stats.rate.won}G-{stats.rate.lost}P</small>;
-}
