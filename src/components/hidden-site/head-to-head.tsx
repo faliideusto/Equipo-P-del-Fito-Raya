@@ -7,6 +7,7 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { formatPoints, formatWinRate } from "@/lib/format";
 import type { LineupPlayer } from "./types";
 import type { PlayerStats } from "./use-player-stats";
+import { StatsGrid } from "./stats-grid";
 
 type Side = { name: string; players: LineupPlayer[]; pairs: Pair[]; profile: (player: LineupPlayer) => string | null };
 const edgeLabel = (edge: Edge, diff: number) => ({
@@ -69,20 +70,11 @@ function PairSide({ side, pair, total, stats, kind }: { side: Side; pair: Pair |
 }
 
 function PlayerRow({ player, stats, href }: { player: LineupPlayer; stats?: PlayerStats; href: string | null }) {
-  const rate = stats?.rate;
-  const sets = rate?.setsWon !== undefined ? `${rate.setsWon}-${rate.setsLost}` : "—";
   return <div className="hs-player">
     <PlayerAvatar name={player.name} photoUrl={player.photo} small/>
     <div className="hs-player-body">
       <b>{player.name}</b>
-      {!player.snpId ? <small className="hs-stats">Sin historial en SNP</small>
-        : !stats ? <small className="hs-stats is-loading" aria-label="Cargando estadísticas"><i/><i/><i/></small>
-        : stats.failed ? <small className="hs-stats">Estadísticas no disponibles</small>
-        : <dl className="hs-stats">
-          <div className="is-rate"><dt>Winrate</dt><dd>{formatWinRate(rate!.percentage)}</dd></div>
-          <div><dt>Partidos</dt><dd>{rate!.won}-{rate!.lost}</dd></div>
-          <div><dt>Sets</dt><dd>{sets}</dd></div>
-        </dl>}
+      <StatsGrid player={player} stats={stats}/>
     </div>
     {href && <Link className="hs-profile" href={href} aria-label={`Ficha SNP de ${player.name}`}><IdCard size={16}/><span>Ficha</span></Link>}
   </div>;
