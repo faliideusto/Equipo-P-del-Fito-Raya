@@ -31,6 +31,8 @@ Las posiciones se guardan mediante upsert por jugador, sin reemplazar las de otr
 
 Los motes de los jugadores, que editan el entrenador y los capitanes de cada equipo, necesitan además `supabase/nicknames.sql`. Se guardan por id de SNP (`.club-private/nicknames.json` en local, o `PLAYER_NICKNAMES_FILE`). Mientras la tabla no exista, la web sigue funcionando sin motes.
 
+La alineación prevista del próximo rival, que guardan el entrenador y los capitanes en la pestaña «Sitio oculto», necesita `supabase/rival-lineups.sql`. Se guarda una por equipo y jornada (`.club-private/rival-lineups.json` en local, o `RIVAL_LINEUPS_FILE`). Mientras la tabla no exista, la sección avisa de que hay que ejecutarlo.
+
 Render Free duerme tras 15 minutos sin tráfico y borra archivos locales al dormir, reiniciar o desplegar. La caché SNP es recuperable desde la fuente. Las posiciones del club necesitan una base de datos externa para conservarse; no deben tratarse como caché. Sin almacenamiento persistente externo, la edición se bloquea en Render para evitar perder cambios.
 
 No se programan solicitudes artificiales para mantener el servidor despierto. Los resultados se actualizan al consultar la web, según lo que SNP haya publicado. Configuramos una caché de cinco minutos para reducir consultas a SNP.

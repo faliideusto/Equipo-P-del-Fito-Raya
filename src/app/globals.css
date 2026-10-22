@@ -4229,3 +4229,9 @@ dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480p
   .calendar-agenda-match strong {font-size:13px}
 }
 @media (prefers-reduced-motion:reduce){.calendar-day.has-match,.calendar-agenda-row {transition:none}}
+.mini-lineup-actions {display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.mini-lineup .panel-heading .mini-lineup-actions {margin-top:0}
+.saved-rival-player {display:flex;align-items:center;gap:10px;min-width:0;padding:10px 12px;border:1px solid var(--accent-line);border-radius:8px}
+.saved-rival-player > span:not(.avatar) {display:flex;flex-direction:column;flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.saved-rival-player small {color:var(--muted);font-weight:400}
+.saved-rival-player .button {flex-shrink:0}
