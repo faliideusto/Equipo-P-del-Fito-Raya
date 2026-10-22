@@ -125,7 +125,7 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
   const team = teamId ? await getSnpTeam(teamId) : undefined;
   const known = team?.data.players.find(p=>p.id===id) || Object.values(snapshotTeams).flatMap(t=>t.players).find(p=>p.id===id);
   const fallback:SnpPlayerProfile|undefined = known ? {...known,groups:[],group:"",stats:[],previousStats:[],statsError:"Conecta SNP para consultar el historial deportivo."} : undefined;
-  return cachedSnp<SnpPlayerProfile>(`player-v3-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
+  return cachedSnp<SnpPlayerProfile>(`player-v4-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
     const html=await snpClient.html(`/ranking/menu_puntuacion/${id}`); const $=load(html);
     const identity=parsePlayerIdentity(html);
     const categories=await snpClient.ajax("ajaxGetCategoriaGrupoByJugador",{idjugador:id},"ranking");
@@ -137,7 +137,7 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
     const entity=ranking.entity as Record<string,unknown>|undefined;
     if(!entity) return base;
     const profile = {...base,points:snpNumber(entity.puntos),nationalRank:entity.orden?String(entity.orden):base.nationalRank,stats:normalizePlayerStats(ranking.datos),previousStats:normalizePlayerStats(ranking.datos_ant)};
-    const winRateKey = `${id}-${group}`; const fingerprint = winRateFingerprint(profile);
+    const winRateKey = `v2-${id}-${group}`; const fingerprint = winRateFingerprint(profile);
     // A manual refresh always recalculates; otherwise the stored winrate is kept until the data changes.
     const stored = force ? undefined : reusableWinRates(await readWinRates(winRateKey), fingerprint);
     if (stored) return {...profile, winRates: stored};

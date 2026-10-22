@@ -33,14 +33,14 @@ test("Mi perfil and the team view return the same zonal rank for the linked play
     assert.equal(profile.data.zoneRank, "198");
     assert.equal(profile.data.zoneRank, teamView.data.zoneRank);
     assert.equal(profile.data.nationalRank, teamView.data.nationalRank);
-    assert.deepEqual(profile.data.winRates?.current, { won: 1, lost: 1, decided: 2, percentage: 50 });
+    assert.deepEqual(profile.data.winRates?.current, { won: 1, lost: 1, decided: 2, percentage: 50, setsWon: 2, setsLost: 2 });
     assert.ok(Math.abs(profile.data.winRates!.total.percentage! - 200 / 3) < 1e-10);
     const otherGroup = await getSnpPlayer("381423", "7778", "19", true);
     assert.deepEqual(otherGroup.data.winRates, profile.data.winRates);
     assert.equal(otherGroup.data.stats[0].lost, 1);
     // Unchanged data reuses the stored winrate without asking SNP for the other groups.
     failOtherGroup = true;
-    await unlink(path.join(directory, "player-v3-381423-7778-default.json"));
+    await unlink(path.join(directory, "player-v4-381423-7778-default.json"));
     const reused = await getSnpPlayer("381423", "7778", undefined);
     assert.deepEqual(reused.data.winRates, profile.data.winRates);
     const incomplete = await getSnpPlayer("381423", "7778", undefined, true);

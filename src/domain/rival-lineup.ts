@@ -1,7 +1,7 @@
 import type { Pair } from "./types";
 
-// Five pairs of rival players: each player at most once and from the rival's SNP squad.
-export function cleanRivalPairs(value: unknown, playerIds: string[]): Pair[] | null {
+// Five pairs: each player at most once and from the given squad.
+export function cleanLineupPairs(value: unknown, playerIds: string[]): Pair[] | null {
   if (!Array.isArray(value) || value.length !== 5) return null;
   const used = new Set<string>(); const pairIds = new Set<string>();
   const pairs: Pair[] = [];
