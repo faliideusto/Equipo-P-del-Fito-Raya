@@ -6,6 +6,7 @@ import { TeamSwitch, TeamTabs } from "@/components/team-tabs";
 import { Skeleton } from "@/components/skeletons";
 import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
+import { canPrepareRivals } from "@/lib/rival-preparation";
 // The header shell renders at once; only the standings figures wait for SNP, so the
 // subpage (and its own skeleton) never waits behind the team header.
 export default async function TeamLayout({
@@ -31,11 +32,14 @@ export default async function TeamLayout({
         <Suspense fallback={<TeamStatsFallback />}><TeamStats teamId={teamId} /></Suspense>
         <TeamSwitch teamId={teamId} />
       </header>
-      <TeamTabs teamId={teamId} />
+      <Suspense fallback={<TeamTabs teamId={teamId} />}><PrivateTeamTabs teamId={teamId} /></Suspense>
       {children}
       <Suspense fallback={null}><ClubDataNote teamId={teamId} /></Suspense>
     </>
   );
+}
+async function PrivateTeamTabs({ teamId }: { teamId: TeamId }) {
+  return <TeamTabs teamId={teamId} showHidden={await canPrepareRivals()} />;
 }
 async function TeamStats({ teamId }: { teamId: TeamId }) {
   const rows = await clubRepository.getStandings(teamId);

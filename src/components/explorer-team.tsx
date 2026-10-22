@@ -10,7 +10,6 @@ import { PlayerAvatar } from "./player-avatar";
 import { cardPhoto } from "@/data/player-photos";
 import { TeamLogo } from "./team-logo";
 import { formatDate, formatPoints } from "@/lib/format";
-import { MiniLineup } from "./lineup/mini-lineup";
 import { TeamSchedule } from "./team-schedule";
 import { RivalTabs, type RivalView } from "./team-tabs";
 import { PageSkeleton } from "./skeletons";
@@ -209,7 +208,7 @@ export function ExplorerTeam({ id, filters, view, preparations = [] }: { id: str
       ) : loadingCompetition)}
 
       {view === "plantilla" && <>
-        {team && preparations.map(preparation => <MiniLineup key={`${id}-${preparation.teamId}-${preparation.fixtureId}`} players={team.players} preparation={preparation}/>)}
+        {preparations.map(preparation => <section key={`${preparation.teamId}-${preparation.fixtureId}`} className="panel connection-panel"><h2>Alineación prevista</h2><p>Es el próximo rival del equipo {preparation.teamId.toUpperCase()}. Sus parejas se preparan y se guardan en el sitio oculto.</p><Link href={`/equipos/${preparation.teamId}/sitio-oculto`} className="text-link">Ir al sitio oculto →</Link></section>)}
         {roster || loadingTeam}
       </>}
 

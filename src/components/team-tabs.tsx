@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, LayoutGrid, ListOrdered, Medal, Sparkles, Tag, Users } from "lucide-react";
+import { CalendarDays, EyeOff, LayoutGrid, ListOrdered, Medal, Sparkles, Tag, Users } from "lucide-react";
 import type { TeamId } from "@/domain/types";
 
 const tabs = [
@@ -12,14 +12,16 @@ const tabs = [
   { slug: "/estadisticas", label: "Ranking", icon: Medal },
   { slug: "/motes", label: "Motes", icon: Tag },
   { slug: "/parejas", label: "Crear parejas", icon: Sparkles },
+  { slug: "/sitio-oculto", label: "Sitio oculto", icon: EyeOff, hidden: true },
 ];
 
-export function TeamTabs({ teamId }: { teamId: TeamId }) {
+// The hidden site tab only shows for the coach and the captains; its page checks access again.
+export function TeamTabs({ teamId, showHidden = false }: { teamId: TeamId; showHidden?: boolean }) {
   const pathname = usePathname();
   const base = `/equipos/${teamId}`;
   return (
     <nav className="team-tabs" aria-label={`Secciones del equipo ${teamId.toUpperCase()}`}>
-      {tabs.map(({ slug, label, icon: Icon }) => {
+      {tabs.filter(tab => showHidden || !tab.hidden).map(({ slug, label, icon: Icon }) => {
         const href = base + slug;
         const active = slug ? pathname === href || pathname.startsWith(href + "/") : pathname === base;
         return (
