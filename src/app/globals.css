@@ -4318,7 +4318,9 @@ dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480p
 .hs-player {display:flex;align-items:flex-start;gap:10px;min-width:0;padding:10px;border-radius:10px;background:var(--bg)}
 .hs-player.is-missing {justify-content:center;margin:0;color:var(--faint);font-size:13px;border:1px dashed var(--line)}
 .hs-player-body {display:grid;gap:6px;flex:1;min-width:0}
-.hs-player-body b {font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+.hs-player-name {display:flex;align-items:baseline;justify-content:space-between;gap:4px 10px;flex-wrap:wrap}
+.hs-player-name b {font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+.hs-player-name span {font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
 .hs-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:0;font-size:12px;color:var(--muted)}
 .hs-stats>div {display:grid;gap:1px;padding:4px 6px;border-radius:6px;background:var(--panel-2);min-width:0}
 .hs-stats dt {font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
