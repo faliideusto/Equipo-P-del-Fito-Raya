@@ -43,9 +43,8 @@ test("a manual refresh makes every saved copy be read again from SNP once", asyn
   const previous = process.env.SNP_CACHE_DIR;
   process.env.SNP_CACHE_DIR = directory;
   try {
-    // A fresh copy of the module, so it uses this test's folder.
-    const fresh = "../src/lib/snp-cache?manual-refresh";
-    const { cachedSnp, expireSnpCache } = await import(fresh) as typeof import("../src/lib/snp-cache");
+    const { cachedSnp, expireSnpCache } = await import("../src/lib/snp-cache");
+    await expireSnpCache(0);
     let reads = 0; const acta = () => cachedSnp("match-refresh-test", async () => ({ reads: ++reads }));
     await acta(); assert.equal((await acta()).data.reads, 1, "within the cache time the saved copy is used");
     await new Promise(resolve => setTimeout(resolve, 5));
@@ -62,8 +61,9 @@ test("a confirmed copy is kept beyond the cache time until its signature changes
   const previous = process.env.SNP_CACHE_DIR;
   process.env.SNP_CACHE_DIR = directory;
   try {
-    const fresh = "../src/lib/snp-cache?kept";
-    const { cachedSnp, expireSnpCache } = await import(fresh) as typeof import("../src/lib/snp-cache");
+    const { cachedSnp, expireSnpCache } = await import("../src/lib/snp-cache");
+    // A refresh from an earlier test would make the aged copies look outdated.
+    await expireSnpCache(0);
     const { readFile } = await import("node:fs/promises");
     let score = "10-2"; let reads = 0;
     const acta = (signature?: string) => cachedSnp("match-kept-test", async () => ({ score, reads: ++reads }), undefined, false,

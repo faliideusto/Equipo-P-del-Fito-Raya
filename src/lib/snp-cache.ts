@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
 import type { SnpResult } from "@/domain/snp";
 export const cacheFolder = () => process.env.VERCEL === "1" ? path.join(tmpdir(), "fito-snp-cache") : path.resolve(process.env.SNP_CACHE_DIR || ".snp-cache");
-const folder = cacheFolder();
 const pending = new Map<string,Promise<SnpResult<unknown>>>();
 let latestSuccess: string | null = null;
 let latestError: string | null = null;
@@ -34,7 +33,7 @@ export async function cachedSnp<T>(key: string, loader: () => Promise<T>, fallba
   if (!/^[a-z0-9-]+$/.test(key)) throw new Error("Consulta no válida.");
   const running = pending.get(key); if (running) return running as Promise<SnpResult<T>>;
   const operation = (async (): Promise<SnpResult<T>> => {
-    const file = path.join(folder, key + ".json");
+    const folder = cacheFolder(); const file = path.join(folder, key + ".json");
     let cached: SnpResult<T> | undefined;
     try { cached = JSON.parse(await readFile(file,"utf8")); } catch { /* No usable cache yet. */ }
     const ttl = Math.max(30, Math.min(3600, Number(process.env.SNP_CACHE_SECONDS) || 60)) * 1000;
