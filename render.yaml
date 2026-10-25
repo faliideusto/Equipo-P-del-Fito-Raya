@@ -10,7 +10,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: 24.19.0
+        value: 24.22.1
       - key: SNP_EMAIL
         sync: false
       - key: SNP_PASSWORD
