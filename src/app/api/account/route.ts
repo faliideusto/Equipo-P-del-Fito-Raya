@@ -5,10 +5,15 @@ import { accountBody, accountCookieOptions, accountFailure, accountReply, Accoun
 import { verifyCoachPassword } from "@/lib/coach-auth";
 import { createCoachToken } from "@/lib/coach-session";
 import { isPosition, playerLink } from "@/lib/account-profile";
+import { canOpenCayitos } from "@/domain/cayitos";
+import { topBalTeam } from "@/lib/cayitos";
 import { requireRosterSelection, rosterPlayer } from "@/lib/account-roster";
 export const runtime = "nodejs";
 export async function GET() {
-  try { const user = await currentAccount(); return accountReply({ user: user ? { id: user.id, email: user.role === "visitor" ? "Visitante" : user.email, role: user.role ?? "player", position: user.user_metadata?.position } : null, link: user && user.role === "player" ? await playerLink(user.id) : null }); }
+  try {
+    const user = await currentAccount(); const link = user && user.role === "player" ? await playerLink(user.id) : null;
+    return accountReply({ user: user ? { id: user.id, email: user.role === "visitor" ? "Visitante" : user.email, role: user.role ?? "player", position: user.user_metadata?.position } : null, link, ...(canOpenCayitos(link?.player_id) || user?.role === "cayito" ? { cayitos: true } : {}), ...(user?.role === "cayito" ? { cayitoTeam: `/competicion/equipos/${await topBalTeam()}` } : {}) });
+  }
   catch (error) { return accountFailure(error); }
 }
 export async function POST(request: Request) {

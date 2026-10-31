@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { accountCookieOptions, authRequest, type Session } from "@/lib/account-auth";
 import { verifyCoachToken } from "@/lib/coach-session";
+import { CAYITO_HOME, cayitoAllowed } from "@/domain/cayitos";
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -17,12 +18,13 @@ export async function proxy(request: NextRequest) {
   // Google fetches the hero image of each card without cookies; the unguessable serial is the key.
   if (path.startsWith("/api/wallet/google/hero/")) return NextResponse.next({ request: { headers } });
   let session: Session | undefined;
+  let role: string | undefined;
   try {
     const token = request.cookies.get("fito-access")?.value;
     let valid = await verifyCoachToken(request.cookies.get("fito-coach")?.value);
     if (token && !valid) {
       const response = await authRequest("user", undefined, token);
-      if (response.ok) valid = Boolean((await response.json()).id);
+      if (response.ok) { const user = await response.json(); valid = Boolean(user.id); role = user.app_metadata?.role; }
       else if (response.status !== 401 && response.status !== 403) throw new Error("Auth unavailable");
     }
     if (!valid) {
@@ -32,6 +34,7 @@ export async function proxy(request: NextRequest) {
         if (response.ok) {
           session = await response.json();
           valid = Boolean(session?.user?.id && session.access_token && session.refresh_token);
+          role = session?.user?.app_metadata?.role;
         } else if (response.status >= 500 || response.status === 429) throw new Error("Auth unavailable");
       }
     }
@@ -52,7 +55,12 @@ export async function proxy(request: NextRequest) {
       request.cookies.set("fito-refresh", session.refresh_token);
       headers.set("cookie", request.cookies.toString());
     }
-    const response = NextResponse.next({ request: { headers } });
+    // A cayito account only reaches its ranking and the SNP explorer; everything else sends it home.
+    const blocked = role === "cayito" && !cayitoAllowed(path);
+    const home = blocked && !path.startsWith("/api/") ? new URL(CAYITO_HOME, `${process.env.RENDER === "true" || process.env.VERCEL === "1" ? "https:" : request.nextUrl.protocol}//${request.headers.get("host") ?? request.nextUrl.host}`) : null;
+    const response = blocked
+      ? home ? NextResponse.redirect(home) : NextResponse.json({ error: "Esta cuenta no tiene acceso a esta información." }, { status: 403 })
+      : NextResponse.next({ request: { headers } });
     response.headers.set("Cache-Control", "private, no-store");
     if (session) {
       response.cookies.set("fito-access", session.access_token, { ...accountCookieOptions(), maxAge: session.expires_in });

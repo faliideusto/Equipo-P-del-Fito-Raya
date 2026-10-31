@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { verifyCoachToken } from "./coach-session";
 
-type AuthUser = { id: string; email?: string; role?: "coach" | "player" | "visitor"; app_metadata?: { role?: string }; user_metadata?: { position?: string } };
+type AuthUser = { id: string; email?: string; role?: "coach" | "player" | "visitor" | "cayito"; app_metadata?: { role?: string }; user_metadata?: { position?: string } };
 export function accountIdentity(user: AuthUser): AuthUser {
-  // Only server-managed app_metadata can grant the visitor role.
-  return { ...user, role: user.app_metadata?.role === "visitor" ? "visitor" : "player" };
+  // Only server-managed app_metadata can grant the visitor and cayito roles.
+  const role = user.app_metadata?.role;
+  return { ...user, role: role === "visitor" || role === "cayito" ? role : "player" };
 }
 export type Session = { access_token: string; refresh_token: string; expires_in: number; user: AuthUser };
 export const accountCookieOptions = () => ({ httpOnly: true, secure: process.env.RENDER === "true" || process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/" });
