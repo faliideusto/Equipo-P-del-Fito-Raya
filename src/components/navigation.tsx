@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   CalendarCheck,
   ClipboardList,
+  Crown,
   HeartHandshake,
   House,
   Menu,
@@ -37,6 +38,7 @@ const clubItems: Item[] = [
 ];
 const home: Item = { href: "/", label: "Inicio", icon: House, match: (path) => path === "/" };
 const profile: Item = { href: "/mi-perfil", label: "Mi perfil", icon: UserRound, match: (path) => path === "/mi-perfil" || path === "/acceso" };
+const cayitosItem: Item = { href: "/ranking-cayitos", label: "Ranking cayitos", icon: Crown, match: (path) => path === "/ranking-cayitos" };
 const coach: Item = { href: "/entrenador", label: "Panel del entrenador", icon: ClipboardList, match: (path) => path === "/entrenador" };
 
 function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string; onNavigate: () => void }) {
@@ -51,7 +53,7 @@ function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string;
   );
 }
 
-export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
+export function Navigation({ isCoach = false, cayitos = false, guestTeam = null }: { isCoach?: boolean; cayitos?: boolean; guestTeam?: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [latestHref, setLatestHref] = useState<string | null>(null);
@@ -67,7 +69,13 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
-  const bottomItems = [home, ...teamItems, clubItems[0]];
+  // Tomás's account has no Fito team: only the ranking, the SNP explorer and his own team.
+  const guestItems: Item[] | null = guestTeam ? [
+    { ...cayitosItem, label: "Cayitos" },
+    { href: guestTeam, label: "Mi equipo", icon: Users, match: (path) => path === guestTeam },
+    { ...clubItems[0], label: "Buscador SNP", match: (path) => path.startsWith("/competicion") && path !== guestTeam },
+  ] : null;
+  const bottomItems = guestItems ?? [home, ...teamItems, clubItems[0]];
   return (
     <>
       <div className="mobile-header" style={{ viewTransitionName: "app-mobile-header" }}>
@@ -89,6 +97,10 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
           </span>
         </Link>
         <nav aria-label="Navegación principal">
+          {guestItems ? <div className="nav-group">
+            <div className="nav-caption">Tu cuenta</div>
+            {guestItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} onNavigate={close} />)}
+          </div> : <>
           <NavLink item={home} pathname={pathname} onNavigate={close} />
           <div className="nav-group">
             <div className="nav-caption">Nuestros equipos</div>
@@ -103,8 +115,10 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
           <div className="nav-group">
             <div className="nav-caption">Tu cuenta</div>
             <NavLink item={profile} pathname={pathname} onNavigate={close} />
+            {cayitos && <NavLink item={cayitosItem} pathname={pathname} onNavigate={close} />}
             {isCoach && <NavLink item={coach} pathname={pathname} onNavigate={close} />}
           </div>
+          </>}
         </nav>
         <div className="sidebar-footer">
           <span><span className="status-dot" /> Temporada 2026 / 27</span>
@@ -113,7 +127,7 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
         </div>
       </aside>
       {open && <button className="nav-backdrop" aria-label="Cerrar menú" onClick={close} />}
-      <nav className="bottom-nav" aria-label="Accesos rápidos" style={{ viewTransitionName: "app-bottom-nav" }}>
+      <nav className={`bottom-nav ${guestItems ? "bottom-nav-guest" : ""}`} aria-label="Accesos rápidos" style={{ viewTransitionName: "app-bottom-nav" }}>
         {bottomItems.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;
@@ -124,10 +138,10 @@ export function Navigation({ isCoach = false }: { isCoach?: boolean }) {
             </Link>
           );
         })}
-        <Link href={profile.href} className={profile.match(pathname) ? "active" : ""} aria-current={profile.match(pathname) ? "page" : undefined} onClick={close}>
+        {!guestItems && <Link href={profile.href} className={profile.match(pathname) ? "active" : ""} aria-current={profile.match(pathname) ? "page" : undefined} onClick={close}>
           <UserRound size={20} />
           <span>Perfil</span>
-        </Link>
+        </Link>}
       </nav>
     </>
   );

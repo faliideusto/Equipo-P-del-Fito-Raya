@@ -4349,3 +4349,73 @@ small.hs-stats {display:block}
   .hs-board {padding:16px}
   .hs-match {padding:12px}
 }
+/* Ranking cayitos: private ranking of four friends. */
+.cayito-sorts {display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none}
+.cayito-sorts::-webkit-scrollbar {display:none}
+.cayito-sorts button {flex-shrink:0;padding:8px 14px;border:1px solid var(--line-strong);border-radius:999px;background:var(--panel);color:var(--muted);font-family:var(--font-mono);font-size:13px;cursor:pointer}
+.cayito-sorts button.active {background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.cayito-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:20px}
+.cayito-card {display:flex;flex-direction:column;gap:14px;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--panel);min-width:0}
+.cayito-card.leader {border-color:var(--accent-line);background:linear-gradient(160deg,var(--accent-soft),var(--panel) 55%)}
+.cayito-card header {display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:12px}
+.cayito-rank {font-family:var(--font-display);font-size:34px;font-weight:800;line-height:1;color:var(--faint);min-width:22px;text-align:center}
+.cayito-card.leader .cayito-rank {color:var(--accent)}
+.cayito-who {min-width:0}
+.cayito-who h3 {margin:0;font-family:var(--font-display);font-size:21px;font-weight:700;line-height:1.1;overflow-wrap:anywhere}
+.cayito-who a:hover h3 {color:var(--accent)}
+.cayito-who small {display:block;margin-top:3px;color:var(--muted);font-size:12px}
+.cayito-crowns {display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.cayito-crowns span {display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-family:var(--font-mono);font-size:11px}
+.cayito-points {display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.cayito-points strong {font-family:var(--font-display);font-size:26px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.cayito-points small {color:var(--muted);font-size:11px;font-family:var(--font-mono);text-transform:uppercase}
+.cayito-points span {display:inline-flex;align-items:center;gap:3px;margin-top:3px;font-family:var(--font-mono);font-size:12px}
+.cayito-points .up,.cayito-stats .good {color:var(--green)}
+.cayito-points .down,.cayito-stats .bad {color:var(--wine)}
+.cayito-winrate>div:first-child {display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;color:var(--muted);font-size:13px}
+.cayito-winrate b {font-family:var(--font-display);font-size:22px;color:var(--ink)}
+.cayito-bar {height:8px;border-radius:999px;background:var(--panel-3);overflow:hidden}
+.cayito-bar i {display:block;height:100%;border-radius:inherit;background:var(--accent)}
+.cayito-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+.cayito-stats div {padding:8px 10px;border-radius:10px;background:var(--bg-deep);min-width:0}
+.cayito-stats dt {color:var(--faint);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cayito-stats dd {margin:2px 0 0;font-family:var(--font-display);font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.cayito-stats dd small {color:var(--muted);font-size:13px;font-weight:600}
+.cayito-card footer {display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cayito-form {display:flex;flex-direction:column;gap:6px;min-width:0}
+.cayito-streak {display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--muted)}
+.cayito-streak.win {color:var(--accent)}
+.cayito-streak.loss {color:#8fc7ff}
+.cayito-last {display:flex;gap:4px}
+.cayito-last i {display:grid;place-items:center;width:22px;height:22px;border-radius:6px;font-style:normal;font-family:var(--font-mono);font-size:11px;font-weight:600}
+.cayito-last .w {background:var(--green-soft);color:var(--green)}
+.cayito-last .l {background:var(--wine-soft);color:var(--wine)}
+.cayito-spark {width:120px;height:36px;flex-shrink:0}
+.cayito-spark polyline {fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.cayito-spark.up polyline {stroke:var(--green)}
+.cayito-spark.down polyline {stroke:var(--wine)}
+.cayito-error {margin:0;color:var(--muted);font-size:14px}
+.cayito-compare {margin-bottom:16px}
+.cayito-table-wrap {overflow-x:auto}
+.cayito-compare table {width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.cayito-compare th,.cayito-compare td {padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.cayito-compare thead th {font-family:var(--font-display);font-size:16px;color:var(--ink)}
+.cayito-compare tbody th {text-align:left;color:var(--muted);font-weight:400;font-size:14px}
+.cayito-compare td {font-family:var(--font-mono);font-size:14px}
+.cayito-compare td.best {color:var(--accent);font-weight:600}
+.cayito-note {color:var(--faint);font-size:13px;line-height:1.5}
+@media (max-width: 900px) {
+  .cayito-grid {grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width: 640px) {
+  .cayito-card {padding:14px;gap:12px}
+  .cayito-card header {grid-template-columns:auto auto minmax(0,1fr);gap:10px}
+  .cayito-points {grid-column:1/-1;flex-direction:row;align-items:baseline;gap:8px;justify-content:flex-start;padding-left:2px}
+  .cayito-rank {font-size:28px}
+  .cayito-who h3 {font-size:19px}
+  .cayito-stats dd {font-size:17px}
+  .cayito-compare th,.cayito-compare td {padding:8px 6px;font-size:13px}
+}
+@media (max-width: 900px) {
+  .bottom-nav.bottom-nav-guest {grid-template-columns:repeat(3,minmax(0,1fr))}
+}
