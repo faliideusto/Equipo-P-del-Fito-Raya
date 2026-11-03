@@ -1,4 +1,6 @@
 "use client";
+import { LineupBuilder } from "./lineup/lineup-builder";
+import type { Player } from "@/domain/types";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -16,7 +18,7 @@ import { PageSkeleton } from "./skeletons";
 import { isForcedCheck, SNP_CHECKED_EVENT } from "@/lib/snp-updates";
 import type { RivalPreparation } from "@/lib/rival-preparation";
 
-export function ExplorerTeam({ id, filters, view, preparations = [] }: { id: string; filters: Partial<SnpCompetition["filters"]>; view: RivalView; preparations?: RivalPreparation[] }) {
+export function ExplorerTeam({ id, filters, view, preparations = [], pairs = false }: { id: string; filters: Partial<SnpCompetition["filters"]>; view: RivalView; preparations?: RivalPreparation[]; pairs?: boolean }) {
   const [result, setResult] = useState<SnpResult<SnpTeam> | null>(null);
   const [error, setError] = useState("");
   const [competition, setCompetition] = useState<SnpResult<SnpCompetition> | null>(null);
@@ -133,7 +135,7 @@ export function ExplorerTeam({ id, filters, view, preparations = [] }: { id: str
         </dl>
         <Link className="team-switch" href={backHref}>← Volver a competición</Link>
       </header>
-      <RivalTabs active={view} href={href} name={name || "este equipo"} />
+      <RivalTabs active={view} href={href} name={name || "este equipo"} pairs={pairs} />
       {warnings.map(warning => <p key={warning} className="snp-warning" role="status">{warning}</p>)}
 
       {view === "resumen" && <>
@@ -211,6 +213,8 @@ export function ExplorerTeam({ id, filters, view, preparations = [] }: { id: str
         {preparations.map(preparation => <section key={`${preparation.teamId}-${preparation.fixtureId}`} className="panel connection-panel"><h2>Alineación prevista</h2><p>Es el próximo rival del equipo {preparation.teamId.toUpperCase()}. Sus parejas se preparan y se guardan en el sitio oculto.</p><Link href={`/equipos/${preparation.teamId}/sitio-oculto`} className="text-link">Ir al sitio oculto →</Link></section>)}
         {roster || loadingTeam}
       </>}
+
+      {view === "parejas" && pairs && (team ? <LineupBuilder key={id} teamId="a" players={team.players.map((player): Player => ({ id: player.id, name: player.name, teamId: "a", sourceId: player.id, sourceTeamId: id, photoUrl: player.photoUrl, points: player.points, position: null }))} /> : loadingTeam)}
 
       {result && <p className="data-note">Consulta: {new Date(result.updatedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid" })} · SNP</p>}
     </>

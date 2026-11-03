@@ -42,7 +42,7 @@ export function TeamSwitch({ teamId }: { teamId: TeamId }) {
   return <Link className="team-switch" href={`/equipos/${other}${section}`}>Cambiar al equipo {other.toUpperCase()}</Link>;
 }
 
-export type RivalView = "resumen" | "jornadas" | "clasificacion" | "plantilla";
+export type RivalView = "resumen" | "jornadas" | "clasificacion" | "plantilla" | "parejas";
 export const rivalViews: { view: RivalView; label: string; icon: typeof LayoutGrid }[] = [
   { view: "resumen", label: "Resumen", icon: LayoutGrid },
   { view: "jornadas", label: "Jornadas", icon: CalendarDays },
@@ -50,11 +50,13 @@ export const rivalViews: { view: RivalView; label: string; icon: typeof LayoutGr
   { view: "plantilla", label: "Plantilla", icon: Users },
 ];
 
-export function RivalTabs({ active, href, name }: { active: RivalView; href: (view: RivalView) => string; name: string }) {
+// pairs: the "Crear parejas" tab, only for Tomás on his own team (checked on the server).
+export function RivalTabs({ active, href, name, pairs = false }: { active: RivalView; href: (view: RivalView) => string; name: string; pairs?: boolean }) {
+  const views = pairs ? [...rivalViews, { view: "parejas" as const, label: "Crear parejas", icon: Sparkles }] : rivalViews;
   return (
     <nav className="team-tabs" aria-label={`Secciones de ${name}`}>
-      {rivalViews.map(({ view, label, icon: Icon }) => (
-        <Link key={view} href={href(view)} scroll={false} className={active === view ? "active" : ""} aria-current={active === view ? "page" : undefined}>
+      {views.map(({ view, label, icon: Icon }) => (
+        <Link key={view} href={href(view)} scroll={false} className={`${active === view ? "active" : ""} ${view === "parejas" ? "is-action" : ""}`} aria-current={active === view ? "page" : undefined}>
           <Icon size={16} />
           {label}
         </Link>

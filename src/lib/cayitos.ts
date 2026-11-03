@@ -23,6 +23,13 @@ export async function topBalTeam(): Promise<string> {
   const standings = await getSnpCompetition({ division: "2318" }).then(result => result.data.standings).catch(() => []);
   return standings.find(row => /top\s*bal/i.test(row.name))?.teamId ?? TOP_BAL_FALLBACK;
 }
+// Only Tomás's account (role "cayito") gets a pair builder, and only on his own team.
+export async function canBuildGuestPairs(teamId: string, account: typeof currentAccount = currentAccount, ownTeam: () => Promise<string> = topBalTeam): Promise<boolean> {
+  try {
+    if ((await account())?.role !== "cayito") return false;
+    return teamId === await ownTeam();
+  } catch { return false; }
+}
 async function findMember(member: CayitoMember): Promise<{ id: string; team: string } | null> {
   if (member.snpId) return { id: member.snpId, team: member.snpTeam ?? "" };
   if (!member.findName) return null;
