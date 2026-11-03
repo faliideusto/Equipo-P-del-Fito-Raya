@@ -63,3 +63,13 @@ test("la cuenta cayito solo abre el ranking, el buscador SNP y sus recursos", as
   for (const path of ["/", "/equipos/a", "/equipos/a/sitio-oculto", "/mi-perfil", "/mvp", "/entrenador", "/api/results", "/api/account/stats", "/api/snp/sync", "/api/snp/connect", "/api/rival-lineups", "/asistente"]) assert.ok(!cayitoAllowed(path), path);
   assert.equal(await canSeeCayitos({ account: async () => ({ id: "t", role: "cayito" }), link: async () => null }), true);
 });
+
+test("solo la cuenta de Tomás tiene creador de parejas, y solo en su equipo", async () => {
+  const { canBuildGuestPairs } = await import("../src/lib/cayitos");
+  const own = async () => "3343";
+  assert.equal(await canBuildGuestPairs("3343", async () => ({ id: "t", role: "cayito" }), own), true);
+  assert.equal(await canBuildGuestPairs("3349", async () => ({ id: "t", role: "cayito" }), own), false);
+  assert.equal(await canBuildGuestPairs("3343", async () => ({ id: "r", role: "player" }), own), false);
+  assert.equal(await canBuildGuestPairs("3343", async () => ({ id: "coach", role: "coach" }), own), false);
+  assert.equal(await canBuildGuestPairs("3343", async () => null, own), false);
+});
