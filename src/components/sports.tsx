@@ -132,7 +132,7 @@ function daysUntil(date: string) {
   if (diff < 0) return null;
   return diff === 0 ? "Hoy" : diff === 1 ? "Mañana" : `Faltan ${diff} días`;
 }
-type BoardSide = { name: string; logo: string; info?: { position: number; points: number } };
+type BoardSide = { name: string; logo: string; href?: string; info?: { position: number; points: number } };
 export function MatchBoard({ label, meta, date, home, away, actions }: {
   label: string;
   meta: string;
@@ -149,15 +149,19 @@ export function MatchBoard({ label, meta, date, home, away, actions }: {
         <span>{countdown && <b>{countdown}</b>} {formatDate(date)} · {formatTime(date)}</span>
       </div>
       <div className="match-board-versus">
-        {[home, away].map((side, index) => (
-          <div className={`match-board-team ${index ? "is-away" : ""}`} key={index}>
+        {[home, away].map((side, index) => {
+          const className = ["match-board-team", index && "is-away", side.href && "is-link"].filter(Boolean).join(" ");
+          const content = <>
             <TeamLogo name={side.logo} large />
             <div>
               <strong>{side.name}</strong>
               <span>{index ? "Visitante" : "Local"}{side.info && ` · ${side.info.position}º · ${side.info.points} pts`}</span>
             </div>
-          </div>
-        ))}
+          </>;
+          return side.href
+            ? <Link className={className} href={side.href} key={index} aria-label={`Ver ficha de ${side.name}`}>{content}</Link>
+            : <div className={className} key={index}>{content}</div>;
+        })}
         <b className="match-board-vs" aria-hidden="true">VS</b>
       </div>
       <ol className="match-values" aria-label="Puntos en juego por pareja">
@@ -172,15 +176,16 @@ export function MatchBoard({ label, meta, date, home, away, actions }: {
     </section>
   );
 }
-export function NextMatchBoard({ fixture, team, standing, opponentStanding, lineupHref = `/equipos/${team.id}/parejas` }: {
+export function NextMatchBoard({ fixture, team, standing, opponentStanding, opponentHref, lineupHref = `/equipos/${team.id}/parejas` }: {
   fixture: Fixture;
   team: Team;
   lineupHref?: string;
+  opponentHref?: string;
   standing?: { position: number; points: number };
   opponentStanding?: { position: number; points: number };
 }) {
-  const ours = { name: `Fito Raya ${team.id.toUpperCase()}`, logo: team.name, info: standing };
-  const theirs = { name: fixture.opponent.replaceAll("_", " "), logo: fixture.opponent, info: opponentStanding };
+  const ours = { name: `Fito Raya ${team.id.toUpperCase()}`, logo: team.name, href: `/equipos/${team.id}`, info: standing };
+  const theirs = { name: fixture.opponent.replaceAll("_", " "), logo: fixture.opponent, href: opponentHref, info: opponentStanding };
   const [home, away] = fixture.home ? [ours, theirs] : [theirs, ours];
   return (
     <MatchBoard

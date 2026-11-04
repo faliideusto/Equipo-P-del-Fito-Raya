@@ -26,6 +26,7 @@ export default async function Home() {
         position: ownIndex + 1,
         next,
         opponent: opponentIndex >= 0 ? { position: opponentIndex + 1, points: rows[opponentIndex].points } : undefined,
+        opponentHref: opponentIndex >= 0 && rows[opponentIndex].teamId ? `/competicion/equipos/${rows[opponentIndex].teamId}?division=${team.id === "a" ? "2318" : "2326"}` : undefined,
         last: fixtures.filter((f) => f.status === "played").at(-1),
       };
     }),
@@ -51,6 +52,7 @@ export default async function Home() {
           lineupHref={lineupHref(featured.team.id, featured.next!.id, canPublish)}
           standing={featured.own ? { position: featured.position, points: featured.own.points } : undefined}
           opponentStanding={featured.opponent}
+          opponentHref={featured.opponentHref}
         />
       ) : (
         <section className="panel empty-state">

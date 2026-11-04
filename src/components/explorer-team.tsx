@@ -94,6 +94,8 @@ export function ExplorerTeam({ id, filters, view, preparations = [], pairs = fal
   const next = calendar.filter(f => !f.score).sort((a, b) => a.round - b.round)[0];
   const played = calendar.filter(f => f.score).sort((a, b) => b.round - a.round);
   const backHref = filters.division ? `/competicion?${query}` : "/competicion";
+  // The board links the other team; the team on this page already is where you are.
+  const teamHref = (teamId?: string) => teamId && teamId !== id ? `/competicion/equipos/${teamId}${query ? `?${query}` : ""}` : undefined;
   const noDivision = <section className="panel connection-panel"><h2>Jornadas y clasificación</h2><p>Selecciona la división del equipo en competición para consultar su calendario y su clasificación.</p><Link href="/competicion" className="text-link">Buscar en competición →</Link></section>;
   const loadingCompetition = !calendarError && <PageSkeleton variant="table" heading={false} label="Consultando jornadas y clasificación…"/>;
   const loadingTeam = error || (result && !result.data)
@@ -144,8 +146,8 @@ export function ExplorerTeam({ id, filters, view, preparations = [], pairs = fal
             label={`Próximo encuentro de ${name}`}
             meta={`Jornada ${String(next.round).padStart(2, "0")}${division ? ` · ${division}` : ""}`}
             date={next.date || ""}
-            home={{ name: next.homeName.replaceAll("_", " "), logo: next.homeName, info: standingOf(next.homeId) }}
-            away={{ name: next.awayName.replaceAll("_", " "), logo: next.awayName, info: standingOf(next.awayId) }}
+            home={{ name: next.homeName.replaceAll("_", " "), logo: next.homeName, href: teamHref(next.homeId), info: standingOf(next.homeId) }}
+            away={{ name: next.awayName.replaceAll("_", " "), logo: next.awayName, href: teamHref(next.awayId), info: standingOf(next.awayId) }}
             actions={<Link className="text-link" href={`/competicion/actas/${next.id}${query ? `?${query}` : ""}`}>Ver encuentro <ArrowRight size={16} /></Link>}
           />
         ) : (

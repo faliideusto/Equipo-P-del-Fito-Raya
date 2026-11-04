@@ -38,6 +38,7 @@ export default async function TeamPage({
           lineupHref={lineupHref(teamId, next.id, canPublish)}
           standing={ownIndex >= 0 ? { position: ownIndex + 1, points: rows[ownIndex].points } : undefined}
           opponentStanding={opponentIndex >= 0 ? { position: opponentIndex + 1, points: rows[opponentIndex].points } : undefined}
+          opponentHref={opponentIndex >= 0 && rows[opponentIndex].teamId ? `/competicion/equipos/${rows[opponentIndex].teamId}?division=${division}` : undefined}
         />
       ) : (
         <section className="panel empty-state">
