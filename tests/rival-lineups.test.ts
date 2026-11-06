@@ -7,7 +7,7 @@ import type { SnpFixture } from "../src/domain/snp";
 import { cleanLineupPairs } from "../src/domain/rival-lineup";
 import { emptyLineup } from "../src/domain/rules";
 import type { Pair } from "../src/domain/types";
-import { canPrepareRivals, nextRivalFixture } from "../src/lib/rival-preparation";
+import { canPrepareRivals, nextFixtureOf, nextRivalFixture } from "../src/lib/rival-preparation";
 import { clearRivalLineup, readRivalLineup, saveRivalLineup } from "../src/lib/rival-lineups";
 
 const lineup = (...players: (string | null)[]): Pair[] => emptyLineup().map((pair, index) => ({ ...pair, players: [players[index * 2] ?? null, players[index * 2 + 1] ?? null] }));
@@ -29,6 +29,8 @@ test("el próximo rival sale del calendario del propio equipo, local o visitante
   const next = nextRivalFixture("a", [fixture("1", 1, "7778", "9", [4, 3]), fixture("3", 3, "7778", "11"), fixture("2", 2, "10", "7778")]);
   assert.deepEqual(next, { teamId: "a", fixtureId: "2", round: 2, date: null, rivalId: "10", rivalName: "10 club" });
   assert.equal(nextRivalFixture("b", [fixture("2", 2, "10", "7778")]), null);
+  // Tomás's hidden site: the same rule from his own team, whoever it plays.
+  assert.deepEqual(nextFixtureOf("3343", [fixture("4", 4, "7778", "3343"), fixture("5", 5, "3343", "12")]), { fixtureId: "4", round: 4, date: null, rivalId: "7778", rivalName: "7778 club" });
 });
 
 test("al sitio oculto solo entran el entrenador y los capitanes", async () => {

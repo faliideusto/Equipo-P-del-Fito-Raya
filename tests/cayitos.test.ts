@@ -59,8 +59,8 @@ test("orden y coronas", () => {
 
 test("la cuenta cayito solo abre el ranking, el buscador SNP y sus recursos", async () => {
   const { cayitoAllowed } = await import("../src/domain/cayitos");
-  for (const path of ["/ranking-cayitos", "/competicion", "/competicion/equipos/3343", "/competicion/jugadores/1", "/api/account", "/api/snp/players/1", "/jugadores/381423.png", "/_next/data/x.json"]) assert.ok(cayitoAllowed(path), path);
-  for (const path of ["/", "/equipos/a", "/equipos/a/sitio-oculto", "/mi-perfil", "/mvp", "/entrenador", "/api/results", "/api/account/stats", "/api/snp/sync", "/api/snp/connect", "/api/rival-lineups", "/asistente"]) assert.ok(!cayitoAllowed(path), path);
+  for (const path of ["/ranking-cayitos", "/competicion", "/competicion/equipos/3343", "/competicion/jugadores/1", "/api/account", "/api/snp/players/1", "/competicion/equipos/3343/sitio-oculto", "/api/rival-lineups/tomas", "/jugadores/381423.png", "/_next/data/x.json"]) assert.ok(cayitoAllowed(path), path);
+  for (const path of ["/", "/equipos/a", "/equipos/a/sitio-oculto", "/mi-perfil", "/mvp", "/entrenador", "/api/results", "/api/account/stats", "/api/snp/sync", "/api/snp/connect", "/api/rival-lineups", "/api/rival-lineups/a", "/asistente"]) assert.ok(!cayitoAllowed(path), path);
   assert.equal(await canSeeCayitos({ account: async () => ({ id: "t", role: "cayito" }), link: async () => null }), true);
 });
 

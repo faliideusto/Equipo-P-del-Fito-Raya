@@ -2,12 +2,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, EyeOff, RotateCcw, Save, Swords, Trash2, Undo2, Users } from "lucide-react";
-import type { Pair, TeamId } from "@/domain/types";
+import type { Pair } from "@/domain/types";
 import { emptyLineup } from "@/domain/rules";
 import { TeamLogo } from "@/components/team-logo";
 import { formatDate } from "@/lib/format";
 import type { RivalFixture } from "@/lib/rival-preparation";
-import type { RivalLineup } from "@/lib/rival-lineups";
+import type { LineupOwner, RivalLineup } from "@/lib/rival-lineups";
 import { HeadToHead } from "./head-to-head";
 import { PairEditor } from "./pair-editor";
 import { usePlayerStats } from "./use-player-stats";
@@ -15,12 +15,16 @@ import type { LineupPlayer } from "./types";
 
 type Tab = "h2h" | "rival" | "own";
 const same = (a: Pair[], b: Pair[]) => JSON.stringify(a) === JSON.stringify(b);
+const clubTeamIds = ["7778", "803902"];
 const filled = (pairs: Pair[]) => pairs.some(pair => pair.players.some(Boolean));
 
+// owner "tomas": Tomás's own hidden site for his team, saved through its own route and seen only by him.
 export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers, rivalPlayers, initialRival, publishedOwn }: {
-  teamId: TeamId; ownName: string; preparation: RivalFixture; division: string;
+  teamId: LineupOwner; ownName: string; preparation: Omit<RivalFixture, "teamId">; division: string;
   ownPlayers: LineupPlayer[]; rivalPlayers: LineupPlayer[]; initialRival: RivalLineup | null; publishedOwn: Pair[] | null;
 }) {
+  const guest = teamId === "tomas";
+  const audience = guest ? "Solo la ves tú" : "La ven el entrenador y los capitanes";
   const [tab, setTab] = useState<Tab>(initialRival ? "h2h" : "rival");
   const [saved, setSaved] = useState<RivalLineup | null>(initialRival);
   const [rivalPairs, setRivalPairs] = useState<Pair[]>(() => initialRival?.pairs ?? emptyLineup());
@@ -38,7 +42,7 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
     if (action.startsWith("clear") && !window.confirm(action === "clear" ? "¿Borrar la alineación guardada del rival?" : "¿Borrar nuestra alineación guardada?")) return;
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/rival-lineups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, teamId, pairs: rivalPairs, ownPairs }) });
+      const response = await fetch(guest ? "/api/rival-lineups/tomas" : "/api/rival-lineups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, ...(guest ? {} : { teamId }), pairs: rivalPairs, ownPairs }) });
       const value = await response.json().catch(() => ({}));
       if (!response.ok) { setMessage(value.error || "No se pudo guardar la alineación."); return; }
       const lineup: RivalLineup | null = value.lineup;
@@ -47,7 +51,7 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
       if (action === "clear") setRivalPairs(emptyLineup());
       if (action === "save-own") setOwnPairs(lineup!.own_pairs!);
       if (action === "clear-own") setOwnPairs(publishedOwn ?? emptyLineup());
-      setMessage(action.startsWith("save") ? "Guardada. Ya la ven el entrenador y los capitanes." : "Alineación borrada.");
+      setMessage(action.startsWith("save") ? `Guardada. ${audience}.` : "Alineación borrada.");
     } catch { setMessage("No se pudo conectar. Inténtalo de nuevo."); }
     finally { setBusy(false); }
   }
@@ -64,7 +68,10 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
       <TeamLogo name={preparation.rivalName}/>
       <div>
         <p className="eyebrow">Jornada {preparation.round}{preparation.date ? ` · ${formatDate(preparation.date)}` : ""}</p>
-        <Link className="hs-rival-name" href={`/competicion/equipos/${preparation.rivalId}?division=${division}`}>{preparation.rivalName} <ArrowRight size={16}/></Link>
+        {/* Tomás's account can't open the club's own team pages, so his rival link skips them. */}
+        {guest && clubTeamIds.includes(preparation.rivalId)
+          ? <p className="hs-rival-name">{preparation.rivalName}</p>
+          : <Link className="hs-rival-name" href={`/competicion/equipos/${preparation.rivalId}?division=${division}`}>{preparation.rivalName} <ArrowRight size={16}/></Link>}
         <p className="hs-rival-status">{saved ? `Actualizado el ${savedAt}` : "Aún no hay nada guardado"}</p>
       </div>
       <span className="badge blue">Privado</span>
@@ -85,7 +92,7 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
       </section>)}
 
     {tab === "rival" && <section className="hs-panel">
-      <div className="hs-panel-head"><div><h2>Alineación del rival</h2><p>La que esperáis que traiga {preparation.rivalName}. Al guardarla la ven el entrenador y todos los capitanes.</p></div></div>
+      <div className="hs-panel-head"><div><h2>Alineación del rival</h2><p>La que esperáis que traiga {preparation.rivalName}. {guest ? "Se queda guardada y solo la ves tú." : "Al guardarla la ven el entrenador y todos los capitanes."}</p></div></div>
       <PairEditor side="rival" players={rivalPlayers} pairs={rivalPairs} profile={player => profile(player, preparation.rivalId)} stats={stats} onChange={pairs => { setRivalPairs(pairs); setMessage(""); }}/>
       <div className="hs-actions">
         <button type="button" className="button" disabled={busy || !rivalDirty || !filled(rivalPairs)} onClick={() => send("save")}><Save size={16}/> {busy ? "Guardando…" : rivalDirty || !savedRival ? "Guardar alineación" : "Guardada"}</button>
@@ -95,7 +102,7 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
     </section>}
 
     {tab === "own" && <section className="hs-panel">
-      <div className="hs-panel-head"><div><h2>Nuestra alineación</h2><p>Prueba combinaciones y mira los cruces. Al guardarla la ven el entrenador y los capitanes; no cambia la convocatoria publicada de la jornada.</p></div></div>
+      <div className="hs-panel-head"><div><h2>Nuestra alineación</h2><p>Prueba combinaciones y mira los cruces. {guest ? "Se queda guardada y solo la ves tú." : "Al guardarla la ven el entrenador y los capitanes; no cambia la convocatoria publicada de la jornada."}</p></div></div>
       <PairEditor side="own" players={ownPlayers} pairs={ownPairs} profile={player => profile(player, player.snpTeam ?? "")} stats={stats} onChange={pairs => { setOwnPairs(pairs); setMessage(""); }}/>
       <div className="hs-actions">
         <button type="button" className="button" disabled={busy || !ownDirty || !filled(ownPairs)} onClick={() => send("save-own")}><Save size={16}/> {busy ? "Guardando…" : ownDirty || !savedOwn ? "Guardar alineación" : "Guardada"}</button>

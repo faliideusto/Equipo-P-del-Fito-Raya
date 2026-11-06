@@ -111,7 +111,8 @@ export function crowns(rows: CayitoStats[]) {
 export const CAYITO_HOME = "/ranking-cayitos";
 export function cayitoAllowed(path: string) {
   if (path === CAYITO_HOME || path === "/competicion" || path.startsWith("/competicion/")) return true;
-  if (path === "/api/account" || path.startsWith("/api/snp/") && !path.startsWith("/api/snp/connect") && !path.startsWith("/api/snp/sync")) return true;
+  // Tomás's own hidden site saves through its own route; the club's /api/rival-lineups stays closed.
+  if (path === "/api/account" || path === "/api/rival-lineups/tomas" || path.startsWith("/api/snp/") && !path.startsWith("/api/snp/connect") && !path.startsWith("/api/snp/sync")) return true;
   // Public files (player photos, logos) and Next's own assets.
   return !path.startsWith("/api/") && /^\/(?:_next\/|[\w/.-]+\.(?:png|jpe?g|webp|svg|ico|woff2?|css|js|json|txt|webmanifest)$)/i.test(path);
 }
