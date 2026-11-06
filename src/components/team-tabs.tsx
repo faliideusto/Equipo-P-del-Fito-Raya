@@ -50,8 +50,8 @@ export const rivalViews: { view: RivalView; label: string; icon: typeof LayoutGr
   { view: "plantilla", label: "Plantilla", icon: Users },
 ];
 
-// pairs: the "Crear parejas" tab, only for Tomás on his own team (checked on the server).
-export function RivalTabs({ active, href, name, pairs = false }: { active: RivalView; href: (view: RivalView) => string; name: string; pairs?: boolean }) {
+// pairs: the "Crear parejas" and "Sitio oculto" tabs, only for Tomás on his own team (checked on the server).
+export function RivalTabs({ active, href, name, pairs = false, hiddenHref }: { active: RivalView | null; href: (view: RivalView) => string; name: string; pairs?: boolean; hiddenHref?: string }) {
   const views = pairs ? [...rivalViews, { view: "parejas" as const, label: "Crear parejas", icon: Sparkles }] : rivalViews;
   return (
     <nav className="team-tabs" aria-label={`Secciones de ${name}`}>
@@ -61,6 +61,7 @@ export function RivalTabs({ active, href, name, pairs = false }: { active: Rival
           {label}
         </Link>
       ))}
+      {pairs && hiddenHref && <Link href={hiddenHref} className={active === null ? "active" : ""} aria-current={active === null ? "page" : undefined}><EyeOff size={16} />Sitio oculto</Link>}
     </nav>
   );
 }

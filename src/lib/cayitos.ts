@@ -1,6 +1,7 @@
 import { currentAccount } from "./account-auth";
 import { playerLink } from "./account-profile";
 import { getSnpCompetition, getSnpPlayer, getSnpTeam } from "./snp-service";
+import { nextFixtureOf } from "./rival-preparation";
 import { canOpenCayitos, cayitoMembers, cayitoStats, sameName, type CayitoMember, type CayitoStats } from "@/domain/cayitos";
 
 type Access = { account: typeof currentAccount; link: (userId: string) => Promise<{ player_id: string } | null> };
@@ -30,6 +31,12 @@ export async function canBuildGuestPairs(teamId: string, account: typeof current
     return teamId === await ownTeam();
   } catch { return false; }
 }
+// Top Bal's next unplayed fixture in the Fito A division, for Tomás's hidden site.
+export async function nextGuestRival(ownTeam: string) {
+  const calendar = (await getSnpCompetition({ division: GUEST_DIVISION })).data.calendar;
+  return nextFixtureOf(ownTeam, calendar);
+}
+export const GUEST_DIVISION = "2318";
 async function findMember(member: CayitoMember): Promise<{ id: string; team: string } | null> {
   if (member.snpId) return { id: member.snpId, team: member.snpTeam ?? "" };
   if (!member.findName) return null;

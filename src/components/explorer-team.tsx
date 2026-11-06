@@ -137,7 +137,7 @@ export function ExplorerTeam({ id, filters, view, preparations = [], pairs = fal
         </dl>
         <Link className="team-switch" href={backHref}>← Volver a competición</Link>
       </header>
-      <RivalTabs active={view} href={href} name={name || "este equipo"} pairs={pairs} />
+      <RivalTabs active={view} href={href} name={name || "este equipo"} pairs={pairs} hiddenHref={`/competicion/equipos/${id}/sitio-oculto`} />
       {warnings.map(warning => <p key={warning} className="snp-warning" role="status">{warning}</p>)}
 
       {view === "resumen" && <>
