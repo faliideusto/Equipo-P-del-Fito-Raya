@@ -55,3 +55,13 @@ test("sin acta de SNP cuentan solo los resultados de la app", async () => {
   assert.deepEqual(actaScore(match), [8, 4]);
   assert.deepEqual(match.games[2].away?.map(p => p.id), ["320953"]);
 });
+test("el marcador usa los resultados de la app aunque SNP ya publique la convocatoria con 0–0", async () => {
+  const { scoreBanner } = await import("../src/domain/provisional-acta");
+  // SNP has the lineup but no sets and a 0–0 score; the app has pairs 1 (ours, away) and 2 (theirs).
+  const published: SnpMatch = { ...acta, games: acta.games.map(g => ({ ...g, sets: [], away: [{ id: "9", name: "Nueve", photoUrl: null }] })) };
+  const sets = published.games.map(g => g.index === 0 ? [[1, 6], [1, 6]] as [number, number][] : g.index === 1 ? [[6, 3], [6, 4]] as [number, number][] : null);
+  assert.deepEqual(scoreBanner(published, sets), { score: [3, 3], label: "RESULTADO PROVISIONAL · PENDIENTE DE SNP" });
+  assert.deepEqual(scoreBanner(published, published.games.map(() => null)), { score: null, label: "PENDIENTE DE RESULTADO" });
+  const closed: SnpMatch = { ...acta, score: [5, 7] };
+  assert.deepEqual(scoreBanner(closed, closed.games.map(g => g.sets)), { score: [5, 7], label: "RESULTADO PUBLICADO POR SNP" });
+});
