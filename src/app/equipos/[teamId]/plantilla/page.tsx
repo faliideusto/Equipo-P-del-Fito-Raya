@@ -25,11 +25,11 @@ export default async function RosterPage({
   const view = squadView((await searchParams).vista);
   const team = (await clubRepository.getTeam(teamId))!;
   const [published, fixtures] = await Promise.all([clubRepository.getPlayers(teamId), clubRepository.getFixtures(teamId).catch(() => [])]);
-  // Until SNP closes the last played fixture, its players show the forecast from the app results.
+  // Until SNP closes the last played fixture, each player of it also shows the forecast of their SNP
+  // ranking with the results saved in the app (the same one as in the acta).
   const forecast = await provisionalRanking(teamId, fixtures, published).catch(() => null);
   const forecastOf = (player: { sourceId?: string }) => player.sourceId ? forecast?.points[player.sourceId] : undefined;
-  const players = forecast ? published.map(p => ({ ...p, points: forecastOf(p) ?? p.points })).sort((a, b) => (b.points ?? -1) - (a.points ?? -1)) : published;
-  const pointsLabel = (player: { sourceId?: string }) => forecastOf(player) !== undefined ? "PREVISIÓN" : "PTS SNP";
+  const players = published;
   // Last month's MVP wears the black IF card.
   const inForm = view === "cartas" ? await inFormPlayers() : [];
   return (
@@ -37,7 +37,7 @@ export default async function RosterPage({
       <PageHeading
         eyebrow={`${team.shortName} · ${team.division}`}
         title="Plantilla"
-        text={`${players.length} jugadores · Orden por puntos SNP${forecast ? `, con la previsión de la J${forecast.round}` : " publicados"}`}
+        text={`${players.length} jugadores · Orden por puntos SNP publicados${forecast ? ` · Previsión de la J${forecast.round}` : ""}`}
       />
       <section className="panel">
         <div className="panel-heading">
@@ -61,7 +61,8 @@ export default async function RosterPage({
                 href={`/competicion/jugadores/${player.sourceId ?? player.id}?equipo=${player.sourceTeamId ?? (teamId === "a" ? "7778" : "803902")}`}
                 stats={[
                   { label: "RANK", value: player.points === null ? "—" : rank },
-                  { label: pointsLabel(player), value: player.points === null ? "—" : Math.round(player.points).toLocaleString("es-ES") },
+                  { label: "PTS SNP", value: player.points === null ? "—" : Math.round(player.points).toLocaleString("es-ES") },
+                  ...(forecastOf(player) ? [{ label: "PREVISIÓN", value: Math.round(forecastOf(player)!.after).toLocaleString("es-ES") }] : []),
                 ]}
               />
             )}
@@ -87,7 +88,8 @@ export default async function RosterPage({
               </div>
               <div className="roster-points">
                 <strong>{formatPoints(player.points)}</strong>
-                <span>{pointsLabel(player)}</span>
+                <span>PTS SNP</span>
+                {forecastOf(player) && <ForecastChange value={forecastOf(player)!} />}
               </div>
             </Link>
           ))}
@@ -95,10 +97,16 @@ export default async function RosterPage({
         )}
       </section>
       <p className="data-note">
-        Plantilla y puntos consultados directamente en SNP.{forecast && ` «PREVISIÓN»: ranking calculado con los resultados de la J${forecast.round} guardados en la app; se sustituye por el de SNP cuando publique la jornada.`} Los campos de puntuación vacíos en
+        Plantilla y puntos consultados directamente en SNP.{forecast && ` «Previsión»: cómo queda el ranking SNP de cada jugador con los resultados de la J${forecast.round} guardados en la app, con la fórmula de SNP; desaparece cuando SNP publique la jornada.`} Los campos de puntuación vacíos en
         SNP se muestran como 0 puntos, según la indicación del club. Las
         posiciones de juego están por confirmar.
       </p>
     </>
   );
+}
+const whole = (n: number) => new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0, useGrouping: "always" }).format(n);
+// What the player's SNP ranking gains or loses with the last fixture, as in the acta.
+function ForecastChange({ value }: { value: { before: number; after: number } }) {
+  const change = value.after - value.before;
+  return <small className={`roster-forecast ${change < 0 ? "down" : "up"}`} title={`Ranking SNP: ${formatPoints(value.before)} → ${formatPoints(value.after)} (previsión con la fórmula de SNP)`}>{change >= 0 ? "+" : "−"}{whole(Math.abs(change))} → {whole(value.after)} · previsión</small>;
 }

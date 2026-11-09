@@ -34,3 +34,11 @@ export function actaScore(match: SnpMatch): [number, number] | null {
   }
   return decided ? score : null;
 }
+// The score of the banner: SNP's once it has every set; while any game only has the app result, the
+// score adds up the decided games of both (SNP shows 0–0 until it closes the acta).
+export function scoreBanner(match: SnpMatch, gameSets: (SnpMatch["games"][number]["sets"] | null)[]): { score: [number, number] | null; label: string } {
+  const fromApp=match.games.some((game,i)=>!game.sets.length&&gameSets[i]?.length);
+  if(fromApp)return {score:actaScore({...match,games:match.games.map((game,i)=>({...game,sets:gameSets[i]??[]}))}),label:"RESULTADO PROVISIONAL · PENDIENTE DE SNP"};
+  const published=match.score&&(match.score[0]+match.score[1]>0||match.games.some(game=>game.sets.length))?match.score:null;
+  return published?{score:published,label:"RESULTADO PUBLICADO POR SNP"}:{score:null,label:"PENDIENTE DE RESULTADO"};
+}
