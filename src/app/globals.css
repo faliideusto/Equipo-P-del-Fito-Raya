@@ -4061,10 +4061,26 @@ a.fifa-card:focus-visible {outline:none}
 .fifa-large {--cw:220px}
 .fifa-long-rating .fifa-card-rating b {font-size:1.6em;letter-spacing:-.01em}
 .fifa-if .fifa-card-photo>span,.fifa-if .fifa-card-stats span {opacity:.95}
+/* Cartas únicas (top band of each colour): deeper metal, a foil pattern and a light sweep, like FIFA's shiny rares. */
+.fifa-unique {background:
+  radial-gradient(circle at 30% 18%,rgba(255,255,255,.7),transparent 34%),
+  repeating-conic-gradient(from 0deg at 50% 38%,rgba(255,255,255,.16) 0 4deg,transparent 4deg 12deg),
+  linear-gradient(155deg,var(--c1),var(--c2) 45%,var(--c3))}
+.fifa-unique.fifa-gold {--c1:#fff3b8;--c2:#f0b818;--c3:#7a4a00;--ink:#2e1c00}
+.fifa-unique.fifa-silver {--c1:#ffffff;--c2:#b9c8d6;--c3:#4f6273;--ink:#121c26}
+.fifa-unique.fifa-bronze {--c1:#ffd2a8;--c2:#d0773a;--c3:#6b3214;--ink:#2a1205}
+.fifa-unique::before {border-width:2px;border-color:color-mix(in srgb,var(--c1) 80%,#fff)}
+.fifa-unique::after {content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.85) 48%,rgba(255,255,255,.2) 52%,transparent 62%) no-repeat;
+  background-size:250% 100%;animation:fifa-shine 3.6s ease-in-out infinite}
+@keyframes fifa-shine {0%,35% {background-position:130% 0} 100% {background-position:-130% 0}}
+.court-slot:has(.fifa-unique),.card-shadow:has(.fifa-unique) {filter:drop-shadow(0 0 6px color-mix(in srgb,var(--glow,#ffd34d) 70%,transparent)) drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.court-slot:has(.fifa-unique.fifa-silver),.card-shadow:has(.fifa-unique.fifa-silver) {--glow:#d8e6f2}
+.court-slot:has(.fifa-unique.fifa-bronze),.card-shadow:has(.fifa-unique.fifa-bronze) {--glow:#f0995a}
 
 .mvp-if {display:flex;justify-content:center;margin:18px 0 6px}
 @media (max-width:640px){.squad {padding:12px 8px}.padel-court {padding:22px 6px 26px;border-width:4px}.view-toggle a {padding:7px 10px}.fifa-large {--cw:min(220px,62vw)}}
-@media (prefers-reduced-motion:reduce){.fifa-card {transition:none}}
+@media (prefers-reduced-motion:reduce){.fifa-card {transition:none}.fifa-unique::after {animation:none;background-position:50% 0}}
 .profile-card-aside {flex-shrink:0}
 .profile-card-aside .fifa-card {--cw:92px}
 /* Puntos SNP de cada jugador en el momento del encuentro, tal como los guarda el acta. */

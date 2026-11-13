@@ -24,9 +24,15 @@ export function compactPoints(points: number | null) {
 }
 
 // Card colour by SNP points: gold from 45k, silver from 30k, bronze below.
-export type PointsTier = "gold" | "silver" | "bronze";
+// The top band of each colour is its shiny "único" version, as in FIFA:
+// gold from 60k, silver 40k–45k, bronze 25k–30k.
+export type PointsTier = "gold" | "silver" | "bronze" | "gold-unique" | "silver-unique" | "bronze-unique";
 export function pointsTier(points: number | null): PointsTier {
-  if (points !== null && points >= 45000) return "gold";
-  if (points !== null && points >= 30000) return "silver";
+  if (points === null) return "bronze";
+  if (points >= 60000) return "gold-unique";
+  if (points >= 45000) return "gold";
+  if (points >= 40000) return "silver-unique";
+  if (points >= 30000) return "silver";
+  if (points >= 25000) return "bronze-unique";
   return "bronze";
 }
