@@ -5,7 +5,7 @@ import { useState } from "react";
 import { initials } from "@/lib/format";
 
 export type CardStat = { label: string; value: string | number };
-export type CardTier = "gold" | "silver" | "bronze" | "if";
+export type CardTier = "gold" | "silver" | "bronze" | "gold-unique" | "silver-unique" | "bronze-unique" | "if";
 
 export function FifaCard({ name, nickname, photoUrl, rating, ratingLabel, badge, stats, tier = "gold", href, size = "normal" }: {
   name: string; nickname?: string | null; photoUrl: string | null; rating: string; ratingLabel: string; badge?: string; stats: CardStat[];
@@ -21,7 +21,9 @@ export function FifaCard({ name, nickname, photoUrl, rating, ratingLabel, badge,
     <strong className="fifa-card-name">{shortName}</strong>
     <span className="fifa-card-stats">{stats.map(stat => <span key={stat.label}><b>{stat.value}</b>{stat.label}</span>)}</span>
   </>;
-  const className = `fifa-card fifa-${tier} fifa-${size}${rating.length > 3 ? " fifa-long-rating" : ""}`;
-  const label = `${nickname ? `${name} (${nickname})` : name}. ${rating} ${ratingLabel}. ${stats.map(s => `${s.label} ${s.value}`).join(", ")}`;
+  // "gold-unique" keeps the gold colours and adds the shiny "único" finish on top.
+  const unique = tier.endsWith("-unique");
+  const className = `fifa-card fifa-${tier.replace("-unique", "")}${unique ? " fifa-unique" : ""} fifa-${size}${rating.length > 3 ? " fifa-long-rating" : ""}`;
+  const label = `${nickname ? `${name} (${nickname})` : name}${unique ? ", carta única" : ""}. ${rating} ${ratingLabel}. ${stats.map(s => `${s.label} ${s.value}`).join(", ")}`;
   return href ? <Link className={className} href={href} aria-label={label}>{body}</Link> : <div className={className} role="img" aria-label={label}>{body}</div>;
 }

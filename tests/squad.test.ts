@@ -24,5 +24,11 @@ test("SNP points are shortened for the card rating", () => {
   assert.equal(compactPoints(null), "—");
 });
 test("Card tier follows SNP points: gold 45k+, silver 30k+, bronze below", () => {
-  assert.deepEqual([62421.88, 45000, 44999, 30000, 29999, 0, null].map(pointsTier), ["gold", "gold", "silver", "silver", "bronze", "bronze", "bronze"]);
+  assert.deepEqual([59999, 45000, 44999, 39999, 30000, 29999, 0, null].map(pointsTier).map(t => t.replace("-unique", "")),
+    ["gold", "gold", "silver", "silver", "silver", "bronze", "bronze", "bronze"]);
+});
+test("The top band of each colour is its shiny único card", () => {
+  assert.deepEqual([62421.88, 60000, 59999, 45000].map(pointsTier), ["gold-unique", "gold-unique", "gold", "gold"]);
+  assert.deepEqual([44999, 40000, 39999, 30000].map(pointsTier), ["silver-unique", "silver-unique", "silver", "silver"]);
+  assert.deepEqual([29999, 25000, 24999, 0, null].map(pointsTier), ["bronze-unique", "bronze-unique", "bronze", "bronze", "bronze"]);
 });
