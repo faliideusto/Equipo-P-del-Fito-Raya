@@ -17,6 +17,7 @@ import { RivalTabs, type RivalView } from "./team-tabs";
 import { PageSkeleton } from "./skeletons";
 import { isForcedCheck, SNP_CHECKED_EVENT } from "@/lib/snp-updates";
 import type { RivalPreparation } from "@/lib/rival-preparation";
+import { byRound, CHALLENGE_ROUND } from "@/domain/rounds";
 
 export function ExplorerTeam({ id, filters, view, preparations = [], pairs = false }: { id: string; filters: Partial<SnpCompetition["filters"]>; view: RivalView; preparations?: RivalPreparation[]; pairs?: boolean }) {
   const [result, setResult] = useState<SnpResult<SnpTeam> | null>(null);
@@ -91,8 +92,8 @@ export function ExplorerTeam({ id, filters, view, preparations = [], pairs = fal
     const index = standings.findIndex(row => row.teamId === teamId);
     return index >= 0 ? { position: index + 1, points: standings[index].points } : undefined;
   };
-  const next = calendar.filter(f => !f.score).sort((a, b) => a.round - b.round)[0];
-  const played = calendar.filter(f => f.score).sort((a, b) => b.round - a.round);
+  const next = calendar.filter(f => !f.score).sort(byRound)[0];
+  const played = calendar.filter(f => f.score).sort((a, b) => byRound(b, a));
   const backHref = filters.division ? `/competicion?${query}` : "/competicion";
   // The board links the other team; the team on this page already is where you are.
   const teamHref = (teamId?: string) => teamId && teamId !== id ? `/competicion/equipos/${teamId}${query ? `?${query}` : ""}` : undefined;
@@ -144,7 +145,7 @@ export function ExplorerTeam({ id, filters, view, preparations = [], pairs = fal
         {!filters.division ? noDivision : !competition ? loadingCompetition : next ? (
           <MatchBoard
             label={`Próximo encuentro de ${name}`}
-            meta={`Jornada ${String(next.round).padStart(2, "0")}${division ? ` · ${division}` : ""}`}
+            meta={`${next.round === CHALLENGE_ROUND ? "Jornada de retos" : `Jornada ${String(next.round).padStart(2, "0")}`}${division ? ` · ${division}` : ""}`}
             date={next.date || ""}
             home={{ name: next.homeName.replaceAll("_", " "), logo: next.homeName, href: teamHref(next.homeId), info: standingOf(next.homeId) }}
             away={{ name: next.awayName.replaceAll("_", " "), logo: next.awayName, href: teamHref(next.awayId), info: standingOf(next.awayId) }}
@@ -231,7 +232,7 @@ function RivalResult({ fixture, teamId, query }: { fixture: SnpFixture; teamId: 
   const outcome = own > rival ? "Victoria" : own < rival ? "Derrota" : null;
   return (
     <Link className="result-row" href={`/competicion/actas/${fixture.id}${query ? `?${query}` : ""}`}>
-      <span className="result-round">J{String(fixture.round).padStart(2, "0")}</span>
+      <span className="result-round">{fixture.round === CHALLENGE_ROUND ? "Retos" : `J${String(fixture.round).padStart(2, "0")}`}</span>
       <TeamLogo name={opponent} />
       <span className="result-name"><strong>{home ? "vs" : "en"} {opponent.replaceAll("_", " ")}</strong><small>{formatDate(fixture.date || "")} · {home ? "Local" : "Visitante"}</small></span>
       <b className="result-score">{own}–{rival}</b>

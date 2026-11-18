@@ -8,6 +8,7 @@ import { listResults } from "./match-results";
 import { getSnpMatch } from "./snp-service";
 import { getRankingHistory } from "./snp-ranking";
 import { walletStore } from "./wallet-store";
+import { byRound } from "@/domain/rounds";
 export type ProvisionalMatch = { fixture: Fixture; match: SnpMatch; side: 0 | 1 };
 // Fixtures already played (the usual hour after the start) that SNP has not closed: no SNP score in the calendar.
 export const unpublishedFixtures = (fixtures: Fixture[], now = Date.now()) =>
@@ -41,7 +42,7 @@ export async function provisionalMatch(teamId: TeamId, fixture: Fixture, players
 // are only forecast once a game of that player has a winner.
 export type ProvisionalRanking = { round: number; points: Record<string, { before: number; after: number }> };
 export async function provisionalRanking(teamId: TeamId, fixtures: Fixture[], players: Player[], now = Date.now()): Promise<ProvisionalRanking | null> {
-  const fixture = unpublishedFixtures(fixtures, now).sort((a, b) => b.round - a.round)[0];
+  const fixture = unpublishedFixtures(fixtures, now).sort((a, b) => byRound(b, a))[0];
   const provisional = fixture ? await provisionalMatch(teamId, fixture, players).catch(() => null) : null;
   if (!provisional) return null;
   const { match, side } = provisional;

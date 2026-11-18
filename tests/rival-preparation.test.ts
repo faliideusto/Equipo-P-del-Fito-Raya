@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { SnpFixture } from "../src/domain/snp";
-import { rivalPreparations } from "../src/lib/rival-preparation";
+import { nextFixtureOf, rivalPreparations } from "../src/lib/rival-preparation";
 
 const fixture = (id: string, round: number, homeId: string, awayId: string, score: [number, number] | null = null): SnpFixture =>
   ({ id, round, homeId, awayId, homeName: homeId, awayName: awayId, date: "2026-10-25T10:00:00Z", score, state: "" });
@@ -46,4 +46,10 @@ test("sin jornadas pendientes o al fallar permisos o datos, el creador permanece
   assert.deepEqual(await rivalPreparations("next-a", { ...deps, calendar: async () => { throw new Error("SNP caído"); } }), []);
   assert.deepEqual(await rivalPreparations("next-a", { ...deps, teams: async () => { throw new Error("Supabase caído"); } }), []);
   assert.deepEqual(await rivalPreparations("next-a", { ...deps, account: async () => { throw new Error("Sesión no comprobada"); } }), []);
+});
+
+test("el reto (ronda 1000 en SNP) va antes que la jornada 6: es el siguiente partido", () => {
+  const season = [fixture("r", 1000, "rival-reto", "7778"), fixture("6", 6, "7778", "j6"), fixture("5", 5, "7778", "j5", [6, 3])];
+  assert.equal(nextFixtureOf("7778", season)?.rivalId, "rival-reto");
+  assert.equal(nextFixtureOf("7778", [fixture("r", 1000, "rival-reto", "7778", [5, 4]), ...season.slice(1)])?.rivalId, "j6");
 });

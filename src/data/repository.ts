@@ -11,6 +11,7 @@ import { readNicknames } from "@/lib/player-nicknames";
 import { clubRoster, additionalPlayers } from "./club-roster";
 import { registeredPositions } from "@/lib/account-profile";
 import { clubMembers, localPlayerId, memberSports } from "@/lib/club-members";
+import { byRound } from "@/domain/rounds";
 export const sourceTeams: Record<TeamId, string> = { a: "7778", b: "803902" };
 export interface ClubRepository {
   getTeams(): Promise<Team[]>;
@@ -53,7 +54,7 @@ export const clubRepository: ClubRepository = {
       const previous=fixtures.find(old=>old.teamId===id&&old.id===f.id);
       const home=f.homeId===sourceTeams[id];
       return {id:f.id,teamId:id,round:f.round,opponent:home?f.awayName:f.homeName,date:f.date?.replace(" ","T")||"",venue:previous?.venue||"Sede por confirmar",home,status:f.score?"played" as const:"pending" as const,matches:f.score?previous?.matches||[]:[],score:f.score};
-    }).sort((a,b)=>a.round-b.round);
+    }).sort(byRound);
     return Promise.all(calendar.map(f=>provisionalFixture(id,f)));
   },
 };

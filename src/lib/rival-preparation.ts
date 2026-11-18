@@ -4,6 +4,7 @@ import { sourceTeams } from "@/data/repository";
 import { currentAccount } from "./account-auth";
 import { shareableTeams } from "./team-captains";
 import { getSnpCompetition } from "./snp-service";
+import { byRound } from "@/domain/rounds";
 
 export type RivalPreparation = { teamId: TeamId; fixtureId: string; round: number; date: string | null };
 export type RivalFixture = RivalPreparation & { rivalId: string; rivalName: string };
@@ -28,7 +29,7 @@ export function nextRivalFixture(teamId: TeamId, calendar: SnpFixture[]): RivalF
 export function nextFixtureOf(ownId: string, calendar: SnpFixture[]): Omit<RivalFixture, "teamId"> | null {
   const next = calendar
     .filter(f => !f.score && (f.homeId === ownId || f.awayId === ownId))
-    .sort((a, b) => a.round - b.round)[0];
+    .sort(byRound)[0];
   if (!next) return null;
   const home = next.homeId === ownId;
   return { fixtureId: next.id, round: next.round, date: next.date, rivalId: home ? next.awayId : next.homeId, rivalName: (home ? next.awayName : next.homeName).replaceAll("_", " ") };
