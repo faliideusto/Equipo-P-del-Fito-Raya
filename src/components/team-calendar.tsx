@@ -7,6 +7,7 @@ import type { SnpFixture } from "@/domain/snp";
 import { calendarMonths, fixtureDay, fixtureOutcome, initialMonth, monthGrid, type FixtureOutcome } from "@/domain/schedule-calendar";
 import { formatTime } from "@/lib/format";
 import { TeamLogo } from "./team-logo";
+import { byRound } from "@/domain/rounds";
 
 const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 const OUTCOME_LABEL: Record<FixtureOutcome, string> = { win: "Victoria", draw: "Empate", loss: "Derrota", pending: "Pendiente" };
@@ -24,7 +25,7 @@ export function TeamCalendar({ fixtures, teamId, today, matchBaseHref }: {
   const months = calendarMonths(fixtures);
   const [month, setMonth] = useState(() => initialMonth(fixtures, today));
   const [selected, setSelected] = useState<string | null>(null);
-  const undated = fixtures.filter(f => !fixtureDay(f.date)).sort((a, b) => a.round - b.round);
+  const undated = fixtures.filter(f => !fixtureDay(f.date)).sort(byRound);
   const byDay = new Map<string, SnpFixture[]>();
   for (const fixture of fixtures) {
     const day = fixtureDay(fixture.date);

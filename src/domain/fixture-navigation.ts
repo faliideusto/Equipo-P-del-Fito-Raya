@@ -1,7 +1,8 @@
 import type { Fixture, TeamId } from "./types";
 import { lastPlayedFixture } from "./pending-results";
+import { byRound } from "@/domain/rounds";
 export function adjacentFixtures(fixtures: Fixture[], id: string): { previous: Fixture | null; next: Fixture | null } {
-  const ordered = [...fixtures].sort((a, b) => a.round - b.round);
+  const ordered = [...fixtures].sort(byRound);
   const index = ordered.findIndex(f => f.id === id);
   if (index < 0) return { previous: null, next: null };
   return { previous: ordered[index - 1] ?? null, next: ordered[index + 1] ?? null };

@@ -6,6 +6,7 @@ import { ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
 import type { SnpFixture } from "@/domain/snp";
 import { formatDate, formatTime } from "@/lib/format";
 import { TeamLogo } from "./team-logo";
+import { byRound } from "@/domain/rounds";
 
 // SNP season: 5 league rounds, a challenge match (top two play to go up, bottom
 // two to stay up), 5 more rounds within the new league, then the play-offs.
@@ -27,7 +28,7 @@ export function TeamSchedule({ fixtures, teamId, matchBaseHref = "/competicion/a
   const upcoming = fixtures.filter(f => !f.score);
   const visible = (f: SnpFixture) => filter === "all" || (filter === "played" ? !!f.score : !f.score);
   const groups = STAGES.map(stage => {
-    const all = fixtures.filter(f => stage.includes(f.round)).sort((a, b) => a.round - b.round);
+    const all = fixtures.filter(f => stage.includes(f.round)).sort(byRound);
     return { ...stage, total: all.length, done: all.filter(f => f.score).length, matches: all.filter(visible) };
   }).filter(group => group.matches.length || (filter === "all" && group.placeholder));
   return <section className="panel team-schedule" aria-label="Jornadas del equipo">
