@@ -6,7 +6,7 @@ import { fetchSnpTeam, lineupPlayers } from "./snp-team";
 import type { SnpCompetition, SnpOption, SnpTeam } from "@/domain/snp";
 import { snapshotCompetition, snapshotTeams } from "@/data/snp-explorer-snapshot";
 import { normalizePlayerStats, snpNumber,parsePlayerIdentity } from "./snp-parser";
-import type { SnpPlayerProfile } from "@/domain/snp";
+import type { SnpGroupStats, SnpPlayerProfile, SnpPlayerStats } from "@/domain/snp";
 import { load } from "cheerio";
 import { fixtures as savedFixtures,players as savedPlayers,teams as clubTeams } from "@/data/snp-snapshot";
 import { fixtureScore } from "@/domain/rules";
@@ -125,7 +125,7 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
   const team = teamId ? await getSnpTeam(teamId) : undefined;
   const known = team?.data.players.find(p=>p.id===id) || Object.values(snapshotTeams).flatMap(t=>t.players).find(p=>p.id===id);
   const fallback:SnpPlayerProfile|undefined = known ? {...known,groups:[],group:"",stats:[],previousStats:[],statsError:"Conecta SNP para consultar el historial deportivo."} : undefined;
-  return cachedSnp<SnpPlayerProfile>(`player-v4-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
+  return cachedSnp<SnpPlayerProfile>(`player-v5-${id}-${teamId||"none"}-${requestedGroup||"default"}`,async()=>{
     const html=await snpClient.html(`/ranking/menu_puntuacion/${id}`); const $=load(html);
     const identity=parsePlayerIdentity(html);
     const categories=await snpClient.ajax("ajaxGetCategoriaGrupoByJugador",{idjugador:id},"ranking");
@@ -139,17 +139,28 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
     const profile = {...base,points:snpNumber(entity.puntos),nationalRank:entity.orden?String(entity.orden):base.nationalRank,stats:normalizePlayerStats(ranking.datos),previousStats:normalizePlayerStats(ranking.datos_ant)};
     const winRateKey = `v2-${id}-${group}`; const fingerprint = winRateFingerprint(profile);
     // A manual refresh always recalculates; otherwise the stored winrate is kept until the data changes.
-    const stored = force ? undefined : reusableWinRates(await readWinRates(winRateKey), fingerprint);
-    if (stored) return {...profile, winRates: stored};
+    // Copies saved before previousByGroup existed are recalculated once to fill it in.
+    const saved = force ? undefined : await readWinRates(winRateKey);
+    const stored = reusableWinRates(saved, fingerprint);
+    if (stored && saved?.previousByGroup) return {...profile, winRates: stored, previousByGroup: saved.previousByGroup};
     try {
       // The group's selector changes the detailed ranking, but the win rates
       // cover every group in which the player has competed.
       const rankings = await Promise.all(groups.map(option => option.id === group ? ranking : snpClient.ajax("ajaxGetByJugadorAndGrupo", {idjugador:id,idgrupo:option.id}, "ranking")));
       const winRates = playerWinRates(rankings.flatMap(row => normalizePlayerStats(row.datos)), rankings.flatMap(row => normalizePlayerStats(row.datos_ant)));
-      await saveWinRates(winRateKey, fingerprint, winRates);
-      return {...profile, winRates};
+      const previousByGroup = previousSeasonByGroup(groups, group, rankings.map(row => normalizePlayerStats(row.datos_ant)));
+      await saveWinRates(winRateKey, fingerprint, winRates, previousByGroup);
+      return {...profile, winRates, previousByGroup};
     } catch {
       return {...profile, winRatesError: "No se pudo consultar el winrate de todos los grupos. Se volverá a intentar en la próxima actualización."};
     }
   },fallback,force);
+}
+
+// The previous season may have been played in another group than the current one (a player
+// promoted from 500 to Future, for example), so the "Temporada anterior" tab lists every group
+// with data, the selected group first.
+export function previousSeasonByGroup(groups:SnpOption[], selected:string, previous:SnpPlayerStats[][]):SnpGroupStats[]{
+  const rows=groups.map((group,i)=>({group,stats:previous[i]??[]})).filter(row=>row.stats.length>0);
+  return [...rows.filter(row=>row.group.id===selected),...rows.filter(row=>row.group.id!==selected)];
 }

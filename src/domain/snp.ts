@@ -1,7 +1,9 @@
 export interface SnpOption { id: string; name: string }
 export interface SnpPlayer { id: string; name: string; points: number; photoUrl: string | null; nationalRank: string | null; zoneRank: string | null }
 export interface SnpPlayerStats { phase: string; played: number; won: number; lost: number; setsWon: number; setsLost: number; jornadas: {label:string; points:number|null; played:number; won:number; lost:number}[] }
-export interface SnpPlayerProfile extends SnpPlayer { groups:SnpOption[]; group:string; stats:SnpPlayerStats[]; previousStats:SnpPlayerStats[]; statsError?:string; winRates?: { current: import("./player-winrate").PlayerWinRate; total: import("./player-winrate").PlayerWinRate }; winRatesError?:string }
+// The previous season of every group with data: players often move group between seasons.
+export interface SnpGroupStats { group: SnpOption; stats: SnpPlayerStats[] }
+export interface SnpPlayerProfile extends SnpPlayer { groups:SnpOption[]; group:string; stats:SnpPlayerStats[]; previousStats:SnpPlayerStats[]; previousByGroup?:SnpGroupStats[]; statsError?:string; winRates?: { current: import("./player-winrate").PlayerWinRate; total: import("./player-winrate").PlayerWinRate }; winRatesError?:string }
 export interface SnpTeam { id: string; name: string; players: SnpPlayer[] }
 export interface SnpStanding { teamId: string; name: string; played: number; won: number; lost: number; points: number; gameDifference: number }
 export interface SnpFixture { id: string; round: number; date: string | null; homeId: string; awayId: string; homeName: string; awayName: string; score: [number, number] | null; state: string }

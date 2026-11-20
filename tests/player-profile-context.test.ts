@@ -16,9 +16,9 @@ test("Mi perfil and the team view return the same zonal rank for the linked play
     if (action === "ajaxGetCategoriaGrupoByJugador") return { grupos_select: [{ id: "20", nombre: "Future" }, { id: "19", nombre: "500" }] };
     if (values.idgrupo === "19") {
       if (failOtherGroup) throw new Error("SNP unavailable");
-      return { entity: { puntos: 10000, orden: 2000 }, datos: { regular: { J: { 1: { pd: 1, p3p_p2s: 1 } } } }, datos_ant: [] };
+      return { entity: { puntos: 10000, orden: 2000 }, datos: { regular: { J: { 1: { pd: 1, p3p_p2s: 1 } } } }, datos_ant: { regular: { nombre: "Liga", J: { 1: { pd: 1, p2p_g3s: 1 } } } } };
     }
-    return { entity: { puntos: 58007.81, orden: 1896 }, datos: { regular: { J: { 1: { pd: 1, p2p_g2s: 1 } } } }, datos_ant: { regular: { J: { 1: { pd: 1, p2p_g3s: 1 } } } } };
+    return { entity: { puntos: 58007.81, orden: 1896 }, datos: { regular: { J: { 1: { pd: 1, p2p_g2s: 1 } } } }, datos_ant: [] };
   };
   try {
     // Provide the exact roster shape that contains both national and zonal ranks.
@@ -35,17 +35,22 @@ test("Mi perfil and the team view return the same zonal rank for the linked play
     assert.equal(profile.data.nationalRank, teamView.data.nationalRank);
     assert.deepEqual(profile.data.winRates?.current, { won: 1, lost: 1, decided: 2, percentage: 50, setsWon: 2, setsLost: 2 });
     assert.ok(Math.abs(profile.data.winRates!.total.percentage! - 200 / 3) < 1e-10);
+    // Last season was played in the other group: the selected group has none, but the tab still finds it.
+    assert.deepEqual(profile.data.previousStats, []);
+    assert.deepEqual(profile.data.previousByGroup?.map(row => [row.group.name, row.stats[0].won]), [["500", 1]]);
     const otherGroup = await getSnpPlayer("381423", "7778", "19", true);
     assert.deepEqual(otherGroup.data.winRates, profile.data.winRates);
     assert.equal(otherGroup.data.stats[0].lost, 1);
     // Unchanged data reuses the stored winrate without asking SNP for the other groups.
     failOtherGroup = true;
-    await unlink(path.join(directory, "player-v4-381423-7778-default.json"));
+    await unlink(path.join(directory, "player-v5-381423-7778-default.json"));
     const reused = await getSnpPlayer("381423", "7778", undefined);
     assert.deepEqual(reused.data.winRates, profile.data.winRates);
+    assert.deepEqual(reused.data.previousByGroup, profile.data.previousByGroup);
     const incomplete = await getSnpPlayer("381423", "7778", undefined, true);
     assert.equal(incomplete.data.stats[0].won, 1);
     assert.equal(incomplete.data.winRates, undefined);
+    assert.equal(incomplete.data.previousByGroup, undefined);
     assert.match(incomplete.data.winRatesError!, /todos los grupos/);
   } finally {
     snpClient.html = oldHtml; snpClient.ajax = oldAjax;
@@ -53,4 +58,12 @@ test("Mi perfil and the team view return the same zonal rank for the linked play
     for (const file of await readdir(directory)) await unlink(path.join(directory, file));
     await rmdir(directory);
   }
+});
+
+test("The previous season lists the selected group first and leaves out groups without data", async () => {
+  const { previousSeasonByGroup } = await import("../src/lib/snp-service");
+  const stats = [{ phase: "Liga", played: 1, won: 1, lost: 0, setsWon: 2, setsLost: 0, jornadas: [] }];
+  const groups = [{ id: "19", name: "500" }, { id: "20", name: "Future" }, { id: "21", name: "Elite" }];
+  assert.deepEqual(previousSeasonByGroup(groups, "20", [stats, stats, []]).map(row => row.group.name), ["Future", "500"]);
+  assert.deepEqual(previousSeasonByGroup(groups, "20", [[], [], []]), []);
 });
