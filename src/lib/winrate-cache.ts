@@ -2,10 +2,11 @@ import { readFile, mkdir, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { cacheFolder } from "./snp-cache";
-import type { SnpPlayerProfile } from "@/domain/snp";
+import type { SnpGroupStats, SnpPlayerProfile } from "@/domain/snp";
 
 type WinRates = NonNullable<SnpPlayerProfile["winRates"]>;
-export type StoredWinRates = { fingerprint: string; winRates: WinRates; savedAt: string };
+// previousByGroup is saved with the winrate because both come from the same per-group requests.
+export type StoredWinRates = { fingerprint: string; winRates: WinRates; previousByGroup?: SnpGroupStats[]; savedAt: string };
 
 // Safety net for matches in another group, which do not change the selected group's data.
 export const WINRATE_MAX_AGE = 24 * 3600 * 1000;
@@ -28,11 +29,11 @@ export async function readWinRates(key: string): Promise<StoredWinRates | undefi
   try { return JSON.parse(await readFile(file(key), "utf8")); } catch { return undefined; }
 }
 
-export async function saveWinRates(key: string, fingerprint: string, winRates: WinRates) {
+export async function saveWinRates(key: string, fingerprint: string, winRates: WinRates, previousByGroup?: SnpGroupStats[]) {
   const target = file(key); const temporary = `${target}.${randomUUID()}.tmp`;
   try {
     await mkdir(path.dirname(target), { recursive: true });
-    await writeFile(temporary, JSON.stringify({ fingerprint, winRates, savedAt: new Date().toISOString() }), { mode: 0o600 });
+    await writeFile(temporary, JSON.stringify({ fingerprint, winRates, previousByGroup, savedAt: new Date().toISOString() }), { mode: 0o600 });
     await rename(temporary, target);
   } catch { /* Without a stored copy the winrate is simply recalculated next time. */ }
 }
