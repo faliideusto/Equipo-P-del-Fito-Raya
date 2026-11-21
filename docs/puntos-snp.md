@@ -14,7 +14,8 @@ Fórmula deducida del historial de SNP (`ranking/ajaxGetByJugadorAndGrupo`) y co
 | Perder 0-2 | 3 | 1 |
 
 - Bonus: +1 si el equipo gana el enfrentamiento, +0,5 si empata.
-- Coeficiente (solo fase regular): 1ª = 1, −0,05 por división hasta la 6ª (0,75), luego −0,01 por división (10ª = 0,71), mínimo 0,50.
+- Coeficiente (fase regular y retos): 1ª = 1, −0,05 por división hasta la 6ª (0,75), luego −0,01 por división (10ª = 0,71), mínimo 0,50. En el playoff es 1.
+- Retos: SNP numera la jornada de retos como ronda 1000 y la guarda en el historial como la fila «retos» de la fase regular, entre la jornada 5 y la 6. Al jugarla cae el reto de la temporada pasada. Puntúan igual que una jornada de liga.
 - No influyen los puntos del compañero ni de los rivales, la posición en la pareja ni los juegos.
 
 ## Ranking

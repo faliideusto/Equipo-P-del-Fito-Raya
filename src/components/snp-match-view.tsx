@@ -6,7 +6,7 @@ import { ActaGameRows, type ActaProvisional } from "./acta-game-rows";
 import { matchDateParts } from "@/lib/snp-parser";
 import { CalendarDays, Clock3, MapPin } from "lucide-react";
 import { mapsSearchUrl } from "@/domain/team-result-message";
-import { actaForecast, rankingForecast, type PlayerRanking } from "@/domain/snp-points";
+import { actaForecast, actaRound, rankingForecast, type PlayerRanking } from "@/domain/snp-points";
 import { getRankingHistory } from "@/lib/snp-ranking";
 import { toActaSets } from "@/domain/result-edit";
 import { scoreBanner } from "@/domain/provisional-acta";
@@ -27,8 +27,8 @@ export async function SnpMatchView({result,backHref="/competicion",backLabel="Vo
 }
 // New SNP ranking of each player of the acta, from their SNP history and the forecast points of their game.
 async function rankingForecasts(match:SnpMatch,forecast:ReturnType<typeof actaForecast>):Promise<Record<string,PlayerRanking>>{
-  const round=Number(match.title.match(/\[\s*Jornada\s*(\d+)\s*\]/i)?.[1]);
-  if(!Number.isInteger(round)||round<1)return {};
+  const round=actaRound(match.title);
+  if(round===null)return {};
   const people=match.games.flatMap(game=>([0,1] as const).flatMap(side=>{const gained=forecast[game.index]?.[side];return gained?((side===0?game.home:game.away)??[]).filter(p=>/^\d+$/.test(p.id)).map(person=>({person,gained})):[];}));
   const out:Record<string,PlayerRanking>={};
   for(let i=0;i<people.length;i+=5)await Promise.all(people.slice(i,i+5).map(async({person,gained})=>{
