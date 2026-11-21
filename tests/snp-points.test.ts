@@ -46,3 +46,25 @@ test("publicado por SNP, la variación parte de los puntos de la convocatoria, c
   // 46.015,63 PTS −2.078 → 43.938, no −7.125 desde el ranking de la jornada 1.
   assert.deepEqual(rankingForecast(history, title, 2, 2.85, 46015.63), { before: 46015.63, after: 43937.5, published: true });
 });
+
+test("jornada de retos: se reconoce en el título y usa el coeficiente de la división", async () => {
+  const { actaRound, rankingForecast } = await import("../src/domain/snp-points");
+  for (const title of ["SNP ESPAÑA - FASE REGULAR CÁDIZ - MASCULINO - Future - 10ª División [Jornada 1000]", "SNP ESPAÑA - RETOS CÁDIZ - MASCULINO - Future - 10ª División", "SNP ESPAÑA - FASE REGULAR CÁDIZ - MASCULINO - Future - 10ª División [Retos]"]) {
+    assert.equal(actaRound(title), 1000, title);
+    assert.equal(actaCoefficient(title), 0.71, title);
+  }
+  assert.equal(actaRound("FASE REGULAR - Future - 2ª División [Jornada 3]"), 3);
+  assert.equal(actaRound("Enfrentamiento (#55252): SNP ESPAÑA - FASE REGULAR CÁDIZ - MASCULINO - Future - 2ª División"), null);
+  // Reto real de la temporada pasada (5ª, pareja 4 gana 2-1 y el equipo gana): 0,8 × (4 + 1) = 4.
+  const w3: SetScore[] = [[6, 2], [3, 6], [6, 1]]; const l: SetScore[] = [[1, 6], [2, 6]]; const w: SetScore[] = [[6, 1], [6, 2]];
+  assert.equal(actaForecast("RETOS CÁDIZ - Future - 5ª División [Jornada 1000]", [w, w, l, w3, l])[3][0]?.points, 4);
+  // El historial guarda los retos como fila «retos» de la fase regular, aunque el acta no la nombre.
+  const title = "SNP ESPAÑA - RETOS CÁDIZ - MASCULINO - Future - 10ª División [Jornada 1000]";
+  const jornadas = { "1": { ptos_c: 4.97, pd: 1, puntos: 38828.13 }, "5": { ptos_c: 0.71, pd: 1, puntos: 22187.5 } };
+  const previous = { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "10", J: { "3": { ptos_c: 2, pd: 1 }, "7": { ptos_c: 3, pd: 1 }, retos: { ptos_c: 5, pd: 1 } } } };
+  const open = { current: { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "5", J: jornadas } }, previous };
+  // Ventana: J1, J5, J7 de la pasada y el reto nuevo (el reto pasado cae): (4,97 + 0,71 + 3 + 2,13) / 4 × 12.500.
+  assert.deepEqual(rankingForecast(open, title, 1000, 2.13, 30000), { before: 30000, after: 33781.25, published: false });
+  const published = { current: { "269": { nombre: "FASE REGULAR CÁDIZ", j_a: "5", J: { ...jornadas, retos: { ptos_c: 2.13, pd: 1, puntos: 33781.25 } } } }, previous };
+  assert.deepEqual(rankingForecast(published, title, 1000, 2.13, 30000), { before: 30000, after: 33781.25, published: true });
+});

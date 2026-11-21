@@ -1,4 +1,5 @@
 import { matchValue } from "./rules";
+import { CHALLENGE_ROUND } from "./rounds";
 import type { SetScore } from "./match-result";
 // Puntos SNP de un partido, deducidos del historial de SNP (ver docs/puntos-snp.md):
 // coeficiente de división × (puntos por resultado + bonus del enfrentamiento).
@@ -10,12 +11,21 @@ export function divisionCoefficient(division: number): number {
   const value = division <= 6 ? 1 - 0.05 * (division - 1) : 0.75 - 0.01 * (division - 6);
   return Math.max(0.5, Math.round(value * 100) / 100);
 }
-// El coeficiente solo se aplica en la fase regular; el título del acta trae fase y división.
-// null si el título no dice la división (por ejemplo, un acta guardada sin consultar SNP).
+// El acta de los retos puede decir «[Jornada 1000]» o nombrar los retos en vez de un número.
+export const isChallengeActa = (title: string) => /\[\s*(?:Jornada\s*(?:de\s*)?)?(?:1000|retos?)\s*\]/i.test(title) || /\bRETOS?\b/i.test(title);
+// Jornada del acta según su título: 1…10, o CHALLENGE_ROUND para los retos. null si no la dice.
+export function actaRound(title: string): number | null {
+  const round = Number(title.match(/\[\s*Jornada\s*(\d+)\s*\]/i)?.[1]);
+  if (Number.isInteger(round) && round >= 1) return round;
+  return isChallengeActa(title) ? CHALLENGE_ROUND : null;
+}
+// El coeficiente de división se aplica en la fase regular y en los retos (el historial de SNP de la
+// temporada pasada da a los retos el mismo coeficiente que a la liga); en el playoff es 1.
+// El título del acta trae fase y división. null si no dice la división (un acta guardada sin consultar SNP).
 export function actaCoefficient(title: string): number | null {
   const division = title.match(/(\d+)\s*ª\s*Divisi[oó]n/i)?.[1];
   if (!division) return null;
-  return /FASE REGULAR/i.test(title) ? divisionCoefficient(Number(division)) : 1;
+  return /FASE REGULAR/i.test(title) || isChallengeActa(title) ? divisionCoefficient(Number(division)) : 1;
 }
 const setsWon = (sets: SetScore[], side: 0 | 1) => sets.filter(s => s[side] > s[1 - side]).length;
 // Resultado de un lado del partido: null mientras no hay ganador.
@@ -57,15 +67,20 @@ type RawRound = { ptos_c?: unknown; pd?: unknown; puntos?: unknown };
 type RawPhase = { nombre?: unknown; j_a?: unknown; J?: unknown };
 export type RankingHistory = { current: Record<string, RawPhase>; previous: Record<string, RawPhase> };
 const num = (value: unknown) => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
-const roundOrder = (key: string) => key === "retos" ? 5.5 : Number(key);
+const roundOrder = (key: string) => key === "retos" || key === String(CHALLENGE_ROUND) ? 5.5 : Number(key);
 const rounds = (phase: RawPhase | undefined) => phase?.J && typeof phase.J === "object" && !Array.isArray(phase.J) ? Object.entries(phase.J as Record<string, RawRound>).filter(([key, row]) => row && Number.isFinite(roundOrder(key))) : [];
 const sameName = (phase: RawPhase, title: string) => typeof phase.nombre === "string" && phase.nombre.trim() !== "" && title.toUpperCase().includes(phase.nombre.trim().toUpperCase());
 export type RankingForecast = { before: number; after: number; published: boolean };
 export type PlayerRanking = RankingForecast & { withBonus: boolean };
 // Ranking = 100.000 × puntos de la ventana / (8 × máx(4, partidos de la ventana)).
 // La ventana es un año: al jugar la jornada N cae la jornada N (y antes, los retos) de la temporada pasada.
-export function rankingForecast(history: RankingHistory, title: string, round: number, gained: number, lineupPoints: number | null = null): RankingForecast | null {
-  const phase = Object.values(history.current).find(p => sameName(p, title));
+// `round` es la jornada del acta (actaRound): los retos, ronda 1000, son la fila «retos» del historial.
+export function rankingForecast(history: RankingHistory, title: string, actaRoundNumber: number, gained: number, lineupPoints: number | null = null): RankingForecast | null {
+  const challenge = actaRoundNumber === CHALLENGE_ROUND;
+  const round = challenge ? roundOrder("retos") : actaRoundNumber;
+  // Los retos van dentro de la fase regular en el historial, aunque el título del acta no la nombre.
+  const phases = Object.values(history.current);
+  const phase = phases.find(p => sameName(p, title)) ?? (challenge ? phases.find(p => typeof p.nombre === "string" && /REGULAR/i.test(p.nombre)) ?? (phases.length === 1 ? phases[0] : undefined) : undefined);
   if (!phase) return null;
   const done = rounds(phase).filter(([key]) => roundOrder(key) < round);
   const previousRow = done.sort(([a], [b]) => roundOrder(a) - roundOrder(b)).at(-1)?.[1];
@@ -73,7 +88,8 @@ export function rankingForecast(history: RankingHistory, title: string, round: n
   // SNP ya le ha quitado la jornada de hace un año, así que la variación es solo la de este partido
   // y la suma cuadra, igual en la previsión que en el dato publicado. Sin él, el de la jornada anterior.
   const before = lineupPoints ?? (previousRow ? num(previousRow.puntos) : null);
-  const row = num(phase.j_a) >= round ? rounds(phase).find(([key]) => roundOrder(key) === round)?.[1] : undefined;
+  // j_a es la última jornada abierta; los retos no tienen número propio, solo su fila.
+  const row = challenge || num(phase.j_a) >= round ? rounds(phase).find(([key]) => roundOrder(key) === round)?.[1] : undefined;
   // SNP abre la jornada al llegar la fecha y solo cuenta el partido al confirmar el acta: hasta
   // entonces su fila no tiene partido (pd) y el ranking solo ha perdido la jornada de hace un año.
   const counted = row && num(row.pd) >= 1;

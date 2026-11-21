@@ -14,6 +14,8 @@ import { compactPoints, pointsTier, sideShort } from "@/domain/squad";
 import { isInForm } from "@/domain/mvp";
 import { inFormPlayers } from "@/lib/mvp";
 import { provisionalRanking } from "@/lib/provisional-results";
+import { CHALLENGE_ROUND } from "@/domain/rounds";
+const roundName = (round: number) => round === CHALLENGE_ROUND ? "los retos" : `la J${round}`;
 export default async function RosterPage({
   params,
   searchParams,
@@ -37,7 +39,7 @@ export default async function RosterPage({
       <PageHeading
         eyebrow={`${team.shortName} · ${team.division}`}
         title="Plantilla"
-        text={`${players.length} jugadores · Orden por puntos SNP publicados${forecast ? ` · Previsión de la J${forecast.round}` : ""}`}
+        text={`${players.length} jugadores · Orden por puntos SNP publicados${forecast ? ` · Previsión de ${roundName(forecast.round)}` : ""}`}
       />
       <section className="panel">
         <div className="panel-heading">
@@ -97,7 +99,7 @@ export default async function RosterPage({
         )}
       </section>
       <p className="data-note">
-        Plantilla y puntos consultados directamente en SNP.{forecast && ` «Previsión»: cómo queda el ranking SNP de cada jugador con los resultados de la J${forecast.round} guardados en la app, con la fórmula de SNP; desaparece cuando SNP publique la jornada.`} Los campos de puntuación vacíos en
+        Plantilla y puntos consultados directamente en SNP.{forecast && ` «Previsión»: cómo queda el ranking SNP de cada jugador con los resultados de ${roundName(forecast.round)} guardados en la app, con la fórmula de SNP; desaparece cuando SNP publique la jornada.`} Los campos de puntuación vacíos en
         SNP se muestran como 0 puntos, según la indicación del club. Las
         posiciones de juego están por confirmar.
       </p>
