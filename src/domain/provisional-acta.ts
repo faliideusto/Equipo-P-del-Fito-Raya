@@ -39,6 +39,9 @@ export function actaScore(match: SnpMatch): [number, number] | null {
 export function scoreBanner(match: SnpMatch, gameSets: (SnpMatch["games"][number]["sets"] | null)[]): { score: [number, number] | null; label: string } {
   const fromApp=match.games.some((game,i)=>!game.sets.length&&gameSets[i]?.length);
   if(fromApp)return {score:actaScore({...match,games:match.games.map((game,i)=>({...game,sets:gameSets[i]??[]}))}),label:"RESULTADO PROVISIONAL · PENDIENTE DE SNP"};
-  const published=match.score&&(match.score[0]+match.score[1]>0||match.games.some(game=>game.sets.length))?match.score:null;
-  return published?{score:published,label:"RESULTADO PUBLICADO POR SNP"}:{score:null,label:"PENDIENTE DE RESULTADO"};
+  // A played encounter always shares out its points, so 0–0 means SNP has not closed the acta yet:
+  // with sets already in the acta, the banner adds up the games decided so far.
+  if(match.score&&match.score[0]+match.score[1]>0)return {score:match.score,label:"RESULTADO PUBLICADO POR SNP"};
+  const provisional=actaScore(match);
+  return provisional?{score:provisional,label:"RESULTADO PROVISIONAL · PENDIENTE DE SNP"}:{score:null,label:"PENDIENTE DE RESULTADO"};
 }
