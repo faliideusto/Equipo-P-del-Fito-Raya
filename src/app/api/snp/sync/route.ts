@@ -2,6 +2,7 @@ import { getSnpCompetition, getSnpTeam } from "@/lib/snp-service";
 import { hasSnpSession } from "@/lib/snp-client";
 import { expireSnpCache } from "@/lib/snp-cache";
 import { allowForcedRefresh } from "@/lib/snp-refresh-limit";
+import { clubDivision } from "@/lib/club-division";
 export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");const host=request.headers.get("host");
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
   // Manual "Actualizar" buttons force a SNP read, at most once every 30 s for everyone.
   const force=new URL(request.url).searchParams.get("refresh")==="1"&&allowForcedRefresh("sync");
   if (force) await expireSnpCache();
-  const results = await Promise.allSettled([getSnpTeam("7778",force),getSnpTeam("803902",force),getSnpCompetition({division:"2318"},force),getSnpCompetition({division:"2326"},force)]);
+  const results = await Promise.allSettled([getSnpTeam("7778",force),getSnpTeam("803902",force),getSnpCompetition({division:"2318"},force),getSnpCompetition({division:"2326"},force),...(await Promise.all([clubDivision("a"),clubDivision("b")])).filter(d=>d!=="2318"&&d!=="2326").map(division=>getSnpCompetition({division},force))]);
   const warnings = results.flatMap(result=>result.status==="rejected"?["No se completó una consulta SNP."]:result.value.stale?[result.value.error||"Se conserva la última consulta."]:[]);
   // The client only re-renders the page when SNP returned something new.
   const changed = results.some(result=>result.status==="fulfilled"&&result.value.changed===true);

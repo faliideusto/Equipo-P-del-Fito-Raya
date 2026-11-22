@@ -1,6 +1,7 @@
 import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
 import { PageHeading, StandingsTable } from "@/components/sports";
+import { clubDivision } from "@/lib/club-division";
 export default async function StandingsPage({
   params,
 }: {
@@ -8,7 +9,7 @@ export default async function StandingsPage({
 }) {
   const { teamId } = await params;
   const team = (await clubRepository.getTeam(teamId))!;
-  const rows = await clubRepository.getStandings(teamId);
+  const [rows, division] = await Promise.all([clubRepository.getStandings(teamId), clubDivision(teamId)]);
   return (
     <>
       <PageHeading
@@ -21,7 +22,7 @@ export default async function StandingsPage({
           <h2>Clasificación</h2>
           <span className="badge blue">{team.shortName}</span>
         </div>
-        <StandingsTable rows={rows} division={teamId === "a" ? "2318" : "2326"} />
+        <StandingsTable rows={rows} division={division} />
       </section>
       <p className="data-note">
         Clasificación publicada por SNP. Se conserva

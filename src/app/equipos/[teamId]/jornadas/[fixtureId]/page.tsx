@@ -19,6 +19,7 @@ import { walletAvailability } from "@/lib/wallet-config";
 import { initialAvailability, notifyKindFor, usablePairs } from "@/domain/wallet-ui";
 import { savedAvailability } from "@/lib/fixture-availability";
 import { publishedPairs } from "@/lib/wallet-notify-service";
+import { clubDivision } from "@/lib/club-division";
 export default async function FixturePage({params}:{params:Promise<{teamId:TeamId;fixtureId:string}>}){
   const {teamId,fixtureId}=await params;
   const fixtures=await clubRepository.getFixtures(teamId);
@@ -43,7 +44,7 @@ export default async function FixturePage({params}:{params:Promise<{teamId:TeamI
   const wallet=walletKind==="lineup"&&<WalletNotify teamId={teamId} fixtureId={fixtureId} match={{round:fixture.round,opponent:fixture.opponent,date:fixture.date,home:fixture.home,venue}} players={roster} publishedPairs={editable} availability={availability}/>;
   if(result){
     const provisional=await fixtureProvisional(link&&user?user.id:null,link?.player_id??null,teamId,fixture,result.data,teams.includes(teamId));
-    return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} venue={venue} teamQuery={`division=${teamId === "a" ? "2318" : "2326"}`}/>{card}{wallet}</MatchdaySlide>;
+    return <MatchdaySlide fixtureId={fixtureId}><SnpMatchView result={result} nav={nav} provisional={provisional} venue={venue} teamQuery={`division=${await clubDivision(teamId)}`}/>{card}{wallet}</MatchdaySlide>;
   }
   return <MatchdaySlide fixtureId={fixtureId}>{nav}<PageHeading eyebrow={`JORNADA ${fixture.round}`} title={fixture.opponent} text="El acta no está disponible en esta consulta."/><section className="panel connection-panel"><p>SNP no ha permitido consultar las parejas y los sets. Vuelve a intentarlo más tarde.</p><Link href={`/equipos/${teamId}/parejas`} className="button secondary">Preparar parejas</Link></section>{card}{wallet}</MatchdaySlide>;
 }
