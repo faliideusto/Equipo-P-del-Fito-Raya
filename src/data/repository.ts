@@ -45,7 +45,10 @@ export const clubRepository: ClubRepository = {
     // Encounters played in the last week that SNP has not closed count once all five games have a winner.
     const encounters = (await Promise.all(result.data.calendar.filter(f => recentUnclosed(f.date, f.score)).map(f => provisionalEncounter(id, f)))).filter(e => e !== null);
     if (!encounters.length) return rows;
-    const changed = new Set(encounters.flatMap(e => [e.homeId, e.awayId]));
+    // Only encounters between two teams of this table change it. A reto against a team that has
+    // already left or not yet joined the division is skipped, and must not mark its rival with *.
+    const ids = new Set(rows.map(row => row.teamId));
+    const changed = new Set(encounters.filter(e => ids.has(e.homeId) && ids.has(e.awayId)).flatMap(e => [e.homeId, e.awayId]));
     return applyEncounters(rows, encounters).map(row => changed.has(row.teamId ?? "") ? { ...row, provisional: true } : row);
   },
   getFixtures: async (id) => {
