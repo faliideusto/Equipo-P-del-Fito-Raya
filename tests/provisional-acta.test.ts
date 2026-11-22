@@ -64,4 +64,7 @@ test("el marcador usa los resultados de la app aunque SNP ya publique la convoca
   assert.deepEqual(scoreBanner(published, published.games.map(() => null)), { score: null, label: "PENDIENTE DE RESULTADO" });
   const closed: SnpMatch = { ...acta, score: [5, 7] };
   assert.deepEqual(scoreBanner(closed, closed.games.map(g => g.sets)), { score: [5, 7], label: "RESULTADO PUBLICADO POR SNP" });
+  // A reto between two other teams: SNP already has every set but keeps 0–0 until it closes the acta.
+  const unclosed: SnpMatch = { ...acta, score: [0, 0], games: acta.games.map(g => ({ ...g, sets: g.index < 1 ? [[0, 6], [3, 6]] as [number, number][] : [[6, 2], [6, 2]] as [number, number][] })) };
+  assert.deepEqual(scoreBanner(unclosed, unclosed.games.map(g => g.sets)), { score: [9, 3], label: "RESULTADO PROVISIONAL · PENDIENTE DE SNP" });
 });
