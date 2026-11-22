@@ -14,6 +14,7 @@ import type { SnpMatch } from "@/domain/snp";
 import { sharedPlayerIds } from "@/data/club-roster";
 import { playerWinRates } from "@/domain/player-winrate";
 import { clubMembers, localPlayerId, memberSports } from "./club-members";
+import { CHALLENGE_ROUND } from "@/domain/rounds";
 type Query = Partial<SnpCompetition["filters"]>;
 function options(value: unknown): SnpOption[] {
   if (!value || typeof value !== "object") throw new Error("SNP ha cambiado el formato de los filtros.");
@@ -163,4 +164,19 @@ export async function getSnpPlayer(id:string, teamId?:string, requestedGroup?:st
 export function previousSeasonByGroup(groups:SnpOption[], selected:string, previous:SnpPlayerStats[][]):SnpGroupStats[]{
   const rows=groups.map((group,i)=>({group,stats:previous[i]??[]})).filter(row=>row.stats.length>0);
   return [...rows.filter(row=>row.group.id===selected),...rows.filter(row=>row.group.id!==selected)];
+}
+// The challenge match ("retos", round 1000) is played between two neighbouring divisions, and SNP
+// lists it in only one of their calendars. A team whose own division leaves it out finds it in the
+// division above or below.
+export async function withTeamChallenge(result:Awaited<ReturnType<typeof getSnpCompetition>>,teamId:string){
+  const {filters,divisions,calendar}=result.data;
+  const involves=(f:{homeId:string;awayId:string})=>f.homeId===teamId||f.awayId===teamId;
+  if(calendar.some(f=>f.round===CHALLENGE_ROUND&&involves(f)))return result;
+  const index=divisions.findIndex(d=>d.id===filters.division);
+  if(index<0)return result;
+  const neighbours=[divisions[index-1],divisions[index+1]].filter(d=>d!==undefined);
+  const calendars=await Promise.all(neighbours.map(d=>getSnpCompetition({...filters,division:d.id,round:undefined}).then(r=>r.data.calendar).catch(()=>[])));
+  const challenges=calendars.flat().filter(f=>f.round===CHALLENGE_ROUND&&involves(f)&&!calendar.some(own=>own.id===f.id));
+  if(!challenges.length)return result;
+  return {...result,data:{...result.data,calendar:[...calendar,...challenges.filter((f,i,all)=>all.findIndex(o=>o.id===f.id)===i)]}};
 }
