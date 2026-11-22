@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { clubRepository } from "@/data/repository";
+import { clubDivision } from "@/lib/club-division";
 import type { TeamId } from "@/domain/types";
 import { NextMatchBoard, ResultRow, StandingsTable } from "@/components/sports";
 import { PlayerAvatar } from "@/components/player-avatar";
@@ -22,7 +23,7 @@ export default async function TeamPage({
     canPublishLineup(teamId),
   ]);
   const ownIndex = rows.findIndex((r) => r.own);
-  const division = teamId === "a" ? "2318" : "2326";
+  const division = await clubDivision(teamId);
   const sourceTeam = teamId === "a" ? "7778" : "803902";
   const next = fixtures.find((f) => f.status === "pending");
   const opponentIndex = next ? rows.findIndex((r) => r.name.trim().toUpperCase() === next.opponent.trim().toUpperCase()) : -1;

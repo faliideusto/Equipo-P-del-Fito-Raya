@@ -3,12 +3,12 @@ import type { TeamId } from "@/domain/types";
 import { sourceTeams } from "@/data/repository";
 import { currentAccount } from "./account-auth";
 import { shareableTeams } from "./team-captains";
-import { getSnpCompetition } from "./snp-service";
+import { clubCalendar } from "./club-division";
 import { byRound } from "@/domain/rounds";
 
 export type RivalPreparation = { teamId: TeamId; fixtureId: string; round: number; date: string | null };
 export type RivalFixture = RivalPreparation & { rivalId: string; rivalName: string };
-export const teamDivisions: Record<TeamId, string> = { a: "2318", b: "2326" };
+
 type Dependencies = {
   account: typeof currentAccount;
   teams: typeof shareableTeams;
@@ -17,7 +17,7 @@ type Dependencies = {
 const defaults: Dependencies = {
   account: currentAccount,
   teams: shareableTeams,
-  calendar: async team => (await getSnpCompetition({ division: teamDivisions[team] })).data.calendar,
+  calendar: clubCalendar,
 };
 
 // The first fixture without a score in the club team's own calendar, home or away.

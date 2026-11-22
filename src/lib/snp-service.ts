@@ -72,7 +72,7 @@ const CLUB_TEAMS=["7778","803902"];
 async function withLineupPlayers(team:SnpTeam):Promise<SnpTeam>{
   if(CLUB_TEAMS.includes(team.id))return team;
   try {
-    const calendars=await Promise.all(KEPT_DIVISIONS.map(division=>getSnpCompetition({division}).catch(()=>null)));
+    const calendars=await Promise.all((await keptDivisions()).map(division=>getSnpCompetition({division}).catch(()=>null)));
     const played=calendars.flatMap(result=>result?result.data.calendar:[])
       .filter(f=>(f.homeId===team.id||f.awayId===team.id)&&f.score&&f.score[0]+f.score[1]>0)
       .sort((a,b)=>b.round-a.round);
@@ -105,8 +105,14 @@ export async function getSnpMatch(id: string, force = false) {
 // for a day, and read again as soon as that result changes. Without a result in the calendar (open
 // round, other divisions, SNP down or a changed format) it keeps the usual short cache time.
 const KEPT_DIVISIONS=["2318","2326"];
+// The base divisions plus the ones the club's teams play the second phase in, after the retos.
+async function keptDivisions(){
+  const {clubDivision}=await import("./club-division");
+  const current=await Promise.all((["a","b"] as const).map(team=>clubDivision(team).catch(()=>null)));
+  return [...new Set([...KEPT_DIVISIONS,...current.filter(division=>division!==null)])];
+}
 async function confirmedActa(id:string):Promise<Keep<SnpMatch>|undefined>{
-  const calendars=await Promise.all(KEPT_DIVISIONS.map(division=>getSnpCompetition({division}).catch(()=>null)));
+  const calendars=await Promise.all((await keptDivisions()).map(division=>getSnpCompetition({division}).catch(()=>null)));
   const score=calendars.flatMap(result=>result&&!result.stale?result.data.calendar:[]).find(fixture=>fixture.id===id)?.score;
   // SNP shows 0-0 until the acta is confirmed; a played fixture always shares out its points.
   if(!score||score[0]+score[1]===0)return undefined;

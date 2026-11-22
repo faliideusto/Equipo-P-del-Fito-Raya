@@ -4,7 +4,7 @@ import { cardPhoto } from "@/data/player-photos";
 import { PageHeading } from "@/components/sports";
 import { HiddenSite } from "@/components/hidden-site/hidden-site";
 import type { LineupPlayer } from "@/components/hidden-site/types";
-import { canBuildGuestPairs, GUEST_DIVISION, nextGuestRival } from "@/lib/cayitos";
+import { canBuildGuestPairs, guestDivision, nextGuestRival } from "@/lib/cayitos";
 import { readRivalLineup } from "@/lib/rival-lineups";
 import { getSnpTeam } from "@/lib/snp-service";
 import type { SnpTeam } from "@/domain/snp";
@@ -14,7 +14,7 @@ import type { SnpTeam } from "@/domain/snp";
 export default async function GuestHiddenSitePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^\d{1,10}$/.test(id)) notFound();
-  const back = <Link className="text-link" href={`/competicion/equipos/${id}?division=${GUEST_DIVISION}`}>← Volver a mi equipo</Link>;
+  const back = <Link className="text-link" href={`/competicion/equipos/${id}?division=${await guestDivision()}`}>← Volver a mi equipo</Link>;
   const heading = (name: string) => <PageHeading eyebrow={`${name} · Privado`} title="Sitio oculto" text="Prepara el próximo partido: la alineación que esperas del rival y cómo se cruza con la tuya." />;
   if (!(await canBuildGuestPairs(id))) return <>{heading("Equipo")}<section className="panel empty-state"><h2>Sección privada.</h2><p>Este sitio oculto no está disponible para tu cuenta.</p></section></>;
   const [own, next] = await Promise.all([
@@ -34,7 +34,7 @@ export default async function GuestHiddenSitePage({ params }: { params: Promise<
       {back}
       {saved.error && <p className="snp-warning" role="status">{saved.error}</p>}
       {rival && own
-        ? <HiddenSite key={`tomas-${next.fixtureId}`} teamId="tomas" ownName={ownName} preparation={next} division={GUEST_DIVISION} ownPlayers={players(own, id)} rivalPlayers={players(rival, next.rivalId)} initialRival={saved.value} publishedOwn={null} />
+        ? <HiddenSite key={`tomas-${next.fixtureId}`} teamId="tomas" ownName={ownName} preparation={next} division={await guestDivision()} ownPlayers={players(own, id)} rivalPlayers={players(rival, next.rivalId)} initialRival={saved.value} publishedOwn={null} />
         : <section className="panel empty-state"><h2>Plantilla no disponible.</h2><p>SNP no ha devuelto la plantilla de {rival ? ownName : next.rivalName}. Vuelve a intentarlo en un rato.</p></section>}
     </>
   );

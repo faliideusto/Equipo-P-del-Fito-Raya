@@ -1,5 +1,6 @@
 import { currentAccount } from "./account-auth";
 import { playerLink } from "./account-profile";
+import { divisionOf } from "./club-division";
 import { getSnpCompetition, getSnpPlayer, getSnpTeam } from "./snp-service";
 import { nextFixtureOf } from "./rival-preparation";
 import { canOpenCayitos, cayitoMembers, cayitoStats, sameName, type CayitoMember, type CayitoStats } from "@/domain/cayitos";
@@ -21,7 +22,7 @@ export async function canSeeCayitos(deps: Access = defaults): Promise<boolean> {
 const TOP_BAL_FALLBACK = "3343";
 // Tomás's own team, for his menu: found by name in the Fito A division.
 export async function topBalTeam(): Promise<string> {
-  const standings = await getSnpCompetition({ division: "2318" }).then(result => result.data.standings).catch(() => []);
+  const standings = await getSnpCompetition({ division: await guestDivision() }).then(result => result.data.standings).catch(() => []);
   return standings.find(row => /top\s*bal/i.test(row.name))?.teamId ?? TOP_BAL_FALLBACK;
 }
 // Only Tomás's account (role "cayito") gets a pair builder, and only on his own team.
@@ -33,14 +34,18 @@ export async function canBuildGuestPairs(teamId: string, account: typeof current
 }
 // Top Bal's next unplayed fixture in the Fito A division, for Tomás's hidden site.
 export async function nextGuestRival(ownTeam: string) {
-  const calendar = (await getSnpCompetition({ division: GUEST_DIVISION })).data.calendar;
+  const divisions = [...new Set([GUEST_DIVISION, await guestDivision()])];
+  const calendar = (await Promise.all(divisions.map(division => getSnpCompetition({ division }).then(result => result.data.calendar).catch(() => [])))).flat();
   return nextFixtureOf(ownTeam, calendar);
 }
 export const GUEST_DIVISION = "2318";
+// After the retos Top Bal can play the second phase in another division: found there by name.
+const isTopBal = (row: { name: string }) => /top\s*bal/i.test(row.name);
+export const guestDivision = () => divisionOf(TOP_BAL_FALLBACK, GUEST_DIVISION, isTopBal);
 async function findMember(member: CayitoMember): Promise<{ id: string; team: string } | null> {
   if (member.snpId) return { id: member.snpId, team: member.snpTeam ?? "" };
   if (!member.findName) return null;
-  const standings = await getSnpCompetition({ division: "2318" }).then(result => result.data.standings).catch(() => []);
+  const standings = await getSnpCompetition({ division: await guestDivision() }).then(result => result.data.standings).catch(() => []);
   const teamIds = [...new Set([...standings.filter(row => /top\s*bal/i.test(row.name)).map(row => row.teamId), TOP_BAL_FALLBACK])];
   for (const teamId of teamIds) {
     const team = await getSnpTeam(teamId).then(result => result.data).catch(() => null);

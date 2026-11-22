@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, ListOrdered, Sparkles, Users } from "lucide-react";
 import { clubRepository } from "@/data/repository";
+import { clubDivision } from "@/lib/club-division";
 import { NextMatchBoard, ResultRow } from "@/components/sports";
 import { TeamLogo } from "@/components/team-logo";
 import { formatDate, formatTime } from "@/lib/format";
@@ -26,7 +27,7 @@ export default async function Home() {
         position: ownIndex + 1,
         next,
         opponent: opponentIndex >= 0 ? { position: opponentIndex + 1, points: rows[opponentIndex].points } : undefined,
-        opponentHref: opponentIndex >= 0 && rows[opponentIndex].teamId ? `/competicion/equipos/${rows[opponentIndex].teamId}?division=${team.id === "a" ? "2318" : "2326"}` : undefined,
+        opponentHref: opponentIndex >= 0 && rows[opponentIndex].teamId ? `/competicion/equipos/${rows[opponentIndex].teamId}?division=${await clubDivision(team.id)}` : undefined,
         last: fixtures.filter((f) => f.status === "played").at(-1),
       };
     }),

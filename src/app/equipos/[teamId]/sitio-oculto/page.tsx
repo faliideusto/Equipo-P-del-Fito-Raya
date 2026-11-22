@@ -6,7 +6,8 @@ import { emptyLineup } from "@/domain/rules";
 import { PageHeading } from "@/components/sports";
 import { HiddenSite } from "@/components/hidden-site/hidden-site";
 import type { LineupPlayer } from "@/components/hidden-site/types";
-import { canPrepareRivals, nextRival, teamDivisions } from "@/lib/rival-preparation";
+import { canPrepareRivals, nextRival } from "@/lib/rival-preparation";
+import { clubDivision } from "@/lib/club-division";
 import { readRivalLineup } from "@/lib/rival-lineups";
 import { getSnpTeam } from "@/lib/snp-service";
 import { walletStore } from "@/lib/wallet-store";
@@ -37,7 +38,7 @@ export default async function HiddenSitePage({
       {heading}
       {saved.error && <p className="snp-warning" role="status">{saved.error}</p>}
       {rival
-        ? <HiddenSite key={`${teamId}-${next.fixtureId}`} teamId={teamId} ownName={`Fito Raya ${teamId.toUpperCase()}`} preparation={next} division={teamDivisions[teamId]} ownPlayers={ownPlayers} rivalPlayers={rivalPlayers} initialRival={saved.value} publishedOwn={publishedOwn} />
+        ? <HiddenSite key={`${teamId}-${next.fixtureId}`} teamId={teamId} ownName={`Fito Raya ${teamId.toUpperCase()}`} preparation={next} division={await clubDivision(teamId)} ownPlayers={ownPlayers} rivalPlayers={rivalPlayers} initialRival={saved.value} publishedOwn={publishedOwn} />
         : <section className="panel empty-state"><h2>Plantilla no disponible.</h2><p>SNP no ha devuelto la plantilla de {next.rivalName}. Vuelve a intentarlo en un rato.</p></section>}
     </>
   );
