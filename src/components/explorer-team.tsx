@@ -31,7 +31,7 @@ export function ExplorerTeam({ id, filters, view, preparations = [], pairs = fal
     const controller = new AbortController();
     async function update(force = false) {
       try {
-        const params = new URLSearchParams(JSON.parse(filterKey)); if (force) params.set("refresh", "1");
+        const params = new URLSearchParams(JSON.parse(filterKey)); params.set("team", id); if (force) params.set("refresh", "1");
         const response = await fetch("/api/snp/competition?" + params, { signal: controller.signal });
         const value = await response.json();
         if (controller.signal.aborted) return;
@@ -49,7 +49,7 @@ export function ExplorerTeam({ id, filters, view, preparations = [], pairs = fal
     const onCheck = (event: Event) => void update(isForcedCheck(event));
     window.addEventListener(SNP_CHECKED_EVENT, onCheck);
     return () => { controller.abort(); window.removeEventListener(SNP_CHECKED_EVENT, onCheck); };
-  }, [filterKey]);
+  }, [filterKey, id]);
 
   useEffect(() => {
     let cancelled = false;
