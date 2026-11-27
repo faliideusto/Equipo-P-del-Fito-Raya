@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Hourglass } from "lucide-react";
 import type { SnpMatch } from "@/domain/snp";
-import { matchValue } from "@/domain/rules";
 import { cellsToSets, checkSets, setsToCells, visibleCells, type SetScore } from "@/domain/match-result";
 import { toActaSets } from "@/domain/result-edit";
 import { updateCell } from "./result-sets-grid";
@@ -12,7 +11,7 @@ import { formatPoints } from "@/lib/format";
 import type { PlayerRanking } from "@/domain/snp-points";
 export type ActaProvisional = { fixtureId: string; teamId: string; ownSide: 0 | 1; sets: SetScore[] | null; editable: boolean };
 type Game = SnpMatch["games"][number];
-// One match of the acta: SNP sets when published; otherwise the provisional
+// One match of the acta, as a scoreboard card: SNP sets when published; otherwise the provisional
 // result saved in the app. Captains can also enter results for empty pairs.
 export function ActaGameRows({ game, teams, teamIds, provisional, rankings }: { game: Game; teams: [string, string]; teamIds?: [string, string]; provisional?: ActaProvisional; rankings?: Record<string, PlayerRanking> }) {
   const router = useRouter();
@@ -23,7 +22,7 @@ export function ActaGameRows({ game, teams, teamIds, provisional, rankings }: { 
   const showActions = Boolean(pending?.sets || pending?.editable);
   const shown: SetScore[] = game.sets.length ? game.sets : pending?.sets ? toActaSets(pending.sets, pending.ownSide) : [];
   const victories = shown.reduce((n, s) => n + (s[0] > s[1] ? 1 : 0), 0); const defeats = shown.reduce((n, s) => n + (s[1] > s[0] ? 1 : 0), 0);
-  const winner = victories >= 2 ? 0 : defeats >= 2 ? 1 : null; const value = game.index < 5 ? matchValue(game.index) : null;
+  const winner = victories >= 2 ? 0 : defeats >= 2 ? 1 : null;
   const view = editing && visibleCells(editing);
   async function save() {
     if (!pending || !view) return;
@@ -37,20 +36,26 @@ export function ActaGameRows({ game, teams, teamIds, provisional, rankings }: { 
       setEditing(null); router.refresh();
     } catch { setMessage("No se pudo modificar. Comprueba la conexión."); } finally { setBusy(false); }
   }
-  return <tbody className={`result-group ${pending?.sets ? "is-provisional" : ""}`}>{[0, 1].map(side => {
-    const names = side === 0 ? game.homePlayers : game.awayPlayers; const people = side === 0 ? game.home : game.away; const own = teams[side].includes("FITO RAYA");
-    // Inputs are stored [nosotros, rivales]: map this acta row to our side or theirs.
-    const inputSide = pending ? (side === pending.ownSide ? 0 : 1) : 0;
-    return <tr key={side} className={own ? "club-result" : "rival-result"}>
-      {side === 0 && <th className="result-number" scope="rowgroup" rowSpan={showActions ? 3 : 2}><span>{String(game.index + 1).padStart(2, "0")}</span><small>{value ?? "—"} pts en juego</small>{pending?.sets && <small className="provisional-tag"><Hourglass size={12} aria-hidden/><span>Provisional</span></small>}</th>}
-      <th className="result-team" scope="row"><small>{teams[side]} · {side === 0 ? "Local" : "Visitante"}</small>{names.length ? names.map((name, i) => { const person = people?.[i]; return <span key={person?.id || i}>{person?.id ? <Link href={`/competicion/jugadores/${person.id}${teamIds?.[side] ? `?equipo=${teamIds[side]}` : ""}`}>{name}</Link> : name}{typeof person?.points === "number" && <b className="acta-points" title="Puntos SNP del jugador en este encuentro">{formatPoints(person.points)}</b>}{person?.id && rankings?.[person.id] && <RankingChange value={rankings[person.id]}/>}</span>; }) : <span>Sin alineación publicada</span>}</th>
-      {[0, 1, 2].map(i => <td className="result-set" key={i}>{view
-        ? <input className="acta-set-input" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`${side === pending!.ownSide ? "Nosotros" : "Rivales"}, set ${i + 1}`} disabled={i === 2 && view.thirdLocked} value={view.cells[i][inputSide]} onChange={e => setEditing(updateCell(editing!, i, inputSide, e.target.value.replace(/\D/g, "")))}/>
-        : <span className={shown[i] && shown[i][side] > shown[i][1 - side] ? "set-won" : ""}>{shown[i]?.[side] ?? "—"}</span>}</td>)}
-      <td className="result-points"><span className={winner === side ? "points-earned" : ""}>{winner === null || value === null ? "—" : winner === side ? value : 0}</span></td>
-    </tr>;
-  })}
-    {pending && showActions && <tr className="provisional-row"><td colSpan={5}>
+  // Sets won by each pair, e.g. 1–2; the winner's figure in yellow.
+  const setScore = shown.length ? <><span className={winner === 0 ? "is-winner" : ""}>{victories}</span>–<span className={winner === 1 ? "is-winner" : ""}>{defeats}</span></> : "—";
+  return <article className={`acta-card ${pending?.sets ? "is-provisional" : ""}`}>
+    <div className="acta-num"><b>{String(game.index + 1).padStart(2, "0")}</b><span className="acta-result-mobile" aria-hidden>{setScore}<small>sets</small></span>{pending?.sets && <small className="provisional-tag"><Hourglass size={12} aria-hidden/><span>Provisional</span></small>}</div>
+    <div className="acta-rows">{[0, 1].map(side => {
+      const names = side === 0 ? game.homePlayers : game.awayPlayers; const people = side === 0 ? game.home : game.away; const own = teams[side].includes("FITO RAYA");
+      // Inputs are stored [nosotros, rivales]: map this acta row to our side or theirs.
+      const inputSide = pending ? (side === pending.ownSide ? 0 : 1) : 0;
+      const state = winner === null ? "" : winner === side ? "is-winner" : "is-loser";
+      return <div key={side} className={`acta-row ${state} ${own ? "is-club" : ""}`}>
+        <div className="acta-pair">
+          <div className="acta-team">{teams[side]} · {side === 0 ? "Local" : "Visitante"}{winner === side && <span className="acta-chip">Gana</span>}</div>
+          {names.length ? names.map((name, i) => { const person = people?.[i]; return <div className="acta-player" key={person?.id || i}><span className="acta-name">{person?.id ? <Link href={`/competicion/jugadores/${person.id}${teamIds?.[side] ? `?equipo=${teamIds[side]}` : ""}`}>{name}</Link> : name}</span>{typeof person?.points === "number" && <b className="acta-points" title="Puntos SNP del jugador en este encuentro">{formatPoints(person.points)}</b>}{person?.id && rankings?.[person.id] && <RankingChange value={rankings[person.id]}/>}</div>; }) : <div className="acta-player"><span className="acta-name">Sin alineación publicada</span></div>}
+        </div>
+        {[0, 1, 2].map(i => view
+          ? <span className="acta-set-cell" key={i}><input className="acta-set-input" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`${side === pending!.ownSide ? "Nosotros" : "Rivales"}, set ${i + 1}`} disabled={i === 2 && view.thirdLocked} value={view.cells[i][inputSide]} onChange={e => setEditing(updateCell(editing!, i, inputSide, e.target.value.replace(/\D/g, "")))}/></span>
+          : <span key={i} className={`acta-set ${shown[i] ? (shown[i][side] > shown[i][1 - side] ? "is-won" : "") : "is-empty"}`} aria-label={`Set ${i + 1}`}>{shown[i]?.[side] ?? "—"}</span>)}
+      </div>;
+    })}
+    {pending && showActions && <div className="acta-provisional">
       <div className="provisional-actions">
         <span className="provisional-note"><Hourglass size={14} aria-hidden/> {pending.sets ? "Resultado provisional de la app, hasta que SNP lo publique." : "Puedes introducir el resultado de esta pareja en la app."}</span>
         {pending.editable && (view
@@ -58,8 +63,10 @@ export function ActaGameRows({ game, teams, teamIds, provisional, rankings }: { 
           : <button type="button" className="button secondary" onClick={() => setEditing(setsToCells(pending.sets ?? []))}>{pending.sets ? "Modificar" : "Añadir resultado"}</button>)}
       </div>
       {message && <p role="alert" className="snp-warning">{message}</p>}
-    </td></tr>}
-  </tbody>;
+    </div>}
+    </div>
+    <div className="acta-result" aria-label={`Sets: ${victories} a ${defeats}`}><b>{setScore}</b><small>sets</small></div>
+  </article>;
 }
 const whole = (n: number) => new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0, useGrouping: "always" }).format(n);
 // How much the player's SNP ranking moves with this game: forecast until SNP publishes the round.

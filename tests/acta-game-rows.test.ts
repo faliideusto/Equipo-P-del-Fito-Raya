@@ -8,12 +8,12 @@ import type { SetScore } from "../src/domain/match-result";
 
 const router: AppRouterInstance = { back() {}, forward() {}, refresh() {}, push() {}, replace() {}, prefetch() {}, bfcacheId: "test" };
 const provisional: ActaProvisional = { fixtureId: "55", teamId: "a", ownSide: 1, sets: null, editable: true };
-const render = (pending = provisional, sets: SetScore[] = []) => renderToStaticMarkup(createElement(AppRouterContext.Provider, { value: router }, createElement("table", null, createElement(ActaGameRows, { game: { index: 1, homePlayers: [], awayPlayers: [], sets }, teams: ["Rival", "FITO RAYA"], provisional: pending }))));
+const render = (pending = provisional, sets: SetScore[] = []) => renderToStaticMarkup(createElement(AppRouterContext.Provider, { value: router }, createElement("div", null, createElement(ActaGameRows, { game: { index: 1, homePlayers: [], awayPlayers: [], sets }, teams: ["Rival", "FITO RAYA"], provisional: pending }))));
 
 test("la pareja vacía muestra Añadir resultado si el capitán tiene permiso", () => {
   const html = render();
   assert.match(html, />Añadir resultado<\/button>/);
-  assert.match(html, /rowSpan="3"/i);
+  assert.match(html, /<article class="acta-card[^"]*">[\s\S]*<div class="acta-provisional">[\s\S]*Añadir resultado[\s\S]*<\/article>/);
   assert.doesNotMatch(render({ ...provisional, editable: false }), /<button/);
 });
 
