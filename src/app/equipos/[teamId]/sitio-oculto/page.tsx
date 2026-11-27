@@ -10,6 +10,7 @@ import { canPrepareRivals, nextRival } from "@/lib/rival-preparation";
 import { clubDivision } from "@/lib/club-division";
 import { readRivalLineup } from "@/lib/rival-lineups";
 import { getSnpTeam } from "@/lib/snp-service";
+import { snpRivalLineup } from "@/lib/snp-rival-lineup";
 import { walletStore } from "@/lib/wallet-store";
 // Only the coach and the club captains see this section; everything is checked on the server.
 export default async function HiddenSitePage({
@@ -33,12 +34,14 @@ export default async function HiddenSitePage({
   // Published pairs keep the builder's ids; the hidden site works with five numbered slots.
   const publishedOwn = published && emptyLineup().map((slot, index) => ({ ...slot, players: published.pairs[index]?.players ?? slot.players }));
   const rivalPlayers: LineupPlayer[] = (rival?.players ?? []).map(player => ({ id: player.id, name: player.name, points: player.points, photo: cardPhoto(player), snpId: player.id, snpTeam: next.rivalId }));
+  // Only here, and only this fixture's acta: what SNP already knows of the rival's lineup.
+  const fromSnp = rival ? await snpRivalLineup(next.fixtureId, next.rivalId, rival.players) : null;
   return (
     <>
       {heading}
       {saved.error && <p className="snp-warning" role="status">{saved.error}</p>}
       {rival
-        ? <HiddenSite key={`${teamId}-${next.fixtureId}`} teamId={teamId} ownName={`Fito Raya ${teamId.toUpperCase()}`} preparation={next} division={await clubDivision(teamId)} ownPlayers={ownPlayers} rivalPlayers={rivalPlayers} initialRival={saved.value} publishedOwn={publishedOwn} />
+        ? <HiddenSite key={`${teamId}-${next.fixtureId}`} teamId={teamId} ownName={`Fito Raya ${teamId.toUpperCase()}`} preparation={next} division={await clubDivision(teamId)} ownPlayers={ownPlayers} rivalPlayers={rivalPlayers} initialRival={saved.value} publishedOwn={publishedOwn} fromSnp={fromSnp} />
         : <section className="panel empty-state"><h2>Plantilla no disponible.</h2><p>SNP no ha devuelto la plantilla de {next.rivalName}. Vuelve a intentarlo en un rato.</p></section>}
     </>
   );

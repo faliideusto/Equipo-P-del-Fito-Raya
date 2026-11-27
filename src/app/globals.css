@@ -4261,6 +4261,12 @@ dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480p
 .hs-tabs button:hover {color:var(--ink)}
 .hs-tabs button.active {background:var(--accent);color:var(--accent-ink)}
 .hs-message {margin:0;padding:12px 14px;border:1px solid var(--accent-line);border-radius:10px;background:var(--accent-soft);color:var(--ink);font-size:14px}
+.hs-snp-note {margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:14px}
+.hs-snp-note.is-found {border-color:var(--accent-line);background:var(--accent-soft);color:var(--ink)}
+.hs-snp-note p {margin:0;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.hs-snp-note p svg {flex:none;margin-top:2px}
+.hs-snp-note ul {margin:8px 0 0;padding-left:20px;display:grid;gap:4px}
+.hs-snp-note .button {margin-top:10px}
 .hs-panel {padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
 .hs-panel-head h2 {margin:0;font-family:var(--font-display);font-size:24px;text-transform:uppercase}
 .hs-panel-head p {margin:6px 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
