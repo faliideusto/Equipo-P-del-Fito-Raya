@@ -66,7 +66,7 @@ export function LeagueTable({ rows, division, form, next }: {
         <span>Últimos 5: el más reciente a la derecha, incluye 1ª fase y retos</span>
         <span>Dif. juegos: desempata a igualdad de puntos</span>
       </p>
-      {rows.some(row => row.provisional) && <p className="lt-legend">* Incluye enfrentamientos ya jugados que SNP todavía no ha cerrado, con los sets del acta y los resultados de la app. Provisional hasta que SNP publique.</p>}
+      {(rows.some(row => row.provisional) || Object.values(form).some(entries => entries.some(entry => entry.provisional))) && <p className="lt-legend">* Incluye enfrentamientos ya jugados que SNP todavía no ha cerrado, con los sets del acta y los resultados de la app. Provisional hasta que SNP publique.</p>}
     </section>
   );
 }
@@ -91,9 +91,9 @@ function Form({ entries, scores = false }: { entries: FormEntry[]; scores?: bool
   return (
     <span className="lt-form">
       {entries.map(entry => (
-        <span key={entry.fixtureId} className={`lt-chip ${FORM_CLASS[entry.result]}`} title={`${FORM_TITLE[entry.result]} ${entry.own}-${entry.rival}`}>
+        <span key={entry.fixtureId} className={`lt-chip ${FORM_CLASS[entry.result]}${entry.provisional ? " provisional" : ""}`} title={`${FORM_TITLE[entry.result]} ${entry.own}-${entry.rival}${entry.provisional ? " · provisional, SNP aún no lo ha cerrado" : ""}`}>
           <b>{entry.result}</b>
-          {scores && <em>{entry.own}-{entry.rival}</em>}
+          {scores && <em>{entry.own}-{entry.rival}{entry.provisional && "*"}</em>}
         </span>
       ))}
     </span>

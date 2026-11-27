@@ -66,3 +66,22 @@ test("etiquetas de jornada, diferencia y nombres cortos", () => {
   assert.equal(shortTeamName("JRPADEL C"), "Jrpadel C");
   assert.equal(shortTeamName("CD_PADEL_ARCOS"), "Arcos");
 });
+
+test("los resultados provisionales entran en la racha y en el próximo", () => {
+  const calendar = [
+    fixture("5", 5, "2026-11-21", "fito", "a", [7, 5]),
+    fixture("6", 6, "2026-11-26 20:00", "b", "fito", null),
+    fixture("6b", 6, "2026-11-26 21:00", "c", "d", [0, 0]),
+    fixture("7", 7, "2026-12-03", "fito", "c", null),
+  ];
+  // 6–6 by points; the home side wins on sets.
+  const provisional = { "6": { homeId: "b", awayId: "fito", points: [6, 6] as [number, number], sets: [6, 5] as [number, number], games: [60, 58] as [number, number] } };
+  const form = teamForm("fito", [...calendar, { ...calendar[1] }], 5, provisional);
+  assert.deepEqual(form.map(f => [f.fixtureId, f.result, `${f.own}-${f.rival}`, Boolean(f.provisional)]), [["5", "V", "7-5", false], ["6", "D", "6-6", true]]);
+  assert.equal(teamForm("b", calendar, 5, provisional)[0].result, "V");
+  assert.equal(nextRound(calendar), 6);
+  // Round 6 is still pending: the 0–0 encounter has not been played.
+  assert.equal(nextRound(calendar, provisional), 6);
+  assert.equal(nextRound(calendar.filter(f => f.id !== "6b"), provisional), 7);
+  assert.deepEqual(teamForm("c", calendar), []);
+});

@@ -4568,6 +4568,7 @@ small.hs-stats {display:block}
 .lt-chip.win b { background: var(--green-soft); color: var(--green); box-shadow: inset 0 0 0 1px rgba(95, 212, 155, 0.4); }
 .lt-chip.loss b { background: rgba(255, 138, 138, 0.14); color: var(--danger); box-shadow: inset 0 0 0 1px rgba(255, 138, 138, 0.35); }
 .lt-chip.draw b { background: var(--panel-3); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.lt-chip.provisional b { outline: 1px dashed currentColor; outline-offset: 1px; box-shadow: none; }
 .lt-chip em { font-style: normal; font-family: var(--font-mono); font-size: 9.5px; color: var(--faint); white-space: nowrap; }
 .lt-next { display: inline-flex; align-items: center; gap: 8px; text-align: left; white-space: nowrap; }
 .lt-next .team-logo { width: 24px; height: 24px; border-radius: 6px; padding: 2px; font-size: 9px; }

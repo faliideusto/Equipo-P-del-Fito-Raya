@@ -4,7 +4,7 @@ import { getSnpTeam, getSnpCompetition, getSnpPlayer, getSnpMatch } from "@/lib/
 import { listResults } from "@/lib/match-results";
 import { fixtureStart, RESULT_DELAY_MS } from "@/domain/pending-results";
 import { actaScore, emptyActa, provisionalActa } from "@/domain/provisional-acta";
-import { applyEncounters, encounterResult } from "@/domain/provisional-standings";
+import { applyEncounters, encounterResult, type EncounterResult } from "@/domain/provisional-standings";
 import type { SnpFixture } from "@/domain/snp";
 import { readPositions } from "@/lib/player-positions";
 import { readNicknames } from "@/lib/player-nicknames";
@@ -44,7 +44,7 @@ export const clubRepository: ClubRepository = {
     const result = await getSnpCompetition({division: await clubDivision(id)});
     const rows = result.data.standings.map(row => ({...row, own: row.teamId === sourceTeams[id]}));
     // Encounters played in the last week that SNP has not closed count once all five games have a winner.
-    const encounters = (await Promise.all(result.data.calendar.filter(f => recentUnclosed(f.date, f.score)).map(f => provisionalEncounter(id, f)))).filter(e => e !== null);
+    const encounters = (await unclosedEncounters(id, result.data.calendar)).map(e => e.result);
     if (!encounters.length) return rows;
     // Only encounters between two teams of this table change it. A reto against a team that has
     // already left or not yet joined the division is skipped, and must not mark its rival with *.
@@ -82,6 +82,17 @@ async function provisionalFixture(teamId: TeamId, fixture: Fixture): Promise<Fix
     const score = actaScore(await completedActa(teamId, fixture.id, fixture.home));
     return score ? { ...fixture, status: "played", score, provisional: true } : fixture;
   } catch { return fixture; }
+}
+// Encounters of a division calendar played in the last week that SNP has not closed, with their result
+// once every game has a winner.
+async function unclosedEncounters(teamId: TeamId, calendar: SnpFixture[]) {
+  const read = await Promise.all(calendar.filter(f => recentUnclosed(f.date, f.score)).map(async fixture => ({ fixture, result: await provisionalEncounter(teamId, fixture) })));
+  return read.filter((e): e is { fixture: SnpFixture; result: EncounterResult } => e.result !== null);
+}
+// The provisional encounters of the club team's current division, for the recent form of the table.
+export async function provisionalEncounters(teamId: TeamId) {
+  const result = await getSnpCompetition({ division: await clubDivision(teamId) });
+  return unclosedEncounters(teamId, result.data.calendar);
 }
 async function provisionalEncounter(teamId: TeamId, fixture: SnpFixture) {
   const own = fixture.homeId === sourceTeams[teamId] || fixture.awayId === sourceTeams[teamId];

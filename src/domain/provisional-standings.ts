@@ -14,6 +14,9 @@ export function encounterResult(homeId: string, awayId: string, match: SnpMatch)
   }
   return { homeId, awayId, points, sets, games };
 }
+// The side that wins the encounter: more points, then more sets, then more games (home on a full tie).
+export const encounterWinner = (r: EncounterResult): 0 | 1 =>
+  (r.points[0] !== r.points[1] ? r.points[0] > r.points[1] : r.sets[0] !== r.sets[1] ? r.sets[0] > r.sets[1] : r.games[0] >= r.games[1]) ? 0 : 1;
 type Row = { teamId?: string; played: number; won: number; lost: number; points: number; gameDifference?: number };
 // SNP's table: points are the sum of the encounter points; with the same points the winner is the one
 // with more sets (then games); the difference counts games. Sorted by points, then wins and games.
@@ -22,7 +25,7 @@ export function applyEncounters<T extends Row>(rows: T[], results: EncounterResu
   for (const r of results) {
     const home = table.find(row => row.teamId === r.homeId), away = table.find(row => row.teamId === r.awayId);
     if (!home || !away) continue;
-    const homeWins = r.points[0] !== r.points[1] ? r.points[0] > r.points[1] : r.sets[0] !== r.sets[1] ? r.sets[0] > r.sets[1] : r.games[0] >= r.games[1];
+    const homeWins = encounterWinner(r) === 0;
     for (const [row, side] of [[home, 0], [away, 1]] as const) {
       const won = side === 0 ? homeWins : !homeWins;
       row.played++; row.points += r.points[side]; if (won) row.won++; else row.lost++;
