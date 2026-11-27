@@ -1,14 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CloudDownload, EyeOff, RotateCcw, Save, Swords, Trash2, Undo2, Users } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, CloudDownload, EyeOff, RotateCcw, Save, Swords, Trash2, Undo2, Users } from "lucide-react";
 import type { Pair } from "@/domain/types";
 import { emptyLineup } from "@/domain/rules";
 import { TeamLogo } from "@/components/team-logo";
 import { formatDate } from "@/lib/format";
 import type { RivalFixture } from "@/lib/rival-preparation";
 import type { LineupOwner, RivalLineup } from "@/lib/rival-lineups";
-import type { LineupFromPoints } from "@/domain/snp-lineup-points";
+import { changedPairs, type LineupFromPoints } from "@/domain/snp-lineup-points";
 import { formatPoints } from "@/lib/format";
 import { HeadToHead } from "./head-to-head";
 import { PairEditor } from "./pair-editor";
@@ -29,9 +29,11 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
 }) {
   const guest = teamId === "tomas";
   const audience = guest ? "Solo la ves tú" : "La ven el entrenador y los capitanes";
-  const [tab, setTab] = useState<Tab>(initialRival ? "h2h" : "rival");
-  const [saved, setSaved] = useState<RivalLineup | null>(initialRival);
   const snpPairs = fromSnp?.status === "found" ? fromSnp.pairs : null;
+  // The rival changed its lineup in SNP since it was saved here: open straight on it.
+  const changedOnOpen = fromSnp && initialRival && filled(initialRival.pairs) ? changedPairs(fromSnp, initialRival.pairs) : [];
+  const [tab, setTab] = useState<Tab>(initialRival && !changedOnOpen.length ? "h2h" : "rival");
+  const [saved, setSaved] = useState<RivalLineup | null>(initialRival);
   // Nothing saved yet: start from what SNP already shows, ready to review and save.
   const [rivalPairs, setRivalPairs] = useState<Pair[]>(() => initialRival && filled(initialRival.pairs) ? initialRival.pairs : snpPairs ?? emptyLineup());
   const [busy, setBusy] = useState(false);
@@ -43,6 +45,7 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
   const savedOwn = saved?.own_pairs ?? null;
   const rivalDirty = !same(rivalPairs, savedRival ?? emptyLineup());
   const ownDirty = !same(ownPairs, savedOwn ?? emptyLineup());
+  const snpChanges = fromSnp && savedRival ? changedPairs(fromSnp, savedRival) : [];
 
   async function send(action: "save" | "clear" | "save-own" | "clear-own") {
     if (action.startsWith("clear") && !window.confirm(action === "clear" ? "¿Borrar la alineación guardada del rival?" : "¿Borrar nuestra alineación guardada?")) return;
@@ -61,7 +64,6 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
     } catch { setMessage("No se pudo conectar. Inténtalo de nuevo."); }
     finally { setBusy(false); }
   }
-  const rivalName = (id: string) => rivalPlayers.find(player => player.id === id)?.name ?? "Jugador";
   const profile = (player: LineupPlayer, team: string) => player.snpId ? `/competicion/jugadores/${player.snpId}?equipo=${team}&division=${division}` : null;
   const savedAt = saved && new Date(saved.updated_at).toLocaleString("es-ES", { timeZone: "Europe/Madrid", dateStyle: "short", timeStyle: "short" });
   const tabs: { id: Tab; label: string; icon: typeof Swords }[] = [
@@ -80,11 +82,12 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
           ? <p className="hs-rival-name">{preparation.rivalName}</p>
           : <Link className="hs-rival-name" href={`/competicion/equipos/${preparation.rivalId}?division=${division}`}>{preparation.rivalName} <ArrowRight size={16}/></Link>}
         <p className="hs-rival-status">{saved ? `Actualizado el ${savedAt}` : "Aún no hay nada guardado"}</p>
+        {snpChanges.length > 0 && <p className="hs-rival-alert"><AlertTriangle size={14}/> Ha cambiado su alineación en SNP</p>}
       </div>
       <span className="badge blue">Privado</span>
     </section>
 
-    <nav className="hs-tabs" aria-label="Secciones del sitio oculto">{tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" className={tab === id ? "active" : ""} aria-pressed={tab === id} onClick={() => setTab(id)}><Icon size={16}/>{label}</button>)}</nav>
+    <nav className="hs-tabs" aria-label="Secciones del sitio oculto">{tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" className={tab === id ? "active" : ""} aria-pressed={tab === id} onClick={() => setTab(id)}><Icon size={16}/>{label}{id === "rival" && snpChanges.length > 0 && <span className="hs-tab-dot" aria-label="con cambios en SNP"/>}</button>)}</nav>
     {message && <p className="hs-message" role="status">{message}</p>}
 
     {tab === "h2h" && (filled(rivalPairs) && filled(ownPairs)
@@ -100,7 +103,8 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
 
     {tab === "rival" && <section className="hs-panel">
       <div className="hs-panel-head"><div><h2>Alineación del rival</h2><p>La que esperáis que traiga {preparation.rivalName}. {guest ? "Se queda guardada y solo la ves tú." : "Al guardarla la ven el entrenador y todos los capitanes."}</p></div></div>
-      <SnpNotice fromSnp={fromSnp} rivalName={preparation.rivalName} name={rivalName} showUse={Boolean(snpPairs && !same(rivalPairs, snpPairs))} onUse={() => { setRivalPairs(snpPairs!); setMessage("Cargada la alineación de SNP. Revísala y guárdala."); }}/>
+      <SnpPanel fromSnp={fromSnp} rivalName={preparation.rivalName} players={rivalPlayers} changes={snpChanges} hasSaved={Boolean(savedRival)}
+        showUse={Boolean(snpPairs && !same(rivalPairs, snpPairs))} onUse={() => { setRivalPairs(snpPairs!); setMessage("Cargada la alineación de SNP. Revisa los empates y guárdala."); }}/>
       <PairEditor side="rival" players={rivalPlayers} pairs={rivalPairs} profile={player => profile(player, preparation.rivalId)} stats={stats} onChange={pairs => { setRivalPairs(pairs); setMessage(""); }}/>
       <div className="hs-actions">
         <button type="button" className="button" disabled={busy || !rivalDirty || !filled(rivalPairs)} onClick={() => send("save")}><Save size={16}/> {busy ? "Guardando…" : rivalDirty || !savedRival ? "Guardar alineación" : "Guardada"}</button>
@@ -123,14 +127,50 @@ export function HiddenSite({ teamId, ownName, preparation, division, ownPlayers,
   </div>;
 }
 
-// What SNP's acta says about the rival's lineup: found (with tied points to review), or not entered yet.
-function SnpNotice({ fromSnp, rivalName, name, showUse, onUse }: { fromSnp: LineupFromPoints | null; rivalName: string; name: (id: string) => string; showUse: boolean; onUse: () => void }) {
+// What SNP's acta says about the rival's lineup: each pair as SNP has it, the tied players to choose
+// from, and which pairs changed since the lineup was saved here.
+function SnpPanel({ fromSnp, rivalName, players, changes, hasSaved, showUse, onUse }: {
+  fromSnp: LineupFromPoints | null; rivalName: string; players: LineupPlayer[]; changes: number[]; hasSaved: boolean; showUse: boolean; onUse: () => void;
+}) {
   if (!fromSnp) return null;
-  if (fromSnp.status === "none") return <p className="hs-snp-note">{rivalName} aún no ha metido su alineación en SNP.</p>;
-  return <div className="hs-snp-note is-found">
-    <p><CloudDownload size={16}/> <b>{rivalName} ya ha metido su alineación en SNP.</b> Sale de los puntos de cada jugador en el acta.</p>
-    {fromSnp.ties.length > 0 && <ul>{fromSnp.ties.map(tie => <li key={`${tie.pair}-${tie.chosen}`}>P{tie.pair}: {formatPoints(tie.points)} pts. Puesto {name(tie.chosen)}; con los mismos puntos también {tie.candidates.filter(id => id !== tie.chosen).map(name).join(" o ")}.</li>)}</ul>}
-    {fromSnp.missing.length > 0 && <ul>{fromSnp.missing.map(item => <li key={`m-${item.pair}-${item.points}`}>P{item.pair}: nadie de la plantilla tiene {formatPoints(item.points)} pts.</li>)}</ul>}
-    {showUse && <button type="button" className="button secondary small" onClick={onUse}><CloudDownload size={16}/> Usar la de SNP</button>}
-  </div>;
+  if (fromSnp.status === "none") return <section className="hs-snp is-none">
+    <span className="hs-snp-icon"><CloudDownload size={18}/></span>
+    <div><strong>{rivalName} aún no ha metido su alineación en SNP</strong><small>Se vuelve a mirar cada vez que entras aquí.</small></div>
+  </section>;
+  const name = (id: string) => players.find(player => player.id === id)?.name ?? "Jugador";
+  const points = (id: string) => players.find(player => player.id === id)?.points ?? 0;
+  const state = changes.length ? "is-changed" : hasSaved ? "is-match" : "is-new";
+  const pill = changes.length ? "Ha cambiado" : hasSaved ? "Coincide con la guardada" : "Sin guardar";
+  const list = (pairs: number[]) => pairs.map(n => `P${n}`).join(pairs.length === 2 ? " y " : ", ").replace(/, (P\d)$/, " y $1");
+  return <section className={`hs-snp ${state}`}>
+    <header>
+      <span className="hs-snp-icon"><CloudDownload size={18}/></span>
+      <div><strong>Alineación de {rivalName} en SNP</strong><small>Sacada de los puntos de cada jugador en el acta.</small></div>
+      <span className="hs-snp-pill">{changes.length ? <AlertTriangle size={14}/> : hasSaved ? <CheckCircle2 size={14}/> : null}{pill}</span>
+    </header>
+    {changes.length > 0 && <p className="hs-snp-alert"><AlertTriangle size={16}/><span><b>Han cambiado la alineación.</b> No coincide con la guardada en {changes.length === 1 ? "la" : "las"} {list(changes)}.</span></p>}
+    <ol className="hs-snp-pairs">{fromSnp.pairs.map((pair, index) => {
+      const n = index + 1;
+      return <li key={pair.id} className={changes.includes(n) ? "is-changed" : ""}>
+        <span className="hs-pair-number">P{n}</span>
+        {pair.players.map((id, slot) => {
+          const tie = fromSnp.ties.find(item => item.pair === n && item.slot === slot);
+          const miss = fromSnp.missing.find(item => item.pair === n && item.slot === slot);
+          if (!id) return <div key={slot} className="hs-snp-player is-empty">
+            <span>{miss ? "Jugador sin identificar" : "Sin datos"}</span>
+            {miss && <small>{formatPoints(miss.points)} pts · nadie de la plantilla los tiene</small>}
+          </div>;
+          return <div key={slot} className={`hs-snp-player${tie ? " is-tie" : ""}`}>
+            <span>{name(id)}</span>
+            <small>{formatPoints(points(id))} pts</small>
+            {tie && <small className="hs-snp-tie">Empate: o {tie.candidates.filter(other => other !== id).map(name).join(", ")}</small>}
+          </div>;
+        })}
+      </li>;
+    })}</ol>
+    {(showUse || fromSnp.ties.length > 0) && <footer>
+      {fromSnp.ties.length > 0 && <small>Si hay empate de puntos no se sabe cuál de ellos juega: se pone uno y puedes cambiarlo.</small>}
+      {showUse && <button type="button" className="button small" onClick={onUse}><CloudDownload size={16}/> Usar la de SNP</button>}
+    </footer>}
+  </section>;
 }

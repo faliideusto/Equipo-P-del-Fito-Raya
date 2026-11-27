@@ -4261,12 +4261,37 @@ dialog.photo-dialog img {display:block;width:auto;height:auto;max-width:min(480p
 .hs-tabs button:hover {color:var(--ink)}
 .hs-tabs button.active {background:var(--accent);color:var(--accent-ink)}
 .hs-message {margin:0;padding:12px 14px;border:1px solid var(--accent-line);border-radius:10px;background:var(--accent-soft);color:var(--ink);font-size:14px}
-.hs-snp-note {margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:14px}
-.hs-snp-note.is-found {border-color:var(--accent-line);background:var(--accent-soft);color:var(--ink)}
-.hs-snp-note p {margin:0;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
-.hs-snp-note p svg {flex:none;margin-top:2px}
-.hs-snp-note ul {margin:8px 0 0;padding-left:20px;display:grid;gap:4px}
-.hs-snp-note .button {margin-top:10px}
+.hs-rival-alert {display:flex;align-items:center;gap:6px;margin:4px 0 0;color:var(--wine);font-size:13px;font-weight:600}
+.hs-tab-dot {width:8px;height:8px;border-radius:50%;background:var(--wine);box-shadow:0 0 0 2px var(--panel)}
+/* SNP lineup */
+.hs-snp {--snp:var(--rival);--snp-soft:var(--rival-soft);--snp-line:var(--rival-line);display:grid;gap:14px;margin:0 0 16px;padding:16px;border:1px solid var(--snp-line);border-radius:14px;background:linear-gradient(180deg,var(--snp-soft),transparent 70%),var(--bg)}
+.hs-snp.is-match {--snp:var(--green);--snp-soft:var(--green-soft);--snp-line:rgba(95,212,155,.4)}
+.hs-snp.is-changed {--snp:var(--wine);--snp-soft:var(--wine-soft);--snp-line:rgba(255,111,154,.5)}
+.hs-snp.is-none {--snp:var(--muted);--snp-soft:transparent;--snp-line:var(--line-strong);grid-template-columns:auto minmax(0,1fr);align-items:center;border-style:dashed}
+.hs-snp header {display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
+.hs-snp strong {display:block;color:var(--ink);font-size:15px}
+.hs-snp header small, .hs-snp.is-none small {display:block;margin-top:2px;color:var(--muted);font-size:13px}
+.hs-snp-icon {display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--snp-soft);color:var(--snp);border:1px solid var(--snp-line)}
+.hs-snp-pill {display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--snp-soft);border:1px solid var(--snp-line);color:var(--snp);font-size:12px;font-weight:700;white-space:nowrap}
+.hs-snp-alert {display:flex;gap:10px;align-items:flex-start;margin:0;padding:10px 12px;border-radius:10px;background:var(--wine-soft);color:var(--ink);font-size:14px;line-height:1.45}
+.hs-snp-alert svg {flex:none;margin-top:2px;color:var(--wine)}
+.hs-snp-pairs {display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.hs-snp-pairs li {display:grid;grid-template-columns:auto repeat(2,minmax(0,1fr));align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.hs-snp-pairs li.is-changed {border-color:rgba(255,111,154,.55);box-shadow:inset 3px 0 0 var(--wine)}
+.hs-snp-player {display:grid;gap:2px;min-width:0;padding:4px 6px}
+.hs-snp-player span {overflow:hidden;color:var(--ink);font-weight:600;font-size:14px;text-overflow:ellipsis;white-space:nowrap}
+.hs-snp-player small {color:var(--muted);font-family:var(--font-mono);font-size:12px}
+.hs-snp-player.is-tie span::after {content:"";display:inline-block;width:6px;height:6px;margin-left:6px;border-radius:50%;background:var(--warn);vertical-align:middle}
+.hs-snp-player .hs-snp-tie {color:var(--warn);font-family:var(--font-body);font-size:12px;line-height:1.35;white-space:normal}
+.hs-snp-player.is-empty span {color:var(--faint);font-weight:500;font-style:italic}
+.hs-snp footer {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.hs-snp footer small {flex:1 1 240px;color:var(--muted);font-size:13px}
+@media (max-width:560px) {
+  .hs-snp header {grid-template-columns:auto minmax(0,1fr)}
+  .hs-snp-pill {grid-column:1/-1;justify-self:start}
+  .hs-snp-pairs li {grid-template-columns:auto minmax(0,1fr)}
+  .hs-snp-pairs li .hs-snp-player:last-child {grid-column:2}
+}
 .hs-panel {padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
 .hs-panel-head h2 {margin:0;font-family:var(--font-display);font-size:24px;text-transform:uppercase}
 .hs-panel-head p {margin:6px 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
