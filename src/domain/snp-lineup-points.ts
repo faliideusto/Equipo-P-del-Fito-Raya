@@ -8,13 +8,15 @@ import { emptyLineup } from "./rules";
 export type ActaGame = { numero: number; homeId: string; awayId: string; extra: Record<string, unknown> };
 export type RosterPoints = { id: string; points: number | null };
 // A slot whose points match several players: one of them is placed and the rest are listed.
-export type PointsTie = { pair: number; points: number; chosen: string; candidates: string[] };
+export type PointsTie = { pair: number; slot: number; points: number; chosen: string; candidates: string[] };
 export type LineupFromPoints = {
   status: "none" | "found";
   pairs: Pair[];
   ties: PointsTie[];
   // Points with no player in the roster (stale roster or a player SNP left out of it).
-  missing: { pair: number; points: number }[];
+  missing: { pair: number; slot: number; points: number }[];
+  // Every player whose points fit each slot (options[pair-1][slot]); null when SNP gives no points there.
+  options: (string[] | null)[][];
 };
 
 // Reads the JS literal `var partidos_json = [...]` out of the acta HTML.
@@ -59,18 +61,33 @@ export function lineupFromPoints(games: ActaGame[], rivalId: string, roster: Ros
     const fields = keys(game);
     return fields ? fields.map((key, slot) => ({ pair: game.numero, slot, value: cents(game.extra[key]) })).filter(item => item.value !== null) : [];
   });
-  if (!wanted.length) return { status: "none", pairs, ties, missing };
+  const options: (string[] | null)[][] = pairs.map(() => [null, null]);
+  if (!wanted.length) return { status: "none", pairs, ties, missing, options };
   const byPoints = (value: number) => roster.filter(player => cents(player.points ?? 0) === value).map(player => player.id);
   // Unique matches first, so a tied slot never takes a player that only fits elsewhere.
   const ordered = [...wanted].sort((a, b) => byPoints(a.value!).length - byPoints(b.value!).length);
   for (const item of ordered) {
     const candidates = byPoints(item.value!);
+    options[item.pair - 1][item.slot] = candidates;
     const free = candidates.filter(id => !used.has(id));
-    if (!free.length) { missing.push({ pair: item.pair, points: item.value! / 100 }); continue; }
+    if (!free.length) { missing.push({ pair: item.pair, slot: item.slot, points: item.value! / 100 }); continue; }
     const chosen = free[0]; used.add(chosen);
     pairs[item.pair - 1].players[item.slot] = chosen;
-    if (candidates.length > 1) ties.push({ pair: item.pair, points: item.value! / 100, chosen, candidates });
+    if (candidates.length > 1) ties.push({ pair: item.pair, slot: item.slot, points: item.value! / 100, chosen, candidates });
   }
-  ties.sort((a, b) => a.pair - b.pair); missing.sort((a, b) => a.pair - b.pair);
-  return { status: "found", pairs, ties, missing };
+  const bySlot = (a: { pair: number; slot: number }, b: { pair: number; slot: number }) => a.pair - b.pair || a.slot - b.slot;
+  ties.sort(bySlot); missing.sort(bySlot);
+  return { status: "found", pairs, ties, missing, options };
+}
+
+// Pairs (1-5) of a saved lineup that no longer match SNP. A player tied on points with the one SNP shows
+// still matches, so picking the other tied player is not a change; a slot SNP has no player for matches anyone.
+export function changedPairs(snp: LineupFromPoints, saved: Pair[]): number[] {
+  if (snp.status !== "found") return [];
+  const fits = (option: string[] | null, id: string | null) => !option?.length || (id !== null && option.includes(id));
+  return saved.flatMap((pair, index) => {
+    const [a, b] = snp.options[index] ?? [null, null];
+    const [x, y] = pair.players;
+    return (fits(a, x) && fits(b, y)) || (fits(a, y) && fits(b, x)) ? [] : [index + 1];
+  });
 }
