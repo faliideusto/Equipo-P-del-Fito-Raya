@@ -4490,6 +4490,60 @@ small.hs-stats {display:block}
 .roster-points small.roster-forecast.up {color:#4ade80}
 .roster-points small.roster-forecast.down {color:#f87171}
 
+/* Acta del encuentro en tarjetas marcador: una tarjeta por partido, la pareja ganadora con franja amarilla
+   y a la derecha el resultado en sets (1–2). */
+.acta-head {display:grid;grid-template-columns:92px minmax(0,1fr) repeat(3,44px) 96px;gap:8px;padding:0 18px 8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.acta-head span {text-align:center}
+.acta-head span:nth-child(2) {text-align:left;padding-left:16px}
+.acta-list {display:grid;gap:12px;padding:0 18px 18px}
+.acta-card {display:grid;grid-template-columns:92px minmax(0,1fr) 96px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg-deep)}
+.acta-num {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--panel);border-right:1px solid var(--line)}
+.acta-num b {font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;color:var(--accent)}
+.acta-num .provisional-tag {font-size:11px}
+.acta-row {display:grid;grid-template-columns:minmax(0,1fr) repeat(3,44px);gap:8px;align-items:center;padding:12px 16px}
+.acta-row + .acta-row {border-top:1px dashed var(--line)}
+.acta-row.is-winner {background:linear-gradient(90deg,rgba(242,197,0,.10),transparent 70%);box-shadow:inset 3px 0 0 var(--accent)}
+.acta-row.is-loser .acta-pair {opacity:.72}
+.acta-team {display:flex;align-items:center;gap:8px;margin-bottom:6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.acta-row.is-winner .acta-team {color:var(--accent)}
+.acta-chip {padding:2px 6px;border-radius:4px;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:600;letter-spacing:.06em}
+.acta-player {display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 0;line-height:1.7}
+.acta-name {font-family:var(--font-mono);font-size:13px;letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
+.acta-name a {color:inherit}
+.acta-name a:hover {color:var(--accent)}
+.acta-player .acta-ranking {margin-left:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.02em;white-space:nowrap;color:var(--muted)}
+.acta-player .acta-ranking.up {color:#4ade80}
+.acta-player .acta-ranking.down {color:#f87171}
+.acta-set,.acta-set-cell {display:grid;place-items:center;width:40px;height:40px;justify-self:center}
+.acta-set {border-radius:9px;background:var(--panel);font-family:var(--font-mono);font-size:19px;font-variant-numeric:tabular-nums;color:var(--faint)}
+.acta-set.is-won {background:var(--green-soft);color:var(--green);font-weight:600;box-shadow:inset 0 0 0 1px rgba(95,212,155,.35)}
+.acta-set.is-empty {background:none}
+.acta-card.is-provisional .acta-set {color:var(--accent);font-style:italic}
+.acta-result {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--panel);border-left:1px solid var(--line)}
+.acta-result b {font-family:var(--font-display);font-weight:800;font-size:30px;line-height:1;letter-spacing:.02em;color:var(--faint);font-variant-numeric:tabular-nums}
+.acta-result .is-winner,.acta-result-mobile .is-winner {color:var(--accent)}
+.acta-result small {font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.acta-result-mobile {display:none}
+.acta-provisional {padding:10px 16px 14px;border-top:1px dashed var(--line)}
+.results-key > span.key-winner {margin-left:12px;background:var(--accent);border-color:var(--accent)}
+@media (max-width:640px){
+  .acta-head {display:none}
+  .acta-list {gap:10px;padding:0 10px 12px}
+  .acta-card {grid-template-columns:1fr}
+  .acta-card > .acta-result {display:none}
+  .acta-num {flex-direction:row;justify-content:space-between;padding:8px 14px;border-right:0;border-bottom:1px solid var(--line)}
+  .acta-num b {font-size:22px}
+  .acta-num .acta-result-mobile {display:inline-flex;align-items:baseline;gap:0;font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--faint)}
+  .acta-num .acta-result-mobile small {margin-left:6px;font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .acta-row {grid-template-columns:minmax(0,1fr) repeat(3,30px);gap:5px;padding:10px 12px}
+  .acta-set,.acta-set-cell {width:28px;height:30px}
+  .acta-set {font-size:15px;border-radius:7px}
+  .acta-player {flex-direction:column;gap:0}
+  .acta-name {font-size:11.5px}
+  .acta-player .acta-points {margin-left:0}
+  .acta-player .acta-ranking {margin-left:0;white-space:normal}
+  .acta-provisional {padding:10px 12px 12px}
+}
 /* Clasificación: tabla completa (V–D, dif. de juegos, últimos 5 y próximo). */
 .league-panel { border-radius: 16px; }
 .league-table { width: 100%; border-collapse: collapse; }
