@@ -7,6 +7,7 @@ import type { LineupPlayer } from "@/components/hidden-site/types";
 import { canBuildGuestPairs, guestDivision, nextGuestRival } from "@/lib/cayitos";
 import { readRivalLineup } from "@/lib/rival-lineups";
 import { getSnpTeam } from "@/lib/snp-service";
+import { snpRivalLineup } from "@/lib/snp-rival-lineup";
 import type { SnpTeam } from "@/domain/snp";
 
 // Tomás's own hidden site: the same tools as the club's, worked out from his team (Top Bal).
@@ -27,6 +28,7 @@ export default async function GuestHiddenSitePage({ params }: { params: Promise<
     getSnpTeam(next.rivalId).then(result => result.data).catch(() => null),
     readRivalLineup("tomas", next.fixtureId).then(value => ({ value, error: "" })).catch((error: unknown) => ({ value: null, error: error instanceof Error ? error.message : "No se pudo leer la alineación guardada." })),
   ]);
+  const fromSnp = rival ? await snpRivalLineup(next.fixtureId, next.rivalId, rival.players) : null;
   const players = (team: SnpTeam | null, teamId: string): LineupPlayer[] => (team?.players ?? []).map(player => ({ id: player.id, name: player.name, points: player.points, photo: cardPhoto(player), snpId: player.id, snpTeam: teamId }));
   return (
     <>
@@ -34,7 +36,7 @@ export default async function GuestHiddenSitePage({ params }: { params: Promise<
       {back}
       {saved.error && <p className="snp-warning" role="status">{saved.error}</p>}
       {rival && own
-        ? <HiddenSite key={`tomas-${next.fixtureId}`} teamId="tomas" ownName={ownName} preparation={next} division={await guestDivision()} ownPlayers={players(own, id)} rivalPlayers={players(rival, next.rivalId)} initialRival={saved.value} publishedOwn={null} />
+        ? <HiddenSite key={`tomas-${next.fixtureId}`} teamId="tomas" ownName={ownName} preparation={next} division={await guestDivision()} ownPlayers={players(own, id)} rivalPlayers={players(rival, next.rivalId)} initialRival={saved.value} publishedOwn={null} fromSnp={fromSnp} />
         : <section className="panel empty-state"><h2>Plantilla no disponible.</h2><p>SNP no ha devuelto la plantilla de {rival ? ownName : next.rivalName}. Vuelve a intentarlo en un rato.</p></section>}
     </>
   );
