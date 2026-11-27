@@ -25,6 +25,8 @@ export interface Standing {
   won: number;
   lost: number;
   points: number;
+  // Games won minus games lost: SNP's tie-break at equal points.
+  gameDifference?: number;
   own?: boolean;
   // Includes an encounter that SNP has not closed yet, from its acta and the app results.
   provisional?: boolean;

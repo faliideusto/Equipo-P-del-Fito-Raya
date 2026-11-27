@@ -1,7 +1,9 @@
 import { clubRepository } from "@/data/repository";
 import type { TeamId } from "@/domain/types";
-import { PageHeading, StandingsTable } from "@/components/sports";
+import { PageHeading } from "@/components/sports";
+import { LeagueTable } from "@/components/league-table";
 import { clubDivision } from "@/lib/club-division";
+import { leagueExtras } from "@/lib/league-table";
 export default async function StandingsPage({
   params,
 }: {
@@ -9,7 +11,11 @@ export default async function StandingsPage({
 }) {
   const { teamId } = await params;
   const team = (await clubRepository.getTeam(teamId))!;
-  const [rows, division] = await Promise.all([clubRepository.getStandings(teamId), clubDivision(teamId)]);
+  const [rows, division, extras] = await Promise.all([
+    clubRepository.getStandings(teamId),
+    clubDivision(teamId),
+    leagueExtras(teamId).catch(() => ({ form: {}, next: {} })),
+  ]);
   return (
     <>
       <PageHeading
@@ -17,18 +23,7 @@ export default async function StandingsPage({
         title="Clasificación"
         text="Tabla de liga publicada por SNP · Temporada 2026 / 27"
       />
-      <section className="panel">
-        <div className="panel-heading">
-          <h2>Clasificación</h2>
-          <span className="badge blue">{team.shortName}</span>
-        </div>
-        <StandingsTable rows={rows} division={division} />
-      </section>
-      <p className="data-note">
-        Clasificación publicada por SNP. Se conserva
-        el orden y las victorias publicados, incluidos los encuentros con
-        marcador 6–6.
-      </p>
+      <LeagueTable rows={rows} division={division} form={extras.form} next={extras.next} />
     </>
   );
 }
