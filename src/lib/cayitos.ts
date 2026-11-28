@@ -3,7 +3,7 @@ import { playerLink } from "./account-profile";
 import { divisionOf } from "./club-division";
 import { getSnpCompetition, getSnpPlayer, getSnpTeam } from "./snp-service";
 import { nextFixtureOf } from "./rival-preparation";
-import { canOpenCayitos, cayitoMembers, cayitoStats, sameName, type CayitoMember, type CayitoStats } from "@/domain/cayitos";
+import { canCheckLineups, canOpenCayitos, cayitoMembers, cayitoStats, sameName, type CayitoMember, type CayitoStats } from "@/domain/cayitos";
 
 type Access = { account: typeof currentAccount; link: (userId: string) => Promise<{ player_id: string } | null> };
 const defaults: Access = { account: currentAccount, link: playerLink };
@@ -14,6 +14,15 @@ export async function canSeeCayitos(deps: Access = defaults): Promise<boolean> {
     if (user?.role === "cayito") return true;
     if (!user || user.role !== "player") return false;
     return canOpenCayitos((await deps.link(user.id))?.player_id);
+  } catch { return false; }
+}
+
+// Only Rafael's own player account: not the coach, Tomás or the other cayitos.
+export async function canSeeLineupCheck(deps: Access = defaults): Promise<boolean> {
+  try {
+    const user = await deps.account();
+    if (!user || user.role !== "player") return false;
+    return canCheckLineups((await deps.link(user.id))?.player_id);
   } catch { return false; }
 }
 

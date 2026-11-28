@@ -12,6 +12,7 @@ import {
   Menu,
   MessageCircle,
   Search,
+  ScanSearch,
   Trophy,
   UserRound,
   Users,
@@ -39,6 +40,7 @@ const clubItems: Item[] = [
 const home: Item = { href: "/", label: "Inicio", icon: House, match: (path) => path === "/" };
 const profile: Item = { href: "/mi-perfil", label: "Mi perfil", icon: UserRound, match: (path) => path === "/mi-perfil" || path === "/acceso" };
 const cayitosItem: Item = { href: "/ranking-cayitos", label: "Ranking cayitos", icon: Crown, match: (path) => path === "/ranking-cayitos" };
+const lineupCheckItem: Item = { href: "/comprobar-alineaciones", label: "Comprobar alineaciones", icon: ScanSearch, match: (path) => path.startsWith("/comprobar-alineaciones") };
 const coach: Item = { href: "/entrenador", label: "Panel del entrenador", icon: ClipboardList, match: (path) => path === "/entrenador" };
 
 function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string; onNavigate: () => void }) {
@@ -53,7 +55,7 @@ function NavLink({ item, pathname, onNavigate }: { item: Item; pathname: string;
   );
 }
 
-export function Navigation({ isCoach = false, cayitos = false, guestTeam = null }: { isCoach?: boolean; cayitos?: boolean; guestTeam?: string | null }) {
+export function Navigation({ isCoach = false, cayitos = false, lineupCheck = false, guestTeam = null }: { isCoach?: boolean; cayitos?: boolean; lineupCheck?: boolean; guestTeam?: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [latestHref, setLatestHref] = useState<string | null>(null);
@@ -116,6 +118,7 @@ export function Navigation({ isCoach = false, cayitos = false, guestTeam = null 
             <div className="nav-caption">Tu cuenta</div>
             <NavLink item={profile} pathname={pathname} onNavigate={close} />
             {cayitos && <NavLink item={cayitosItem} pathname={pathname} onNavigate={close} />}
+            {lineupCheck && <NavLink item={lineupCheckItem} pathname={pathname} onNavigate={close} />}
             {isCoach && <NavLink item={coach} pathname={pathname} onNavigate={close} />}
           </div>
           </>}
