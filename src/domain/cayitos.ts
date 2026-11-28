@@ -11,6 +11,11 @@ export const cayitoMembers: CayitoMember[] = [
   { key: "dionisio", name: "Dionisio Sánchez Márquez", snpId: "381480", snpTeam: "803902" },
   { key: "tomas", name: "Tomás Jesús Martínez Sánchez", findName: "tomas jesus martinez sanchez" },
 ];
+// The lineup checker (any acta, lineups rebuilt from the points SNP shows) is only for Rafael's account.
+export const LINEUP_CHECK_ACCESS = ["381423"] as const;
+export function canCheckLineups(playerId: string | null | undefined) {
+  return Boolean(playerId && (LINEUP_CHECK_ACCESS as readonly string[]).includes(playerId));
+}
 export function canOpenCayitos(playerId: string | null | undefined) {
   return Boolean(playerId && (CAYITOS_ACCESS as readonly string[]).includes(playerId));
 }

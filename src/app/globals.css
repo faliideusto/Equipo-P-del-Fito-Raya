@@ -4657,3 +4657,20 @@ small.hs-stats {display:block}
   .lt-chip b { width: 18px; height: 18px; font-size: 9.5px; border-radius: 5px; }
   .lt-form { gap: 3px; }
 }
+/* Lineup checker (private) */
+.lineup-check-search {display:grid;gap:10px}
+.lineup-check-search label {font-weight:700;color:var(--ink)}
+.lineup-check-search > div {display:flex;flex-wrap:wrap;gap:10px}
+.lineup-check-search input {flex:1 1 240px;min-height:44px;padding:0 14px;border:1px solid var(--line-strong);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+.lineup-check-search input:focus {outline:2px solid var(--accent);outline-offset:1px}
+.lineup-check-links {display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.lineup-check-links .text-link {display:inline-flex;align-items:center;gap:6px}
+.lineup-check {--rival:#7ab8ff;--rival-soft:rgba(122,184,255,.14);--rival-line:rgba(122,184,255,.45);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.lineup-check-side {display:grid;gap:10px;min-width:0}
+.lineup-check-side .hs-snp {margin:0}
+.lineup-check-team {display:flex;align-items:center;gap:10px;margin:0}
+.lineup-check-team span {display:grid;min-width:0}
+.lineup-check-team small {color:var(--muted);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.lineup-check-team a {overflow:hidden;color:var(--ink);font-family:var(--font-display);font-size:20px;font-weight:700;text-transform:uppercase;text-overflow:ellipsis;white-space:nowrap;text-decoration:none}
+.lineup-check-team a:hover {color:var(--accent)}
+@media (max-width:1100px) {.lineup-check {grid-template-columns:minmax(0,1fr)}}
